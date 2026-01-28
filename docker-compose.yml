@@ -35,12 +35,12 @@ services:
   mysql:
     image: mysql:8.0
     container_name: must_negoce_mysql
-    restart: unless-stopped
+    restart: always
     environment:
-      MYSQL_DATABASE: must_negoce
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_USER: laravel_user
-      MYSQL_PASSWORD: laravel_password
+      MYSQL_DATABASE: must-negoce-invoices
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: laravelpassword
     volumes:
       - mysql_data:/var/lib/mysql
     ports:
@@ -54,9 +54,9 @@ services:
     container_name: must_negoce_phpmyadmin
     restart: unless-stopped
     environment:
-      PMA_HOST: mysql
+      PMA_HOST: must_negoce_mysql
       PMA_USER: root
-      PMA_PASSWORD: root_password
+      PMA_PASSWORD: rootpassword
     ports:
       - "8081:80"
     networks:
