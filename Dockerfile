@@ -15,6 +15,10 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
+# Install Node.js & npm
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
+
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
@@ -25,6 +29,13 @@ RUN mkdir -p /home/laravel/.composer && \
 
 # Set user
 USER laravel
+
+# Copy package files and install Node dependencies (for Vite)
+COPY package*.json ./
+RUN npm install
+
+# Copy remaining files
+COPY . .
 
 # Expose port 9000 and start php-fpm server
 EXPOSE 9000

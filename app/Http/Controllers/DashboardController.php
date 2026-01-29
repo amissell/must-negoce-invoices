@@ -14,15 +14,15 @@ class DashboardController extends Controller
     {
         $stats = [
             'total_invoices' => Invoice::count(),
-            'total_amount' => Invoice::sum('total_ttc'),
-            'total_products' => Product::where('is_active', true)->count(),
+            'total_amount' => Invoice::sum('total'),
+            'total_products' => Product::count(),
             'recent_invoices' => Invoice::with('client')
                 ->orderBy('created_at', 'desc')
                 ->limit(5)
                 ->get(),
             'monthly_totals' => Invoice::select(
                     DB::raw("DATE_FORMAT(invoice_date, '%Y-%m') as month"),
-                    DB::raw('SUM(total_ttc) as total'),
+                    DB::raw('SUM(total) as total'),
                     DB::raw('COUNT(*) as count')
                 )
                 ->groupBy('month')
