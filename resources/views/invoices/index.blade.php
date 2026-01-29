@@ -66,6 +66,7 @@
                             <form action="{{ route('invoices.generate') }}" method="POST">
                                 @csrf
                                 <div class="mb-4">
+                                    {{-- <p>{{ route('invoices.store') }}</p> --}}
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
                                         Montant Global TTC (MAD)
                                     </label>
@@ -132,7 +133,7 @@
                                             </td>
                                             <td class="px-4 py-3">
                                                 <a 
-                                                    href="{{ route('invoices.download', $invoice->id) }}" 
+                                                    href="" 
                                                     class="inline-flex items-center text-blue-600 hover:text-blue-800"
                                                 >
                                                     ⬇️

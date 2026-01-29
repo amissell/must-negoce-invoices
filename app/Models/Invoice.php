@@ -32,6 +32,7 @@ class Invoice extends Model
         return $this->hasMany(InvoiceItem::class);
     }
 
+    // هاد الـ method المهم!
     public static function generateInvoiceNumber()
     {
         $year = date('y');

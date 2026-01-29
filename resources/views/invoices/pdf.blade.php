@@ -3,237 +3,287 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Facture {{ $invoice->invoice_number }}</title>
+    <title>Facture - {{ $invoice->invoice_number }}</title>
     <style>
         @page {
-            margin: 20mm;
+            margin: 15px;
+            size: A4;
         }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: 11pt;
-            color: #333;
+            font-size: 10px;
             line-height: 1.4;
+            color: #000;
         }
-        .header {
-            display: table;
+        
+        .container {
             width: 100%;
-            margin-bottom: 30px;
+            padding: 10px;
         }
-        .header-left, .header-right {
-            display: table-cell;
-            vertical-align: top;
-            width: 50%;
+        
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #000;
         }
+        
         .company-name {
-            font-size: 24pt;
+            font-size: 18px;
             font-weight: bold;
-            color: #2563eb;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
         }
-        .company-info {
-            font-size: 9pt;
-            color: #666;
-            line-height: 1.6;
-        }
-        .invoice-title {
-            font-size: 20pt;
+        
+        .header-title {
+            font-size: 12px;
             font-weight: bold;
-            text-align: right;
-            color: #1f2937;
-            margin-bottom: 10px;
+            margin: 5px 0;
         }
-        .invoice-details {
-            text-align: right;
-            font-size: 10pt;
+        
+        /* Invoice Info Table */
+        .info-table {
+            width: 100%;
+            margin-bottom: 15px;
+            border-collapse: collapse;
         }
-        .invoice-details div {
-            margin-bottom: 5px;
+        
+        .info-table td {
+            border: 1px solid #000;
+            padding: 6px 8px;
+            font-size: 10px;
         }
-        .client-section {
-            background: #f3f4f6;
-            padding: 15px;
-            margin: 20px 0;
-            border-left: 4px solid #2563eb;
+        
+        .info-table td.label {
+            font-weight: bold;
+            width: 25%;
+            background-color: #f5f5f5;
         }
-        .client-section h3 {
-            margin: 0 0 10px 0;
-            font-size: 12pt;
-            color: #1f2937;
+        
+        .info-table td.value {
+            width: 25%;
         }
-        table {
+        
+        /* Products Table */
+        .products-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 20px 0;
+            margin-bottom: 15px;
         }
-        thead {
-            background: #2563eb;
-            color: white;
+        
+        .products-table thead {
+            background-color: #f0f0f0;
         }
-        thead th {
-            padding: 12px 8px;
+        
+        .products-table th {
+            border: 1px solid #000;
+            padding: 8px 5px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 10px;
+        }
+        
+        .products-table td {
+            border: 1px solid #000;
+            padding: 6px 5px;
+            font-size: 9px;
+        }
+        
+        .products-table td.description {
             text-align: left;
-            font-weight: 600;
-            font-size: 10pt;
+            padding-left: 8px;
         }
-        tbody td {
-            padding: 10px 8px;
-            border-bottom: 1px solid #e5e7eb;
-            font-size: 10pt;
-        }
-        tbody tr:hover {
-            background: #f9fafb;
-        }
-        .text-right {
-            text-align: right;
-        }
-        .text-center {
+        
+        .products-table td.center {
             text-align: center;
         }
-        .totals-section {
-            margin-top: 30px;
-            float: right;
-            width: 40%;
+        
+        .products-table td.right {
+            text-align: right;
+            padding-right: 8px;
         }
-        .totals-section table {
-            margin: 0;
+        
+        .products-table tbody tr:nth-child(even) {
+            background-color: #fafafa;
         }
-        .totals-section td {
-            padding: 8px;
-            border: none;
-        }
-        .total-row {
-            background: #2563eb;
-            color: white;
-            font-weight: bold;
-            font-size: 12pt;
-        }
-        .amount-words {
-            clear: both;
-            margin-top: 40px;
-            padding: 15px;
-            background: #f9fafb;
-            border-left: 4px solid #10b981;
-        }
-        .amount-words strong {
-            color: #059669;
-        }
-        .footer {
-            margin-top: 50px;
-            padding-top: 20px;
-            border-top: 2px solid #e5e7eb;
-            font-size: 9pt;
-            color: #666;
-        }
-        .legal-ids {
-            display: table;
+        
+        /* Totals Table */
+        .totals-table {
             width: 100%;
-            margin-top: 10px;
+            border-collapse: collapse;
+            margin-bottom: 15px;
         }
-        .legal-ids > div {
-            display: table-cell;
-            width: 25%;
-            padding: 5px;
+        
+        .totals-table td {
+            border: 1px solid #000;
+            padding: 8px 12px;
+            font-size: 11px;
+        }
+        
+        .totals-table td.label {
+            font-weight: bold;
+            text-align: left;
+            width: 70%;
+            background-color: #f5f5f5;
+        }
+        
+        .totals-table td.amount {
+            text-align: right;
+            width: 30%;
+            font-weight: bold;
+        }
+        
+        .totals-table tr.highlight {
+            background-color: #e8e8e8;
+        }
+        
+        .totals-table tr.highlight td {
+            font-size: 13px;
+            font-weight: bold;
+            padding: 10px 12px;
+        }
+        
+        /* Amount in Words */
+        .amount-words {
+            border: 1px solid #000;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 9px;
+            text-align: justify;
+        }
+        
+        .amount-words strong {
+            font-size: 10px;
+        }
+        
+        /* Footer */
+        .footer {
+            border-top: 1px solid #000;
+            padding-top: 8px;
+            font-size: 8px;
+            text-align: center;
+            line-height: 1.6;
+        }
+        
+        .footer-row {
+            margin: 3px 0;
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <div class="header">
-        <div class="header-left">
-            <div class="company-name">MUST NEGOCE</div>
-            <div class="company-info">
-                Société spécialisée en produits de nettoyage<br>
-                123 Boulevard Mohammed V<br>
-                Casablanca, Maroc<br>
-                Tél: +212 522 123 456<br>
-                Email: contact@mustnegoce.ma
-            </div>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="company-name">Sté. MUST-NEGOCE</div>
+            <div class="header-title">Facture pour</div>
         </div>
-        <div class="header-right">
-            <div class="invoice-title">FACTURE</div>
-            <div class="invoice-details">
-                <div><strong>N°:</strong> {{ $invoice->invoice_number }}</div>
-                <div><strong>Date:</strong> {{ $invoice->invoice_date->format('d/m/Y') }}</div>
-                <div><strong>Date d'échéance:</strong> {{ $invoice->invoice_date->addDays(30)->format('d/m/Y') }}</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Client Section -->
-    <div class="client-section">
-        <h3>FACTURÉ À:</h3>
-        <div>
-            <strong>Client Entreprise</strong><br>
-            Adresse du client<br>
-            Ville, Code Postal<br>
-            Maroc
-        </div>
-    </div>
-
-    <!-- Products Table -->
-    <table>
-        <thead>
+        
+        <!-- Invoice Info -->
+        <table class="info-table">
             <tr>
-                <th style="width: 10%;">#</th>
-                <th style="width: 40%;">Produit</th>
-                <th style="width: 15%;" class="text-center">Quantité</th>
-                <th style="width: 15%;" class="text-right">Prix Unitaire</th>
-                <th style="width: 20%;" class="text-right">Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($invoice->items as $index => $item)
-            <tr>
-                <td>{{ $index + 1 }}</td>
-                <td>{{ $item->product->name }}</td>
-                <td class="text-center">{{ $item->quantity }} {{ $item->product->unite }}</td>
-                <td class="text-right">{{ number_format($item->unit_price, 2) }} MAD</td>
-                <td class="text-right">{{ number_format($item->total, 2) }} MAD</td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-
-    <!-- Totals -->
-    <div class="totals-section">
-        <table>
-            <tr>
-                <td><strong>Sous-total HT:</strong></td>
-                <td class="text-right">{{ number_format($invoice->montant_ht, 2) }} MAD</td>
+                <td class="label">N° FACTURE :</td>
+                <td class="value">{{ $invoice->invoice_number }}</td>
+                <td class="label">DATE :</td>
+                <td class="value">{{ $invoice->invoice_date->format('n/j/Y') }}</td>
             </tr>
             <tr>
-                <td><strong>TVA (20%):</strong></td>
-                <td class="text-right">{{ number_format($invoice->tva, 2) }} MAD</td>
-            </tr>
-            <tr class="total-row">
-                <td><strong>TOTAL TTC:</strong></td>
-                <td class="text-right">{{ number_format($invoice->total_ttc, 2) }} MAD</td>
+                <td class="label">Nom de client :</td>
+                <td class="value">{{ $invoice->customer_name }}</td>
+                <td class="label">MODE DE PAY :</td>
+                <td class="value">CH</td>
             </tr>
         </table>
-    </div>
-
-    <!-- Amount in Words -->
-    <div class="amount-words">
-        <strong>Montant en toutes lettres:</strong><br>
-        {{ App\Helpers\NumberToWords::convert($invoice->total_ttc) }}
-    </div>
-
-    <!-- Footer -->
-    <div class="footer">
-        <div style="margin-bottom: 15px;">
-            <strong>Conditions de paiement:</strong> Paiement à 30 jours<br>
-            <strong>Mode de paiement:</strong> Virement bancaire, Chèque, Espèces
+        
+        <!-- Products Table -->
+        <table class="products-table">
+            <thead>
+                <tr>
+                    <th style="width: 50%;">Description</th>
+                    <th style="width: 12%;">Qté</th>
+                    <th style="width: 18%;">Prix unitaire</th>
+                    <th style="width: 20%;">Prix total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @php
+                    $subtotalHT = 0;
+                @endphp
+                
+                @foreach($invoice->items as $item)
+                <tr>
+                    <td class="description">{{ $item->product->name }}</td>
+                    <td class="center">{{ $item->quantity }}</td>
+                    <td class="right">{{ number_format($item->unit_price, 2) }}</td>
+                    <td class="right"><strong>{{ number_format($item->subtotal, 2) }}</strong></td>
+                </tr>
+                @php
+                    $subtotalHT += $item->subtotal;
+                @endphp
+                @endforeach
+                
+                <!-- Empty rows for spacing (minimum 5 rows) -->
+                @for($i = count($invoice->items); $i < 5; $i++)
+                <tr>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
+                @endfor
+            </tbody>
+        </table>
+        
+        <!-- Totals -->
+        <table class="totals-table">
+            @php
+                // Calcul TVA 20%
+                $tauxTVA = 20;
+                $montantTTC = $invoice->total_amount;
+                $montantHT = $montantTTC / 1.20;
+                $montantTVA = $montantTTC - $montantHT;
+            @endphp
+            
+            <tr class="highlight">
+                <td class="label">MONTANT TTC</td>
+                <td class="amount">{{ number_format($montantTTC, 2) }} MAD</td>
+            </tr>
+            <tr>
+                <td class="label">Taux TVA</td>
+                <td class="amount">{{ $tauxTVA }}%</td>
+            </tr>
+            <tr>
+                <td class="label">Montant TVA</td>
+                <td class="amount">{{ number_format($montantTVA, 2) }}</td>
+            </tr>
+            <tr>
+                <td class="label">Montant HT</td>
+                <td class="amount">{{ number_format($montantHT, 2) }}</td>
+            </tr>
+        </table>
+        
+        <!-- Amount in Words -->
+        <div class="amount-words">
+            <strong>Arrêter la présente facture à la somme :</strong><br>
+            {{ strtoupper(\App\Helpers\NumberToWords::convertToFrench($montantTTC)) }} DIRHAMS
         </div>
         
-        <div class="legal-ids">
-            <div><strong>ICE:</strong> 002547896000045</div>
-            <div><strong>RC:</strong> 125478</div>
-            <div><strong>IF:</strong> 45896214</div>
-            <div><strong>CNSS:</strong> 8547896</div>
-        </div>
-        
-        <div style="text-align: center; margin-top: 20px; font-size: 8pt; color: #999;">
-            Cette facture est générée automatiquement et ne nécessite pas de signature
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-row"><strong>Tel :</strong> 06 62482531</div>
+            <div class="footer-row"><strong>TP:</strong> 47960328</div>
+            <div class="footer-row"><strong>Adresse :</strong> Mourabitoun commune Saada Marrakech</div>
+            <div class="footer-row">
+                <strong>R.C:</strong> 86613 | 
+                <strong>I.F:</strong> 25055643 | 
+                <strong>ICE :</strong> 001996252000022
+            </div>
         </div>
     </div>
 </body>
