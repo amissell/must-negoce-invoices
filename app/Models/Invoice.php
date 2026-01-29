@@ -11,34 +11,36 @@ class Invoice extends Model
 
     protected $fillable = [
         'invoice_number',
-        'client_id',
         'invoice_date',
-        'subtotal',
+        'montant_ht',
         'tva',
-        'total',
-        'notes',
+        'total_ttc',
+        'is_locked',
+        'status'
     ];
 
     protected $casts = [
         'invoice_date' => 'date',
-        'subtotal' => 'decimal:2',
+        'is_locked' => 'boolean',
+        'montant_ht' => 'decimal:2',
         'tva' => 'decimal:2',
-        'total' => 'decimal:2',
+        'total_ttc' => 'decimal:2',
     ];
 
-    /**
-     * Get the client that owns the invoice.
-     */
-    public function client()
-    {
-        return $this->belongsTo(Client::class);
-    }
-
-    /**
-     * Get the items for the invoice.
-     */
     public function items()
     {
         return $this->hasMany(InvoiceItem::class);
+    }
+
+    public static function generateInvoiceNumber()
+    {
+        $year = date('y');
+        $lastInvoice = self::whereYear('created_at', date('Y'))
+            ->orderBy('id', 'desc')
+            ->first();
+        
+        $number = $lastInvoice ? intval(substr($lastInvoice->invoice_number, 3)) + 1 : 1;
+        
+        return $year . '/' . str_pad($number, 3, '0', STR_PAD_LEFT);
     }
 }

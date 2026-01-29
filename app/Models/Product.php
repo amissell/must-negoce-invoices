@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
@@ -12,16 +11,15 @@ class Product extends Model
 
     protected $fillable = [
         'name',
-        'reference',
-        'price_ttc',
-        'unit',
+        'prix_ttc',
+        'unite'
     ];
 
     protected $casts = [
-        'price_ttc' => 'decimal:2',
+        'prix_ttc' => 'decimal:2',
     ];
 
-    public function invoiceItems(): HasMany
+    public function invoiceItems()
     {
         return $this->hasMany(InvoiceItem::class);
     }

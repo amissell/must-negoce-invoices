@@ -1,24 +1,13 @@
 <?php
 
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\InvoicePdfController;
-use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\ProductController;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-*/
+Route::get('/', [InvoiceController::class, 'index'])->name('invoices.index');
+Route::post('/invoices/generate', [InvoiceController::class, 'generate'])->name('invoices.generate');
+Route::get('/invoices/{id}/download', [InvoiceController::class, 'downloadPdf'])->name('invoices.download');
+Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->name('invoices.show');
 
-// Dashboard
-Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-Route::post('/generate', [DashboardController::class, 'generate'])->name('invoices.generate');
-Route::get('/invoices/{invoice}', [DashboardController::class, 'show'])->name('invoices.show');
-
-// PDF Routes
-Route::get('/invoices/{invoice}/pdf', [InvoicePdfController::class, 'download'])->name('invoices.pdf.download');
-Route::get('/invoices/{invoice}/pdf/view', [InvoicePdfController::class, 'view'])->name('invoices.pdf.view');
-
-// Products CRUD
-Route::resource('products', ProductController::class);
+Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
