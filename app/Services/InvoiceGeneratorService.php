@@ -288,6 +288,10 @@ class InvoiceGeneratorService
      */
     private function loadProducts(): void
     {
-        $this->products = Product::active()->get();
-    }
+        $this->products = Product::all();
+        
+        if ($this->products->isEmpty()) {
+            throw new \RuntimeException('Aucun produit disponible pour la génération de factures.');
+        }
+}
 }
