@@ -1,5 +1,4 @@
 <?php
-// app/Services/InvoiceGeneratorService.php
 
 namespace App\Services;
 
@@ -8,309 +7,287 @@ use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\InvoiceSequence;
 use App\Models\Product;
-use App\Helpers\NumberToFrenchWords;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class InvoiceGeneratorService
 {
-    private const MAX_INVOICE_AMOUNT = 5000;
-    private const TARGET_AMOUNTS = [2000, 2500, 3000, 3500, 4000, 4500];
-    private const MIN_PRODUCTS_PER_INVOICE = 8;
-    private const MAX_PRODUCTS_PER_INVOICE = 25;
-    
-    private Collection $products;
+    private const MIN_INVOICE_TOTAL = 2000;
+    private const MAX_INVOICE_TOTAL = 4500;
+    private const MAX_INVOICE_LIMIT = 5000;
+    private const VAT_RATE = 20.00;
+    private const MIN_DATE = '2026-01-01';
+
     private Client $client;
-    private Carbon $startDate;
-    private Carbon $endDate;
+    private Collection $products;
 
     public function __construct()
     {
-        $this->products = Product::where('is_active', true)->get();
-        $this->client = Client::where('is_default', true)->first() ?? Client::first();
-        $this->startDate = Carbon::create(2026, 1, 1);
-        $this->endDate = Carbon::now();
+        $this->loadDefaultClient();
+        $this->loadProducts();
     }
 
     /**
-     * Generate invoices for a global total amount
+     * Generate invoices from a global total amount
      */
-    public function generateInvoices(float $globalTotal): array
+    public function generateFromTotal(float $globalTotal): array
     {
         if ($globalTotal <= 0) {
-            throw new \InvalidArgumentException('Global total must be positive');
+            throw new \InvalidArgumentException('Le montant total doit être supérieur à zéro.');
+        }
+
+        if ($this->products->isEmpty()) {
+            throw new \RuntimeException('Aucun produit actif disponible pour la génération de factures.');
         }
 
         return DB::transaction(function () use ($globalTotal) {
-            $batchId = time();
             $invoices = [];
+            $remainingTotal = $globalTotal;
+            $batchId = time(); // Unique batch identifier
+            $usedDates = [];
 
-            $invoiceAmounts = $this->splitIntoInvoiceAmounts($globalTotal);
-            $dates = $this->generateRandomDates(count($invoiceAmounts));
-            sort($dates);
-            
-            $invoicesByYear = [];
-            foreach ($dates as $index => $date) {
-                $year = $date->year;
-                if (!isset($invoicesByYear[$year])) {
-                    $invoicesByYear[$year] = [];
-                }
-                $invoicesByYear[$year][] = [
-                    'date' => $date,
-                    'amount' => $invoiceAmounts[$index],
-                ];
-            }
-
-            foreach ($invoicesByYear as $year => $yearInvoices) {
-                $numbers = InvoiceSequence::reserveNumbers($year, count($yearInvoices));
+            while ($remainingTotal > 0) {
+                // Calculate target for this invoice
+                $targetTotal = $this->calculateInvoiceTarget($remainingTotal);
                 
-                foreach ($yearInvoices as $index => $invoiceData) {
-                    $invoice = $this->createInvoice(
-                        $numbers[$index],
-                        $invoiceData['date'],
-                        $invoiceData['amount'],
-                        $batchId
-                    );
-                    $invoices[] = $invoice;
+                // Generate random date
+                $invoiceDate = $this->generateRandomDate($usedDates);
+                $usedDates[] = $invoiceDate->format('Y-m-d');
+
+                // Generate invoice number
+                $invoiceNumber = InvoiceSequence::getNextNumber($invoiceDate->year);
+
+                // Generate items that approximately match the target
+                $items = $this->generateItems($targetTotal);
+                $actualTotal = collect($items)->sum('line_total_ttc');
+
+                // Create the invoice
+                $invoice = $this->createInvoice(
+                    $invoiceNumber,
+                    $invoiceDate,
+                    $items,
+                    $actualTotal,
+                    $batchId
+                );
+
+                $invoices[] = $invoice;
+                $remainingTotal -= $actualTotal;
+
+                // If remaining is too small to make a valid invoice, add it to the last one
+                if ($remainingTotal > 0 && $remainingTotal < self::MIN_INVOICE_TOTAL) {
+                    $this->addToLastInvoice($invoice, $remainingTotal);
+                    $remainingTotal = 0;
                 }
             }
 
-            return [
-                'batch_id' => $batchId,
-                'invoices' => $invoices,
-                'total_generated' => array_sum(array_map(fn($i) => $i->total_ttc, $invoices)),
-                'count' => count($invoices),
-            ];
+            return $invoices;
         });
     }
 
-    private function splitIntoInvoiceAmounts(float $globalTotal): array
+    /**
+     * Calculate target total for an invoice
+     */
+    private function calculateInvoiceTarget(float $remaining): float
     {
-        $amounts = [];
-        $remaining = $globalTotal;
-
-        while ($remaining > 0) {
-            if ($remaining <= self::MAX_INVOICE_AMOUNT) {
-                $amounts[] = $this->addRandomCents($remaining);
-                break;
-            }
-
-            $targetAmount = $this->pickRandomTargetAmount($remaining);
-            $amount = $this->addRandomCents($targetAmount);
-            $amount = min($amount, self::MAX_INVOICE_AMOUNT - rand(10, 500));
-            
-            $amounts[] = $amount;
-            $remaining -= $amount;
+        if ($remaining <= self::MAX_INVOICE_LIMIT) {
+            return $remaining;
         }
 
-        shuffle($amounts);
-        return $amounts;
+        // Random amount between MIN and MAX, but not round numbers
+        $base = mt_rand(self::MIN_INVOICE_TOTAL * 100, self::MAX_INVOICE_TOTAL * 100) / 100;
+        
+        // Add random centimes to avoid round numbers
+        $centimes = mt_rand(1, 99) / 100;
+        $target = $base + $centimes;
+
+        // Ensure we don't exceed the limit
+        return min($target, self::MAX_INVOICE_LIMIT - 0.01);
     }
 
-    private function pickRandomTargetAmount(float $remaining): float
+    /**
+     * Generate a random unique date
+     */
+    private function generateRandomDate(array $usedDates): Carbon
     {
-        $validTargets = array_filter(
-            self::TARGET_AMOUNTS,
-            fn($t) => $t < $remaining && $t <= self::MAX_INVOICE_AMOUNT
-        );
+        $minDate = Carbon::parse(self::MIN_DATE);
+        $maxDate = Carbon::today();
+        $maxAttempts = 100;
+        $attempts = 0;
 
-        if (empty($validTargets)) {
-            return min($remaining, self::MAX_INVOICE_AMOUNT - rand(100, 500));
-        }
+        do {
+            $randomDays = mt_rand(0, $minDate->diffInDays($maxDate));
+            $date = $minDate->copy()->addDays($randomDays);
+            $attempts++;
+        } while (in_array($date->format('Y-m-d'), $usedDates) && $attempts < $maxAttempts);
 
-        $weights = [
-            2000 => 15,
-            2500 => 20,
-            3000 => 25,
-            3500 => 20,
-            4000 => 15,
-            4500 => 5,
-        ];
-
-        $totalWeight = 0;
-        $weightedTargets = [];
-        
-        foreach ($validTargets as $target) {
-            $weight = $weights[$target] ?? 10;
-            $totalWeight += $weight;
-            $weightedTargets[] = ['target' => $target, 'weight' => $weight];
-        }
-
-        $random = rand(1, $totalWeight);
-        $cumulative = 0;
-        
-        foreach ($weightedTargets as $item) {
-            $cumulative += $item['weight'];
-            if ($random <= $cumulative) {
-                return $item['target'];
-            }
-        }
-
-        return $validTargets[array_rand($validTargets)];
+        return $date;
     }
 
-    private function addRandomCents(float $amount): float
-    {
-        $variation = $amount * (rand(-500, 500) / 10000);
-        $amount += $variation;
-        
-        $cents = rand(1, 99);
-        while (in_array($cents, [0, 25, 50, 75])) {
-            $cents = rand(1, 99);
-        }
-        
-        return floor($amount) + ($cents / 100);
-    }
-
-    private function generateRandomDates(int $count): array
-    {
-        $dates = [];
-        $daysDiff = $this->startDate->diffInDays($this->endDate);
-        
-        for ($i = 0; $i < $count; $i++) {
-            $randomDays = rand(0, $daysDiff);
-            $date = $this->startDate->copy()->addDays($randomDays);
-            
-            while ($date->isWeekend()) {
-                $date->addDay();
-                if ($date->gt($this->endDate)) {
-                    $date = $this->endDate->copy();
-                    break;
-                }
-            }
-            
-            $dates[] = $date;
-        }
-        
-        return $dates;
-    }
-
-    private function createInvoice(string $invoiceNumber, Carbon $date, float $targetAmount, int $batchId): Invoice
-    {
-        $invoice = Invoice::create([
-            'invoice_number' => $invoiceNumber,
-            'client_id' => $this->client->id,
-            'invoice_date' => $date,
-            'payment_mode' => 'CH',
-            'total_ht' => 0,
-            'total_tva' => 0,
-            'total_ttc' => 0,
-            'tva_rate' => 20.00,
-            'is_locked' => true,
-            'batch_id' => $batchId,
-        ]);
-
-        $items = $this->generateInvoiceItems($targetAmount);
-        
-        $sortOrder = 0;
-        foreach ($items as $itemData) {
-            $itemData['sort_order'] = $sortOrder++;
-            $invoice->items()->create($itemData);
-        }
-
-        $invoice->calculateTotals();
-        $invoice->amount_in_words = NumberToFrenchWords::convert($invoice->total_ttc);
-        $invoice->save();
-
-        return $invoice->fresh(['items']);
-    }
-
-    private function generateInvoiceItems(float $targetAmount): array
+    /**
+     * Generate invoice items
+     */
+    private function generateItems(float $targetTotal): array
     {
         $items = [];
         $currentTotal = 0;
         $usedProducts = [];
-        $productsArray = $this->products->toArray();
-        
-        $numProducts = rand(self::MIN_PRODUCTS_PER_INVOICE, self::MAX_PRODUCTS_PER_INVOICE);
-        $targetWithMargin = $targetAmount * 0.85;
-        
-        while ($currentTotal < $targetWithMargin && count($items) < $numProducts) {
-            $availableProducts = array_filter(
-                $productsArray,
-                fn($p) => !in_array($p['id'], $usedProducts)
-            );
+        $attempts = 0;
+        $maxAttempts = 50;
+
+        while ($currentTotal < $targetTotal * 0.85 && $attempts < $maxAttempts) {
+            // Select a random product not yet used in this invoice
+            $availableProducts = $this->products->whereNotIn('id', $usedProducts);
             
-            if (empty($availableProducts)) {
+            if ($availableProducts->isEmpty()) {
                 break;
             }
-            
-            $product = $availableProducts[array_rand($availableProducts)];
-            $usedProducts[] = $product['id'];
-            
-            $remaining = $targetAmount - $currentTotal;
-            $maxQty = max(1, floor($remaining / $product['price_ttc']));
-            $quantity = $this->getRealisticQuantity($maxQty, $product['price_ttc']);
-            
-            if ($quantity > 0) {
-                $lineTotal = round($product['price_ttc'] * $quantity, 2);
-                $lineTotalHt = round($lineTotal / 1.2, 2);
-                
-                $items[] = [
-                    'product_id' => $product['id'],
-                    'product_name' => $product['name'],
-                    'quantity' => $quantity,
-                    'unit_price_ttc' => $product['price_ttc'],
-                    'unit_price_ht' => round($product['price_ttc'] / 1.2, 2),
-                    'line_total_ttc' => $lineTotal,
-                    'line_total_ht' => $lineTotalHt,
-                    'line_tva' => round($lineTotal - $lineTotalHt, 2),
-                ];
-                
-                $currentTotal += $lineTotal;
-            }
+
+            $product = $availableProducts->random();
+            $usedProducts[] = $product->id;
+
+            // Calculate max quantity based on remaining amount
+            $remaining = $targetTotal - $currentTotal;
+            $maxQty = max(1, (int) floor($remaining / $product->price_ttc));
+            $quantity = mt_rand(1, min($maxQty, 20)); // Cap at 20 units per line
+
+            $lineTotalTtc = round($quantity * $product->price_ttc, 2);
+            $lineTotalHt = round($lineTotalTtc / 1.2, 2);
+            $lineVat = round($lineTotalTtc - $lineTotalHt, 2);
+
+            $items[] = [
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'unit_price_ttc' => $product->price_ttc,
+                'quantity' => $quantity,
+                'line_total_ttc' => $lineTotalTtc,
+                'line_total_ht' => $lineTotalHt,
+                'line_vat' => $lineVat,
+            ];
+
+            $currentTotal += $lineTotalTtc;
+            $attempts++;
         }
 
-        $items = $this->adjustItemsToTarget($items, $targetAmount, $productsArray, $usedProducts);
+        // Adjust last item to get closer to target if needed
+        if (!empty($items) && abs($currentTotal - $targetTotal) > 50) {
+            $items = $this->adjustLastItem($items, $targetTotal, $currentTotal);
+        }
+
         return $items;
     }
 
-    private function getRealisticQuantity(int $maxQty, float $price): int
+    /**
+     * Adjust the last item to match target more closely
+     */
+    private function adjustLastItem(array $items, float $target, float $current): array
     {
-        $commonQuantities = [4, 6, 12, 15, 24, 30];
-        $validQuantities = array_filter($commonQuantities, fn($q) => $q <= $maxQty);
+        $difference = $target - $current;
         
-        if (!empty($validQuantities) && rand(1, 100) <= 70) {
-            return $validQuantities[array_rand($validQuantities)];
-        }
-        
-        return max(1, rand(1, min($maxQty, 50)));
-    }
-
-    private function adjustItemsToTarget(array $items, float $targetAmount, array $products, array $usedProducts): array
-    {
-        $currentTotal = array_sum(array_column($items, 'line_total_ttc'));
-        $diff = $targetAmount - $currentTotal;
-        
-        if (abs($diff) / $targetAmount < 0.02) {
-            return $items;
-        }
-        
-        if ($diff > 0) {
-            $availableProducts = array_filter(
-                $products,
-                fn($p) => !in_array($p['id'], $usedProducts) && $p['price_ttc'] <= $diff
-            );
+        if ($difference > 0 && !empty($items)) {
+            // Try to add more quantity to the last item
+            $lastIndex = count($items) - 1;
+            $lastItem = &$items[$lastIndex];
             
-            if (!empty($availableProducts)) {
-                $product = $availableProducts[array_rand($availableProducts)];
-                $quantity = max(1, floor($diff / $product['price_ttc']));
-                $lineTotal = round($product['price_ttc'] * $quantity, 2);
-                
-                $items[] = [
-                    'product_id' => $product['id'],
-                    'product_name' => $product['name'],
-                    'quantity' => $quantity,
-                    'unit_price_ttc' => $product['price_ttc'],
-                    'unit_price_ht' => round($product['price_ttc'] / 1.2, 2),
-                    'line_total_ttc' => $lineTotal,
-                    'line_total_ht' => round($lineTotal / 1.2, 2),
-                    'line_tva' => round($lineTotal - round($lineTotal / 1.2, 2), 2),
-                ];
+            $additionalQty = (int) floor($difference / $lastItem['unit_price_ttc']);
+            if ($additionalQty > 0) {
+                $lastItem['quantity'] += $additionalQty;
+                $lastItem['line_total_ttc'] = round($lastItem['quantity'] * $lastItem['unit_price_ttc'], 2);
+                $lastItem['line_total_ht'] = round($lastItem['line_total_ttc'] / 1.2, 2);
+                $lastItem['line_vat'] = round($lastItem['line_total_ttc'] - $lastItem['line_total_ht'], 2);
             }
         }
-        
+
         return $items;
+    }
+
+    /**
+     * Create an invoice with its items
+     */
+    private function createInvoice(
+        string $invoiceNumber,
+        Carbon $invoiceDate,
+        array $items,
+        float $totalTtc,
+        int $batchId
+    ): Invoice {
+        $totalHt = round($totalTtc / 1.2, 2);
+        $totalVat = round($totalTtc - $totalHt, 2);
+
+        $invoice = Invoice::create([
+            'client_id' => $this->client->id,
+            'invoice_number' => $invoiceNumber,
+            'invoice_date' => $invoiceDate,
+            'total_ht' => $totalHt,
+            'total_vat' => $totalVat,
+            'total_ttc' => $totalTtc,
+            'vat_rate' => self::VAT_RATE,
+            'is_locked' => true,
+            'generation_batch' => $batchId,
+        ]);
+
+        foreach ($items as $item) {
+            $invoice->items()->create($item);
+        }
+
+        return $invoice->load('items', 'client');
+    }
+
+    /**
+     * Add remaining amount to the last invoice
+     */
+    private function addToLastInvoice(Invoice $invoice, float $amount): void
+    {
+        // Add a product line to cover the remaining amount
+        $product = $this->products->random();
+        $quantity = max(1, (int) ceil($amount / $product->price_ttc));
+        
+        $lineTotalTtc = round($quantity * $product->price_ttc, 2);
+        $lineTotalHt = round($lineTotalTtc / 1.2, 2);
+        $lineVat = round($lineTotalTtc - $lineTotalHt, 2);
+
+        $invoice->items()->create([
+            'product_id' => $product->id,
+            'product_name' => $product->name,
+            'unit_price_ttc' => $product->price_ttc,
+            'quantity' => $quantity,
+            'line_total_ttc' => $lineTotalTtc,
+            'line_total_ht' => $lineTotalHt,
+            'line_vat' => $lineVat,
+        ]);
+
+        // Recalculate invoice totals
+        $newTotalTtc = $invoice->items()->sum('line_total_ttc');
+        $invoice->update([
+            'total_ttc' => $newTotalTtc,
+            'total_ht' => round($newTotalTtc / 1.2, 2),
+            'total_vat' => round($newTotalTtc - ($newTotalTtc / 1.2), 2),
+        ]);
+
+        $invoice->refresh();
+    }
+
+    /**
+     * Load or create the default client
+     */
+    private function loadDefaultClient(): void
+    {
+        $this->client = Client::firstOrCreate(
+            ['name' => 'CLIENT DIVERS'],
+            [
+                'ice' => null,
+                'address' => null,
+                'city' => null,
+                'phone' => null,
+            ]
+        );
+    }
+
+    /**
+     * Load active products
+     */
+    private function loadProducts(): void
+    {
+        $this->products = Product::active()->get();
     }
 }
