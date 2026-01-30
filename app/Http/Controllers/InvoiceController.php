@@ -7,6 +7,7 @@ use App\Models\InvoiceItem;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Helpers\NumberToFrenchWords;
 
 class InvoiceController extends Controller
 {
@@ -20,11 +21,9 @@ class InvoiceController extends Controller
 
     public function store(Request $request)
     {
-        // 1️⃣ If montant_global_ttc is submitted
         if ($request->has('montant_global_ttc')) {
             $totalAmount = (float) $request->montant_global_ttc;
 
-            // Create a dummy product just to store the amount
             $items = [
                 [
                     'product' => (object)['id' => 0],
@@ -40,7 +39,6 @@ class InvoiceController extends Controller
                 ->with('success', 'Facture(s) créée(s) avec succès');
         }
 
-        // 2️⃣ If products are submitted
         $validated = $request->validate([
             'products' => 'required|array|min:1',
             'products.*.id' => 'required|exists:products,id',
@@ -275,8 +273,14 @@ class InvoiceController extends Controller
         $invoice = Invoice::with('items.product')->findOrFail($id);
         $safeNumber = str_replace('/', '-', $invoice->invoice_number);
 
-        $pdf = Pdf::loadView('invoices.pdf', compact('invoice'));
+        // Convert amount to French words
+        $amountInWords = NumberToFrenchWords::convert($invoice->total_ttc);
 
-        return $pdf->download("facture-$safeNumber.pdf");
+        $pdf = Pdf::loadView('invoices.pdf', compact('invoice', 'amountInWords'));
+        
+        // Set paper size to A4
+        $pdf->setPaper('A4', 'portrait');
+
+        return $pdf->download("FACTURE_$safeNumber.pdf");
     }
 }

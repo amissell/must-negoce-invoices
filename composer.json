@@ -27,7 +27,7 @@
             "Database\\Seeders\\": "database/seeders/"
         },
         "files": [
-            "app/Helpers/NumberToWords.php"
+            "app/Helpers/NumberToFrenchWords.php"
     ]
     },
     "autoload-dev": {

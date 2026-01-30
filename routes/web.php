@@ -7,6 +7,7 @@ use App\Http\Controllers\ProductController;
 // Dashboard - الصفحة الرئيسية
 Route::get('/', [InvoiceController::class, 'index'])->name('invoices.index');
 
+
 // Generate invoices - هنا كيتولدو الفواتير (المهم!)
 Route::post('/invoices/generate', [InvoiceController::class, 'generate'])->name('invoices.generate');
 
