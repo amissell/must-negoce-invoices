@@ -20,28 +20,11 @@ class Invoice extends Model
     ];
 
     protected $casts = [
-        'invoice_date' => 'date',
-        'is_locked' => 'boolean',
-        'montant_ht' => 'decimal:2',
-        'tva' => 'decimal:2',
-        'total_ttc' => 'decimal:2',
+        'invoice_date' => 'datetime',
     ];
 
     public function items()
     {
         return $this->hasMany(InvoiceItem::class);
-    }
-
-    // هاد الـ method المهم!
-    public static function generateInvoiceNumber()
-    {
-        $year = date('y');
-        $lastInvoice = self::whereYear('created_at', date('Y'))
-            ->orderBy('id', 'desc')
-            ->first();
-        
-        $number = $lastInvoice ? intval(substr($lastInvoice->invoice_number, 3)) + 1 : 1;
-        
-        return $year . '/' . str_pad($number, 3, '0', STR_PAD_LEFT);
     }
 }

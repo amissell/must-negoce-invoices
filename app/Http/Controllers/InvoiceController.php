@@ -86,56 +86,30 @@ class InvoiceController extends Controller
         ]);
 
         $totalTTC = $request->montant_global_ttc;
-        
-        // IMPORTANT: Each invoice MUST be LESS than 5000 MAD
-        $maxInvoiceAmount = 4999; // Maximum per invoice
-        $minInvoiceAmount = 3000; // Minimum per invoice
-        
-        // Calculate how many invoices needed
+
+        $maxInvoiceAmount = 4999;
+        $minInvoiceAmount = 3000;
+
         $numberOfInvoices = ceil($totalTTC / $maxInvoiceAmount);
         $remainingAmount = $totalTTC;
-        
         $createdInvoices = 0;
-        
+
         for ($i = 0; $i < $numberOfInvoices; $i++) {
-            if ($remainingAmount <= 0) {
-                break;
-            }
-            
-            // Determine amount for this invoice
-            if ($i == $numberOfInvoices - 1) {
-                // Last invoice gets remaining amount (but MUST be < 5000)
-                $invoiceAmount = min($remainingAmount, $maxInvoiceAmount);
-            } else {
-                // Random amount between 3000 and 4999
-                $invoiceAmount = rand($minInvoiceAmount, $maxInvoiceAmount);
-                
-                // Don't exceed remaining amount
-                if ($invoiceAmount > $remainingAmount) {
-                    $invoiceAmount = $remainingAmount;
-                }
-                
-                // ENFORCE max limit
-                $invoiceAmount = min($invoiceAmount, $maxInvoiceAmount);
-            }
-            
-            // Skip if amount is too small
-            if ($invoiceAmount < 100) {
-                break;
-            }
-            
-            // Calculate HT and TVA (20%)
+            if ($remainingAmount <= 0) break;
+
+            $invoiceAmount = ($i == $numberOfInvoices - 1)
+                ? min($remainingAmount, $maxInvoiceAmount)
+                : rand($minInvoiceAmount, min($maxInvoiceAmount, $remainingAmount));
+
+            if ($invoiceAmount < 100) break;
+
             $montantHT = round($invoiceAmount / 1.2, 2);
             $tva = round($invoiceAmount - $montantHT, 2);
 
-            // Generate random date between Jan 1st 2026 and today
             $startDate = \Carbon\Carbon::create(2026, 1, 1);
             $endDate = \Carbon\Carbon::now();
-            $randomDate = \Carbon\Carbon::createFromTimestamp(
-                rand($startDate->timestamp, $endDate->timestamp)
-            );
+            $randomDate = \Carbon\Carbon::createFromTimestamp(rand($startDate->timestamp, $endDate->timestamp));
 
-            // Create invoice
             $invoice = Invoice::create([
                 'invoice_number' => $this->generateInvoiceNumber(),
                 'invoice_date' => $randomDate,
@@ -146,46 +120,27 @@ class InvoiceController extends Controller
                 'status' => 'Verrouillée'
             ]);
 
-            // Get random products (2-5 products)
-            $numberOfProducts = rand(2, 5);
+            $numberOfProducts = rand(3, 8);
             $products = Product::inRandomOrder()->limit($numberOfProducts)->get();
-            
+
             if ($products->isEmpty()) {
                 $invoice->delete();
                 continue;
             }
-            
-            // Distribute invoice amount across products
+
             $itemsRemaining = $invoiceAmount;
-            $productsCount = $products->count();
-            
-            foreach ($products as $index => $product) {
-                if ($itemsRemaining <= 10) {
-                    break;
-                }
-                
-                if ($index == $productsCount - 1) {
-                    // Last product gets remaining amount
-                    $targetAmount = $itemsRemaining;
-                } else {
-                    // Random portion between 15% and 40%
-                    $portion = rand(15, 40) / 100;
-                    $targetAmount = $itemsRemaining * $portion;
-                }
-                
-                // Calculate quantity (use floor to avoid exceeding)
-                $quantity = max(1, floor($targetAmount / $product->prix_ttc));
-                
-                // Calculate actual item total
+            foreach ($products as $product) {
+                if ($itemsRemaining <= 0) break;
+
+                $quantity = rand(6, 24);
                 $itemTotal = round($quantity * $product->prix_ttc, 2);
-                
-                // IMPORTANT: Don't exceed remaining amount
-                if ($itemTotal > $itemsRemaining) {
-                    $quantity = max(1, floor($itemsRemaining / $product->prix_ttc));
+
+                while ($itemTotal > $itemsRemaining && $quantity > 1) {
+                    $quantity--;
                     $itemTotal = round($quantity * $product->prix_ttc, 2);
                 }
-                
-                // Create invoice item
+                if ($itemTotal <= 0) continue;
+
                 InvoiceItem::create([
                     'invoice_id' => $invoice->id,
                     'product_id' => $product->id,
@@ -193,10 +148,10 @@ class InvoiceController extends Controller
                     'unit_price' => $product->prix_ttc,
                     'total' => $itemTotal
                 ]);
-                
+
                 $itemsRemaining -= $itemTotal;
             }
-            
+
             $remainingAmount -= $invoiceAmount;
             $createdInvoices++;
         }
@@ -233,7 +188,7 @@ class InvoiceController extends Controller
 
     private function splitIntoMultipleInvoices($customerName, $items)
     {
-        $max = 4999; // MUST be less than 5000
+        $max = 4999;
         $currentItems = [];
         $currentTotal = 0;
 
@@ -273,12 +228,9 @@ class InvoiceController extends Controller
         $invoice = Invoice::with('items.product')->findOrFail($id);
         $safeNumber = str_replace('/', '-', $invoice->invoice_number);
 
-        // Convert amount to French words
         $amountInWords = NumberToFrenchWords::convert($invoice->total_ttc);
 
         $pdf = Pdf::loadView('invoices.pdf', compact('invoice', 'amountInWords'));
-        
-        // Set paper size to A4
         $pdf->setPaper('A4', 'portrait');
 
         return $pdf->download("FACTURE_$safeNumber.pdf");

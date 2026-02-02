@@ -12,12 +12,12 @@ class Product extends Model
     protected $fillable = [
         'name',
         'description',
-        'price_ttc',
-        'unit',
+        'prix_ttc',
+        'unite',
     ];
 
     protected $casts = [
-        'price_ttc' => 'decimal:2',
+        'prix_ttc' => 'decimal:2',
     ];
 
     public function invoiceItems()
