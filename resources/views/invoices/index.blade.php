@@ -19,7 +19,7 @@
         .btn-primary:hover {
             background: #2563eb;
         }
-    </style>
+        </style>
 </head>
 <body class="bg-gray-50">
     <div class="flex h-screen">
@@ -33,18 +33,57 @@
                     <p class="text-sm text-gray-400">Gestion de Factures</p>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <span class="text-sm">amailissellav01@gmail.com</span>
-                    <button class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-sm">
-                        Share
-                    </button>
-                    <button class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-sm">
-                        🔄 Upgrade
-                    </button>
-                    <button class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-sm">
-                        Publish
-                    </button>
-                </div>
+
+<!-- Manual Invoice Creation Button -->
+<a href="{{ route('invoices.manual.create') }}" 
+   class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5">
+    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+    </svg>
+    Créer Facture Manuelle
+</a>
+
+<!-- Alternative: Button with dropdown if you want both options -->
+<div class="relative inline-block text-left">
+    <button type="button" class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition" id="createInvoiceDropdown">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+        </svg>
+        Créer une Facture
+        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+    </button>
+    
+    <!-- Dropdown Menu -->
+    <div class="hidden absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-10" id="dropdownMenu">
+        <a href="{{ route('invoices.manual.create') }}" 
+           class="flex items-center px-4 py-3 hover:bg-gray-50 transition">
+            <svg class="w-5 h-5 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            <div>
+                <div class="font-semibold text-gray-900">Facture Manuelle</div>
+                <div class="text-sm text-gray-500">Créer avec sélection de produits</div>
             </div>
+        </a>
+        <a href="   " 
+           class="flex items-center px-4 py-3 hover:bg-gray-50 transition border-t">
+            <svg class="w-5 h-5 mr-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            <div>
+                <div class="font-semibold text-gray-900">Facture Automatique</div>
+                <div class="text-sm text-gray-500">Créer depuis montant global</div>
+            </div>
+        </a>
+    </div>
+</div>
+
+
+                </div>
+
+        </div>
 
             <div class="p-8">
                 <!-- Success Message -->
@@ -113,7 +152,6 @@
                                             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Montant HT</th>
                                             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">TVA</th>
                                             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Total TTC</th>
-                                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Statut</th>
                                             <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Actions</th>
                                         </tr>
                                     </thead>
@@ -126,17 +164,12 @@
                                             <td class="px-4 py-3 text-sm">{{ number_format($invoice->tva, 2) }} MAD</td>
                                             <td class="px-4 py-3 text-sm font-semibold">{{ number_format($invoice->total_ttc, 2) }} MAD</td>
                                             <td class="px-4 py-3">
-                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs bg-green-100 text-green-800">
-                                                    🔒 {{ $invoice->status }}
-                                                </span>
-                                            </td>
-                                            <td class="px-4 py-3">
                                                 <a 
                                                     href="{{ route('invoices.download', $invoice->id) }}" 
                                                     class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium"
                                                     title="Télécharger PDF"
                                                 >
-                                                    ⬇️ PDF
+                                                    ⬇️
                                                 </a>
                                             </td>
                                         </tr>
@@ -159,7 +192,7 @@
                             <div class="flex justify-between items-center mb-6">
                                 <div>
                                     <h2 class="text-lg font-bold">🧹 Produits de Nettoyage</h2>
-                                    <p class="text-gray-600 text-sm">{{ $products->count() }} produit(s) disponible(s)</p>
+                                    <p class="text-gray-600 text-sm"> produit(s) disponible(s)</p>
                                 </div>
                                 <button 
                                     onclick="document.getElementById('addProductModal').classList.remove('hidden')"
@@ -270,5 +303,21 @@
             </form>
         </div>
     </div>
+        <script>
+        // Dropdown toggle script
+        document.getElementById('createInvoiceDropdown')?.addEventListener('click', function() {
+            const dropdown = document.getElementById('dropdownMenu');
+            dropdown.classList.toggle('hidden');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('dropdownMenu');
+            const button = document.getElementById('createInvoiceDropdown');
+            if (dropdown && button && !button.contains(event.target) && !dropdown.contains(event.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+        </script>
 </body>
 </html>

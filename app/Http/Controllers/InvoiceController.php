@@ -11,12 +11,44 @@ use App\Helpers\NumberToFrenchWords;
 
 class InvoiceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $invoices = Invoice::with('items.product')->latest()->get();
+        $query = Invoice::with('items')->latest('invoice_date');
+
+        // Filter by type
+        if ($request->has('type')) {
+            if ($request->type === 'manual') {
+                $query->manual();
+            } elseif ($request->type === 'automatic') {
+                $query->automatic();
+            }
+        }
+
+        // Search filter
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('invoice_number', 'like', "%{$search}%")
+                  ->orWhere('client_name', 'like', "%{$search}%")
+                  ->orWhere('client_email', 'like', "%{$search}%")
+                  ->orWhere('client_phone', 'like', "%{$search}%");
+            });
+        }
+
+        $invoices = $query->paginate(15);
+
+        $totalInvoices = Invoice::count();
+        $manualCount = Invoice::manual()->count();
+        $automaticCount = Invoice::automatic()->count();
         $products = Product::all();
 
-        return view('invoices.index', compact('invoices', 'products'));
+        return view('invoices.index', compact(
+            'invoices',
+            'totalInvoices',
+            'manualCount',
+            'automaticCount',
+            'products'
+        ));
     }
 
     public function store(Request $request)
@@ -86,7 +118,6 @@ class InvoiceController extends Controller
         ]);
 
         $totalTTC = $request->montant_global_ttc;
-
         $maxInvoiceAmount = 4999;
         $minInvoiceAmount = 3000;
 
@@ -97,7 +128,7 @@ class InvoiceController extends Controller
         for ($i = 0; $i < $numberOfInvoices; $i++) {
             if ($remainingAmount <= 0) break;
 
-            $invoiceAmount = ($i == $numberOfInvoices - 1)
+            $invoiceAmount = ($i === $numberOfInvoices - 1)
                 ? min($remainingAmount, $maxInvoiceAmount)
                 : rand($minInvoiceAmount, min($maxInvoiceAmount, $remainingAmount));
 
@@ -139,6 +170,7 @@ class InvoiceController extends Controller
                     $quantity--;
                     $itemTotal = round($quantity * $product->prix_ttc, 2);
                 }
+
                 if ($itemTotal <= 0) continue;
 
                 InvoiceItem::create([
@@ -167,21 +199,22 @@ class InvoiceController extends Controller
 
         $invoice = Invoice::create([
             'invoice_number' => $this->generateInvoiceNumber(),
-            'invoice_date'   => now(),
-            'montant_ht'     => $montantHt,
-            'tva'            => $tva,
-            'total_ttc'      => $totalTtc,
-            'is_locked'      => true,
-            'status'         => 'Verrouillée',
+            'invoice_date' => now(),
+            'montant_ht' => $montantHt,
+            'tva' => $tva,
+            'total_ttc' => $totalTtc,
+            'is_locked' => true,
+            'type' => 'automatic',
+            'client_name' => 'divers',
         ]);
 
         foreach ($items as $item) {
             InvoiceItem::create([
                 'invoice_id' => $invoice->id,
                 'product_id' => $item['product']->id,
-                'quantity'   => $item['quantity'],
+                'quantity' => $item['quantity'],
                 'unit_price' => $item['unit_price'],
-                'total'      => $item['total'],
+                'total' => $item['total'],
             ]);
         }
     }
@@ -227,12 +260,86 @@ class InvoiceController extends Controller
     {
         $invoice = Invoice::with('items.product')->findOrFail($id);
         $safeNumber = str_replace('/', '-', $invoice->invoice_number);
-
         $amountInWords = NumberToFrenchWords::convert($invoice->total_ttc);
 
         $pdf = Pdf::loadView('invoices.pdf', compact('invoice', 'amountInWords'));
         $pdf->setPaper('A4', 'portrait');
 
         return $pdf->download("FACTURE_$safeNumber.pdf");
+    }
+
+    public function export(Request $request)
+    {
+        $query = Invoice::with('items');
+
+        if ($request->has('type')) {
+            if ($request->type === 'manual') $query->manual();
+            elseif ($request->type === 'automatic') $query->automatic();
+        }
+
+        $invoices = $query->get();
+
+        $filename = 'invoices_' . date('Y-m-d') . '.csv';
+
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+        $output = fopen('php://output', 'w');
+
+        fputcsv($output, [
+            'N° Facture',
+            'Type',
+            'Client',
+            'Téléphone',
+            'Email',
+            'Date',
+            'Mode Paiement',
+            'Montant HT',
+            'TVA',
+            'Montant TTC'
+        ]);
+
+        foreach ($invoices as $invoice) {
+            fputcsv($output, [
+                $invoice->invoice_number,
+                $invoice->type,
+                $invoice->client_name,
+                $invoice->client_phone ?? '',
+                $invoice->client_email ?? '',
+                $invoice->invoice_date->format('d/m/Y'),
+                $invoice->payment_mode ?? '',
+                number_format($invoice->montant_ht, 2),
+                number_format($invoice->tva, 2),
+                number_format($invoice->total_ttc, 2),
+            ]);
+        }
+
+        fclose($output);
+        exit;
+    }
+
+    public function statistics()
+    {
+        $totalInvoices = Invoice::count();
+        $manualInvoices = Invoice::manual()->count();
+        $automaticInvoices = Invoice::automatic()->count();
+
+        $totalRevenue = Invoice::sum('total_ttc');
+        $manualRevenue = Invoice::manual()->sum('total_ttc');
+        $automaticRevenue = Invoice::automatic()->sum('total_ttc');
+
+        $monthlyRevenue = Invoice::whereMonth('invoice_date', date('m'))
+            ->whereYear('invoice_date', date('Y'))
+            ->sum('total_ttc');
+
+        return view('invoices.statistics', compact(
+            'totalInvoices',
+            'manualInvoices',
+            'automaticInvoices',
+            'totalRevenue',
+            'manualRevenue',
+            'automaticRevenue',
+            'monthlyRevenue'
+        ));
     }
 }
