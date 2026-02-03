@@ -105,12 +105,17 @@
                 </div>
 
                 <!-- Client Email -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                    <input type="email" name="client_email" value="{{ old('client_email') }}"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                           placeholder="client@example.com">
-                </div>
+               <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">ICE</label>
+                <input type="text"
+                name="client_ice"
+                value="{{ old('client_ice') }}"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Ex: 001234567890123"
+                pattern="[0-9]{15}"
+                maxlength="15">
+            </div>
+
 
                 <!-- Client Address -->
                 <div>

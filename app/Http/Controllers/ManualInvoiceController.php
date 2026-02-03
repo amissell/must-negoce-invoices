@@ -33,7 +33,7 @@ class ManualInvoiceController extends Controller
             'client_name' => 'required|string|max:255',
             'client_address' => 'nullable|string|max:500',
             'client_phone' => 'nullable|string|max:50',
-            'client_email' => 'nullable|email|max:255',
+            'client_ice' => 'required|digits:15',
             'invoice_date' => 'required|date',
             'payment_mode' => 'required|in:CH,ESP,VIR,CB',
             'items' => 'required|array|min:1',
@@ -70,7 +70,7 @@ class ManualInvoiceController extends Controller
                 'client_name' => $validated['client_name'],
                 'client_address' => $validated['client_address'],
                 'client_phone' => $validated['client_phone'],
-                'client_email' => $validated['client_email'],
+                'client_ice' => 'required|digits:15',
                 'invoice_date' => $validated['invoice_date'],
                 'payment_mode' => $validated['payment_mode'],
                 'total_ttc' => $totalTTC,
@@ -165,4 +165,9 @@ class ManualInvoiceController extends Controller
             'unit_price' => $product->prix_ttc,
         ]);
     }
+    public function show($id)
+    {
+        return redirect()->route('invoices.index');
+    }
+
 }

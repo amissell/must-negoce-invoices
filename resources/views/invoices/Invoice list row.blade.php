@@ -1,10 +1,4 @@
-<!-- 
-    UPDATE YOUR INVOICE LIST TABLE
-    Add this badge next to invoice number to show type
-    Location: resources/views/invoices/index.blade.php
--->
 
-<!-- In your invoices table, add this badge column or modify existing row -->
 <tr>
     <td class="px-6 py-4">
         <div class="flex items-center">
@@ -110,10 +104,6 @@
         </div>
     </td>
 </tr>
-
-<!-- 
-    ALTERNATIVE: Add filter tabs at the top of the page
--->
 <div class="mb-6">
     <div class="border-b border-gray-200">
         <nav class="-mb-px flex space-x-8">

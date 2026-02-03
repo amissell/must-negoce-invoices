@@ -342,4 +342,9 @@ class InvoiceController extends Controller
             'monthlyRevenue'
         ));
     }
+    public function show($id)
+    {
+        return redirect()->route('invoices.index');
+    }
+
 }

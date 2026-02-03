@@ -316,7 +316,7 @@
     <div class="amount-words">
         <strong>Arrêter la présence facture a la somme :</strong> {{ strtoupper($amountInWords) }}
     </div>
-
+    
     <!-- Footer -->
     <div class="footer">
         <div class="footer-row"><strong>Adresse:</strong>MASSIRA 1 C IMM 90 MARRAKECH</div>
