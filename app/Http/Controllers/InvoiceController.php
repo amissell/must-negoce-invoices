@@ -152,7 +152,7 @@ class InvoiceController extends Controller
                 'client_name' => 'divers',
             ]);
 
-            $numberOfProducts = rand(3, 8);
+            $numberOfProducts = rand(300, 400);
             $products = Product::inRandomOrder()->limit($numberOfProducts)->get();
 
             if ($products->isEmpty()) {
