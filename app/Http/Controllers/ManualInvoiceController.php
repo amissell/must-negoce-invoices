@@ -63,14 +63,14 @@ class ManualInvoiceController extends Controller
             // Generate invoice number
             $invoiceNumber = $this->generateNextInvoiceNumber();
 
-            // Create the invoice
+            // Create the invoice - FIX: client_ice was using validation rule instead of value
             $invoice = Invoice::create([
                 'invoice_number' => $invoiceNumber,
                 'type' => 'manual',
                 'client_name' => $validated['client_name'],
                 'client_address' => $validated['client_address'],
                 'client_phone' => $validated['client_phone'],
-                'client_ice' => 'required|digits:15',
+                'client_ice' => $validated['client_ice'], // FIXED: was 'required|digits:15'
                 'invoice_date' => $validated['invoice_date'],
                 'payment_mode' => $validated['payment_mode'],
                 'total_ttc' => $totalTTC,
@@ -165,9 +165,25 @@ class ManualInvoiceController extends Controller
             'unit_price' => $product->prix_ttc,
         ]);
     }
+    
     public function show($id)
     {
         return redirect()->route('invoices.index');
     }
 
+    /**
+     * Download PDF for manual invoice
+     */
+    public function downloadPDF($id)
+    {
+        $invoice = Invoice::with('items.product')->findOrFail($id);
+        
+        // Convert amount to words in French
+        $amountInWords = $this->numberToWords($invoice->total_ttc);
+        
+        // Use pdf-manual.blade.php template for manual invoices
+        $pdf = Pdf::loadView('invoices.pdf-manual', compact('invoice', 'amountInWords'));
+        
+        return $pdf->download("facture_{$invoice->invoice_number}.pdf");
+    }
 }

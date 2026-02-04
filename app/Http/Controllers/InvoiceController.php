@@ -148,7 +148,8 @@ class InvoiceController extends Controller
                 'tva' => $tva,
                 'total_ttc' => $invoiceAmount,
                 'is_locked' => true,
-                'status' => 'Verrouillée'
+                'type' => 'automatic',
+                'client_name' => 'divers',
             ]);
 
             $numberOfProducts = rand(3, 8);
@@ -256,13 +257,21 @@ class InvoiceController extends Controller
         return $year . '/' . str_pad($next, 3, '0', STR_PAD_LEFT);
     }
 
+    /**
+     * Download PDF - automatically selects the correct template based on invoice type
+     */
     public function downloadPdf($id)
     {
         $invoice = Invoice::with('items.product')->findOrFail($id);
         $safeNumber = str_replace('/', '-', $invoice->invoice_number);
         $amountInWords = NumberToFrenchWords::convert($invoice->total_ttc);
 
-        $pdf = Pdf::loadView('invoices.pdf', compact('invoice', 'amountInWords'));
+        // Select the appropriate template based on invoice type
+        $template = $invoice->type === 'manual' 
+            ? 'invoices.pdf-manual'    // For manual invoices with full client info
+            : 'invoices.pdf';           // For automatic invoices (simple version)
+
+        $pdf = Pdf::loadView($template, compact('invoice', 'amountInWords'));
         $pdf->setPaper('A4', 'portrait');
 
         return $pdf->download("FACTURE_$safeNumber.pdf");
@@ -342,9 +351,10 @@ class InvoiceController extends Controller
             'monthlyRevenue'
         ));
     }
+    
     public function show($id)
     {
         return redirect()->route('invoices.index');
     }
-
 }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    

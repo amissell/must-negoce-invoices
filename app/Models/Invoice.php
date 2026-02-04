@@ -14,13 +14,17 @@ class Invoice extends Model
         'invoice_date',
         'montant_ht',
         'tva',
+        'tva_rate',
         'total_ttc',
         'is_locked',
         'type',
+        'client_name',
         'client_address',
         'client_phone',
-        'client_email',
-];
+        'client_ice',
+        'payment_mode',
+        'amount_in_words',
+    ];
 
     protected $casts = [
         'invoice_date' => 'datetime',
@@ -30,6 +34,7 @@ class Invoice extends Model
     {
         return $this->hasMany(InvoiceItem::class);
     }
+    
     public function isManual(): bool
     {
         return $this->type === 'manual';
@@ -39,9 +44,9 @@ class Invoice extends Model
     {
         return $query->where('type', 'manual');
     }
+    
     public function scopeAutomatic($query)
     {
         return $query->where('type', 'automatic');
     }
 }
-

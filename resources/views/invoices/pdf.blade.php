@@ -261,7 +261,7 @@
                 <td class="label">Nom de client :</td>
                 <td class="value">{{ $invoice->client_name ?? 'divers' }}</td>
                 <td class="label">MODE DE PAY :</td>
-                <td class="value">{{ $invoice->payment_mode ?? 'CH' }}</td>
+                <td class="value">{{ $invoice->payment_mode ?? 'ESP' }}</td>
             </tr>
         </table>
     </div>
