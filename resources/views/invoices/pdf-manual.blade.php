@@ -4,260 +4,297 @@
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Facture {{ $invoice->invoice_number }}</title>
-    <style>
-        @page {
-            margin: 10mm;
-            size: A4;
-        }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'DejaVu Sans', 'Arial', sans-serif;
-            font-size: 11px;
-            color: #000;
-            line-height: 1.4;
-            padding: 20px 30px;
-        }
-        
-        /* Header Section */
+<style>
+    @page {
+        margin: 8mm 10mm 8mm 10mm; 
+        size: A4;
+    }
+    
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: 'DejaVu Sans', 'Arial', sans-serif;
+        font-size: 10px; /* ✅ Taille de police réduite */
+        color: #000;
+        line-height: 1.3; /* ✅ Interligne réduit */
+        padding: 15px 20px; /* ✅ Padding réduit */
+    }
+    
+    /* Header Section */
+    .header {
+        display: table;
+        width: 100%;
+        margin-bottom: 12px; /* ✅ Marge réduite */
+        border-bottom: 2px solid #000;
+        padding-bottom: 10px; /* ✅ Padding réduit */
+    }
+    .header-left {
+        display: table-cell;
+        vertical-align: middle;
+        width: 70px; /* ✅ Logo plus petit */
+    }
+    .header-right {
+        display: table-cell;
+        vertical-align: middle;
+        padding-left: 12px;
+    }
+    .logo {
+        width: 60px; /* ✅ Logo réduit */
+        height: auto;
+    }
+    .company-name {
+        font-size: 20px; /* ✅ Taille réduite */
+        font-weight: bold;
+        margin-bottom: 2px;
+        letter-spacing: 0.5px;
+    }
+    .company-subtitle {
+        font-size: 9px; /* ✅ Taille réduite */
+        color: #555;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+    }
+    
+    /* Invoice Title */
+    .invoice-title {
+        font-size: 13px; /* ✅ Taille réduite */
+        font-weight: bold;
+        margin-bottom: 8px; /* ✅ Marge réduite */
+    }
+    
+    /* Invoice Info */
+    .invoice-info {
+        margin-bottom: 10px; /* ✅ Marge réduite */
+        font-size: 10px;
+    }
+    .invoice-info table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .invoice-info td {
+        padding: 3px 0; /* ✅ Padding réduit */
+        vertical-align: top;
+    }
+    .invoice-info .label {
+        font-weight: bold;
+        width: 25%;
+    }
+    .invoice-info .value {
+        width: 25%;
+    }
+    
+    /* Client Info Box - POUR FACTURES MANUELLES */
+    .client-box {
+        margin-bottom: 10px; /* ✅ Marge réduite */
+        padding: 8px 10px; /* ✅ Padding réduit */
+        border: 1px solid #ccc;
+        background-color: #f9f9f9;
+        page-break-inside: avoid; /* ✅ Évite la coupure */
+    }
+    .client-box .title {
+        font-weight: bold;
+        font-size: 10px;
+        margin-bottom: 6px;
+        color: #333;
+        text-transform: uppercase;
+    }
+    .client-info-row {
+        margin-bottom: 3px; /* ✅ Marge réduite */
+        font-size: 9px;
+    }
+    .client-info-row .label {
+        font-weight: bold;
+        display: inline-block;
+        width: 70px;
+    }
+    
+    /* Products Table - ✅ OPTIMISÉ POUR MAXIMUM DE LIGNES */
+    table.items {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 12px 0; /* ✅ Marge réduite */
+        font-size: 9px; /* ✅ Taille réduite */
+    }
+    table.items thead {
+        background-color: #e0e0e0;
+    }
+    table.items thead tr {
+        border: 2px solid #000;
+    }
+    table.items thead th {
+        padding: 6px 5px; /* ✅ Padding réduit */
+        font-weight: bold;
+        text-align: center;
+        border-right: 1px solid #999;
+        font-size: 10px;
+    }
+    table.items thead th:first-child {
+        text-align: left;
+        padding-left: 8px;
+    }
+    table.items thead th:last-child {
+        border-right: none;
+    }
+    
+    /* ✅ IMPORTANT: Lignes de produits avec hauteur minimale */
+    table.items tbody tr {
+        border-bottom: 1px solid #ddd;
+        height: auto; /* ✅ Hauteur automatique */
+    }
+    table.items tbody tr:last-child {
+        border-bottom: 2px solid #000;
+    }
+    table.items tbody td {
+        padding: 4px 5px; /* ✅ Padding minimal */
+        border-right: 1px solid #eee;
+        vertical-align: middle;
+    }
+    table.items tbody td:last-child {
+        border-right: none;
+    }
+    table.items td.description {
+        text-align: left;
+        padding-left: 8px;
+        width: 50%;
+    }
+    table.items td.qty {
+        text-align: center;
+        width: 12%;
+        font-family: 'DejaVu Sans Mono', monospace;
+    }
+    table.items td.price {
+        text-align: right;
+        width: 18%;
+        font-family: 'DejaVu Sans Mono', monospace;
+    }
+    table.items td.total {
+        text-align: right;
+        width: 20%;
+        font-weight: 600;
+        font-family: 'DejaVu Sans Mono', monospace;
+    }
+    
+    /* Totals Section */
+    .totals {
+        margin-top: 15px; /* ✅ Marge réduite */
+        margin-bottom: 15px;
+        page-break-inside: avoid; /* ✅ Évite la coupure */
+    }
+    .totals-table {
+        float: right;
+        width: 260px; /* ✅ Largeur réduite */
+        font-size: 10px;
+    }
+    .totals-table table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .totals-table tr {
+        border-bottom: 1px solid #ddd;
+    }
+    .totals-table td {
+        padding: 6px 8px; /* ✅ Padding réduit */
+    }
+    .totals-table .label {
+        font-weight: bold;
+        text-align: left;
+        width: 55%;
+    }
+    .totals-table .amount {
+        text-align: right;
+        font-weight: 600;
+        width: 45%;
+        font-family: 'DejaVu Sans Mono', monospace;
+    }
+    .total-ttc {
+        background-color: #f0f0f0;
+        font-size: 11px;
+        border-top: 2px solid #000 !important;
+        border-bottom: 2px solid #000 !important;
+    }
+    .total-ttc .label,
+    .total-ttc .amount {
+        font-weight: bold;
+        padding: 8px;
+    }
+    
+    /* Amount in Words */
+    .amount-words {
+        clear: both;
+        margin-top: 20px; /* ✅ Marge réduite */
+        margin-bottom: 15px;
+        padding: 10px 12px; /* ✅ Padding réduit */
+        background-color: #f8f8f8;
+        border: 1px solid #ddd;
+        font-size: 9px;
+        line-height: 1.5;
+        page-break-inside: avoid; /* ✅ Évite la coupure */
+    }
+    .amount-words strong {
+        font-weight: bold;
+    }
+    
+    /* ✅ FOOTER - UNIQUEMENT SUR LA DERNIÈRE PAGE */
+    .footer {
+        margin-top: 20px; /* ✅ Marge réduite */
+        padding-top: 12px;
+        border-top: 2px solid #000;
+        font-size: 9px;
+        line-height: 1.6;
+        page-break-inside: avoid; /* ✅ Ne se coupe jamais */
+    }
+    .footer-row {
+        margin: 2px 0;
+    }
+    .footer strong {
+        font-weight: bold;
+    }
+    .footer-inline {
+        display: inline;
+    }
+    .footer-inline span {
+        margin-right: 15px;
+    }
+    
+    /* ✅ RÈGLES DE PAGINATION */
+    @media print {
+        /* Le header ne se répète PAS sur chaque page */
         .header {
-            display: table;
-            width: 100%;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #000;
-            padding-bottom: 15px;
-        }
-        .header-left {
-            display: table-cell;
-            vertical-align: middle;
-            width: 80px;
-        }
-        .header-right {
-            display: table-cell;
-            vertical-align: middle;
-            padding-left: 15px;
-        }
-        .logo {
-            width: 70px;
-            height: auto;
-        }
-        .company-name {
-            font-size: 22px;
-            font-weight: bold;
-            margin-bottom: 3px;
-            letter-spacing: 0.5px;
-        }
-        .company-subtitle {
-            font-size: 10px;
-            color: #555;
-            letter-spacing: 2px;
-            text-transform: uppercase;
+            page-break-after: avoid;
         }
         
-        /* Invoice Title */
-        .invoice-title {
-            font-size: 14px;
-            font-weight: bold;
-            margin-bottom: 12px;
-        }
-        
-        /* Invoice Info */
-        .invoice-info {
-            margin-bottom: 15px;
-            font-size: 11px;
-        }
-        .invoice-info table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .invoice-info td {
-            padding: 4px 0;
-            vertical-align: top;
-        }
-        .invoice-info .label {
-            font-weight: bold;
-            width: 25%;
-        }
-        .invoice-info .value {
-            width: 25%;
-        }
-        
-        /* Client Info Box - POUR FACTURES MANUELLES */
-        .client-box {
-            margin-bottom: 15px;
-            padding: 10px 12px;
-            border: 1px solid #ccc;
-            background-color: #f9f9f9;
-        }
-        .client-box .title {
-            font-weight: bold;
-            font-size: 11px;
-            margin-bottom: 8px;
-            color: #333;
-            text-transform: uppercase;
-        }
-        .client-info-row {
-            margin-bottom: 4px;
-            font-size: 10px;
-        }
-        .client-info-row .label {
-            font-weight: bold;
-            display: inline-block;
-            width: 75px;
-        }
-        
-        /* Products Table */
+        /* Le tableau peut continuer sur plusieurs pages */
         table.items {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            font-size: 10px;
+            page-break-inside: auto;
         }
+        
         table.items thead {
-            background-color: #e0e0e0;
+            display: table-header-group; /* ✅ Header du tableau SE RÉPÈTE */
         }
-        table.items thead tr {
-            border: 2px solid #000;
-        }
-        table.items thead th {
-            padding: 10px 8px;
-            font-weight: bold;
-            text-align: center;
-            border-right: 1px solid #999;
-            font-size: 11px;
-        }
-        table.items thead th:first-child {
-            text-align: left;
-            padding-left: 12px;
-        }
-        table.items thead th:last-child {
-            border-right: none;
-        }
+        
         table.items tbody tr {
-            border-bottom: 1px solid #ddd;
-        }
-        table.items tbody tr:last-child {
-            border-bottom: 2px solid #000;
-        }
-        table.items tbody td {
-            padding: 6px 8px;
-            border-right: 1px solid #eee;
-            vertical-align: middle;
-        }
-        table.items tbody td:last-child {
-            border-right: none;
-        }
-        table.items td.description {
-            text-align: left;
-            padding-left: 12px;
-            width: 50%;
-        }
-        table.items td.qty {
-            text-align: center;
-            width: 12%;
-            font-family: 'DejaVu Sans Mono', monospace;
-        }
-        table.items td.price {
-            text-align: right;
-            width: 18%;
-            font-family: 'DejaVu Sans Mono', monospace;
-        }
-        table.items td.total {
-            text-align: right;
-            width: 20%;
-            font-weight: 600;
-            font-family: 'DejaVu Sans Mono', monospace;
+            page-break-inside: avoid; /* ✅ Une ligne ne se coupe jamais */
         }
         
-        /* Totals Section */
-        .totals {
-            margin-top: 25px;
-            margin-bottom: 20px;
-        }
-        .totals-table {
-            float: right;
-            width: 280px;
-            font-size: 11px;
-        }
-        .totals-table table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .totals-table tr {
-            border-bottom: 1px solid #ddd;
-        }
-        .totals-table td {
-            padding: 8px 10px;
-        }
-        .totals-table .label {
-            font-weight: bold;
-            text-align: left;
-            width: 55%;
-        }
-        .totals-table .amount {
-            text-align: right;
-            font-weight: 600;
-            width: 45%;
-            font-family: 'DejaVu Sans Mono', monospace;
-        }
-        .total-ttc {
-            background-color: #f0f0f0;
-            font-size: 12px;
-            border-top: 2px solid #000 !important;
-            border-bottom: 2px solid #000 !important;
-        }
-        .total-ttc .label,
-        .total-ttc .amount {
-            font-weight: bold;
-            padding: 10px;
-        }
-        
-        /* Amount in Words */
-        .amount-words {
-            clear: both;
-            margin-top: 50px;
-            margin-bottom: 30px;
-            padding: 12px 15px;
-            background-color: #f8f8f8;
-            border: 1px solid #ddd;
-            font-size: 10px;
-            line-height: 1.6;
-        }
-        .amount-words strong {
-            font-weight: bold;
-        }
-        
-        /* Footer */
+        /* Totals et footer restent ensemble */
+        .totals,
+        .amount-words,
         .footer {
-            margin-top: 40px;
-            padding-top: 15px;
-            border-top: 2px solid #000;
-            font-size: 10px;
-            line-height: 1.8;
+            page-break-inside: avoid;
         }
-        .footer-row {
-            margin: 3px 0;
-        }
-        .footer strong {
-            font-weight: bold;
-        }
-        .footer-inline {
-            display: inline;
-        }
-        .footer-inline span {
-            margin-right: 20px;
-        }
-        
-        /* Clearfix */
-        .clearfix::after {
-            content: "";
-            display: table;
-            clear: both;
-        }
-    </style>
+    }
+    
+    /* Clearfix */
+    .clearfix::after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+</style>
 </head>
 <body>
     <!-- Header with Logo -->
