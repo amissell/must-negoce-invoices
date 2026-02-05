@@ -97,7 +97,7 @@ class ManualInvoiceController extends Controller
             DB::commit();
 
             return redirect()
-                ->route('invoices.show', $invoice)
+                ->route('invoices.index', $invoice)
                 ->with('success', 'Facture manuelle créée avec succès!');
 
         } catch (\Exception $e) {

@@ -4,135 +4,101 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'MUST NEGOCE - Gestion de Factures')</title>
+    <title>@yield('title', 'MUST NEGOCE') - Gestion de Factures</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
-
-:root {
-    --primary: #3b5bdb;
-    --primary-light: #4c6ef5;
-    --accent: #20c997;
-    --invoice-automatic: #3b5bdb;
-    --invoice-manual: #20c997;
-}
-
-body {
-    font-family: 'Inter', sans-serif;
-}
-
-.font-display {
-    font-family: 'Space Grotesk', sans-serif;
-}
-
-/* Card shadows */
-.card-shadow {
-    box-shadow: 0 4px 20px -4px rgba(30, 41, 59, 0.08);
-}
-
-.card-hover {
-    transition: all 0.3s ease;
-}
-.card-hover:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 40px -12px rgba(30, 41, 59, 0.15);
-}
-
-/* Animations */
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in {
-    animation: fadeInUp 0.4s ease-out forwards;
-}
-
-.animate-delay-1 { animation-delay: 0.1s; }
-.animate-delay-2 { animation-delay: 0.2s; }
-.animate-delay-3 { animation-delay: 0.3s; }
-
-/* Gradient backgrounds */
-.gradient-primary {
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
-}
-
-.gradient-accent {
-    background: linear-gradient(135deg, var(--accent), #38d9a9);
-}
-
-/* Stats card icon hover */
-.stat-icon {
-    transition: transform 0.3s ease;
-}
-.stat-card:hover .stat-icon {
-    transform: scale(1.1);
-}
-
-/* Button glow effect */
-.btn-glow {
-    box-shadow: 0 4px 15px -3px rgba(59, 91, 219, 0.4);
-    transition: all 0.3s ease;
-}
-.btn-glow:hover {
-    box-shadow: 0 8px 25px -5px rgba(59, 91, 219, 0.5);
-}
-
-/* Table row animation */
-.table-row {
-    opacity: 0;
-    animation: fadeInUp 0.3s ease-out forwards;
-}
-
+        * { font-family: 'Inter', sans-serif; }
+        .gradient-header { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 50%, #3b7cb8 100%); }
+        .card-shadow { box-shadow: 0 4px 20px -4px rgba(30, 58, 95, 0.15); }
+        .btn-primary { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); }
+        .btn-primary:hover { background: linear-gradient(135deg, #2d5a87 0%, #3b7cb8 100%); }
     </style>
     @stack('styles')
 </head>
-<body class="bg-gray-50">
-    <!-- Header -->
-    <div class="bg-gray-800 text-white p-4 flex justify-between items-center">
-        <div>
-            <h1 class="text-xl font-bold">MUST NEGOCE</h1>
-            <p class="text-sm text-gray-400">Gestion de Factures</p>
-        </div>
-        <div class="flex items-center space-x-4">
-            <a href="{{ route('invoices.index') }}" 
-               class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition">
-                ← Retour aux factures
-            </a>
-        </div>
-    </div>
+<body class="bg-gray-50 min-h-screen">
+    {{-- Navigation --}}
+    <nav class="gradient-header text-white sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                {{-- Logo --}}
+                <a href="{{ route('invoices.index') }}" class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold">MUST NEGOCE</h1>
+                        <p class="text-xs text-white/60">Gestion de Factures</p>
+                    </div>
+                </a>
 
-    <!-- Main Content -->
-    <main class="container mx-auto p-8">
-        @if(session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
-            {{ session('success') }}
-        </div>
-        @endif
+                {{-- Navigation Links --}}
+                <div class="hidden md:flex items-center gap-1">
+                    <a href="{{ route('invoices.index') }}" 
+                       class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('invoices.index') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                        📊 Tableau de Bord
+                    </a>
+                    <a href="{{ route('products.index') }}" 
+                       class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('products.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                        📦 Produits
+                    </a>
+                    <a href="{{ route('invoices.manual.create') }}" 
+                       class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('invoices.manual.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                        ✏️ Facture Manuelle
+                    </a>
+                </div>
 
-        @if(session('error'))
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-            {{ session('error') }}
+                {{-- Mobile Menu Button --}}
+                <button id="mobileMenuBtn" class="md:hidden p-2 rounded-lg hover:bg-white/10">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+            </div>
         </div>
-        @endif
 
-        @if ($errors->any())
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-            <ul class="list-disc list-inside">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
+        {{-- Mobile Menu --}}
+        <div id="mobileMenu" class="hidden md:hidden border-t border-white/10">
+            <div class="px-4 py-3 space-y-2">
+                <a href="{{ route('invoices.index') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">📊 Tableau de Bord</a>
+                <a href="{{ route('products.index') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">📦 Produits</a>
+                <a href="{{ route('invoices.manual.create') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">✏️ Facture Manuelle</a>
+            </div>
         </div>
-        @endif
+    </nav>
 
+    {{-- Flash Messages --}}
+    @if(session('success'))
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+            <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl flex items-center gap-3">
+                <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                {{ session('success') }}
+            </div>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+            <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl">
+                {{ session('error') }}
+            </div>
+        </div>
+    @endif
+
+    {{-- Main Content --}}
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         @yield('content')
     </main>
 
+    <script>
+        document.getElementById('mobileMenuBtn')?.addEventListener('click', function() {
+            document.getElementById('mobileMenu').classList.toggle('hidden');
+        });
+    </script>
     @stack('scripts')
 </body>
 </html>

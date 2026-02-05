@@ -215,7 +215,7 @@
             <select name="items[INDEX][product_id]" required class="product-select w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                 <option value="">Sélectionner un produit</option>
                 @foreach($products as $product)
-                    <option value="{{ $product->id }}" data-price="{{ $product->unit_price }}" data-name="{{ $product->name }}">
+                    <option value="{{ $product->id }}" data-price="{{ $product->prix_ttc }}" data-name="{{ $product->name }}">
                         {{ $product->name }}
                     </option>
                 @endforeach
@@ -255,57 +255,63 @@ document.addEventListener('DOMContentLoaded', function() {
     addItemBtn.addEventListener('click', addItem);
 
     // Add item function
-    function addItem() {
-        const template = document.getElementById('itemRowTemplate');
-        const clone = template.content.cloneNode(true);
-        
-        // Replace INDEX with actual index
-        const row = clone.querySelector('tr');
-        row.innerHTML = row.innerHTML.replaceAll('INDEX', itemIndex);
-        
-        itemsBody.appendChild(clone);
-        
-        // Hide no items message
-        noItemsMessage.style.display = 'none';
-        
-        // Attach event listeners
-        attachRowEventListeners(itemsBody.lastElementChild);
-        
-        itemIndex++;
-        updateSubmitButton();
-    }
+    // Add item function
+function addItem() {
+    const template = document.getElementById('itemRowTemplate');
+    const clone = template.content.cloneNode(true);
+    
+    // Replace INDEX with actual index
+    const row = clone.querySelector('tr');
+    row.innerHTML = row.innerHTML.replaceAll('INDEX', itemIndex);
+    
+    itemsBody.appendChild(clone);
+    
+    // Hide no items message
+    noItemsMessage.style.display = 'none';
+    
+    // ✅ IMPORTANT: Get the actual appended row (not the clone)
+    const addedRow = itemsBody.lastElementChild;
+    
+    // Attach event listeners to the newly added row
+    attachRowEventListeners(addedRow);
+    
+    itemIndex++;
+    updateSubmitButton();
+}
 
     // Attach event listeners to a row
-    function attachRowEventListeners(row) {
-        const productSelect = row.querySelector('.product-select');
-        const quantityInput = row.querySelector('.quantity-input');
-        const priceInput = row.querySelector('.price-input');
-        const removeBtn = row.querySelector('.remove-item');
+    // Attach event listeners to a row
+function attachRowEventListeners(row) {
+    const productSelect = row.querySelector('.product-select');
+    const quantityInput = row.querySelector('.quantity-input');
+    const priceInput = row.querySelector('.price-input');
+    const removeBtn = row.querySelector('.remove-item');
 
-        // Product selection
-        productSelect.addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const price = selectedOption.dataset.price;
-            if (price) {
-                priceInput.value = parseFloat(price).toFixed(2);
-                calculateRowTotal(row);
-            }
-        });
+    // Product selection - ✅ This should auto-fill the price
+    productSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const price = selectedOption.getAttribute('data-price'); // ✅ Changed to getAttribute
+        
+        if (price && price !== '') {
+            priceInput.value = parseFloat(price).toFixed(2);
+            calculateRowTotal(row);
+        }
+    });
 
-        // Quantity or price change
-        quantityInput.addEventListener('input', () => calculateRowTotal(row));
-        priceInput.addEventListener('input', () => calculateRowTotal(row));
+    // Quantity or price change
+    quantityInput.addEventListener('input', () => calculateRowTotal(row));
+    priceInput.addEventListener('input', () => calculateRowTotal(row));
 
-        // Remove button
-        removeBtn.addEventListener('click', function() {
-            row.remove();
-            if (itemsBody.children.length === 0) {
-                noItemsMessage.style.display = 'block';
-            }
-            calculateGrandTotal();
-            updateSubmitButton();
-        });
-    }
+    // Remove button
+    removeBtn.addEventListener('click', function() {
+        row.remove();
+        if (itemsBody.children.length === 0) {
+            noItemsMessage.style.display = 'block';
+        }
+        calculateGrandTotal();
+        updateSubmitButton();
+    });
+}
 
     // Calculate row total
     function calculateRowTotal(row) {
@@ -318,21 +324,23 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Calculate grand total
-    function calculateGrandTotal() {
-        let totalTTC = 0;
-        
-        document.querySelectorAll('.item-total').forEach(span => {
-            totalTTC += parseFloat(span.textContent) || 0;
-        });
+    // Calculate grand total
+function calculateGrandTotal() {
+    let montantHT = 0;
+    
+    // Sum all item totals (these are HT prices)
+    document.querySelectorAll('.item-total').forEach(span => {
+        montantHT += parseFloat(span.textContent) || 0;
+    });
 
-        const tvaRate = 0.20; // 20%
-        const montantHT = totalTTC / (1 + tvaRate);
-        const tva = totalTTC - montantHT;
+    const tvaRate = 0.20; // 20%
+    const tva = montantHT * tvaRate;
+    const totalTTC = montantHT + tva;
 
-        document.getElementById('totalTTC').textContent = totalTTC.toFixed(2) + ' MAD';
-        document.getElementById('tvaAmount').textContent = tva.toFixed(2) + ' MAD';
-        document.getElementById('montantHT').textContent = montantHT.toFixed(2) + ' MAD';
-    }
+    document.getElementById('montantHT').textContent = montantHT.toFixed(2) + ' MAD';
+    document.getElementById('tvaAmount').textContent = tva.toFixed(2) + ' MAD';
+    document.getElementById('totalTTC').textContent = totalTTC.toFixed(2) + ' MAD';
+}
 
     // Update submit button state
     function updateSubmitButton() {
