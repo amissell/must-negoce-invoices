@@ -27,32 +27,94 @@
         <!-- Main Content -->
         <div class="flex-1 overflow-auto">
             <!-- Header -->
-            <div class="bg-gray-800 text-white p-4 flex justify-between items-center">
+<header class="bg-white border-b border-gray-100 sticky top-0 z-50 backdrop-blur-sm bg-white/95">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
                 <div>
-                    <h1 class="text-xl font-bold">MUST NEGOCE</h1>
-                    <p class="text-sm text-gray-400">Gestion de Factures</p>
+                    <h1 class="font-display text-xl font-bold text-gray-900">MUST NEGOCE</h1>
+                    <p class="text-xs text-gray-500">Gestion de Factures</p>
                 </div>
-                <div class="flex items-center space-x-4">
-
-<!-- Manual Invoice Creation Button -->
-<a href="{{ route('invoices.manual.create') }}" 
-   class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5">
-    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-    </svg>
-    Créer Facture Manuelle
-</a>
-                </div>
-
+            </div>
+            <a href="{{ route('invoices.manual.create') }}" 
+               class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl font-medium btn-glow hover:bg-blue-700 transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Nouvelle Facture
+            </a>
         </div>
+    </div>
+</header>
+{{-- Add this after your header, before the invoice generator form --}}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    {{-- Total Invoices --}}
+    <div class="stat-card bg-white rounded-xl p-6 card-shadow card-hover animate-fade-in">
+        <div class="flex items-center gap-4">
+            <div class="stat-icon p-3 rounded-xl bg-blue-50">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+            </div>
+            <div>
+                <p class="font-display text-2xl font-bold text-gray-900">{{ $invoices->count() }}</p>
+                <p class="text-sm text-gray-500">Total factures</p>
+            </div>
+        </div>
+    </div>
 
-            <div class="p-8">
-                <!-- Success Message -->
-                @if(session('success'))
-                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
-                    {{ session('success') }}
-                </div>
-                @endif
+    {{-- Automatic Invoices --}}
+    <div class="stat-card bg-white rounded-xl p-6 card-shadow card-hover animate-fade-in animate-delay-1">
+        <div class="flex items-center gap-4">
+            <div class="stat-icon p-3 rounded-xl bg-indigo-50">
+                <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            <div>
+                <p class="font-display text-2xl font-bold text-gray-900">{{ $invoices->where('invoice_type', 'automatic')->count() }}</p>
+                <p class="text-sm text-gray-500">Automatiques</p>
+            </div>
+        </div>
+    </div>
+
+    {{-- Manual Invoices --}}
+    <div class="stat-card bg-white rounded-xl p-6 card-shadow card-hover animate-fade-in animate-delay-2">
+        <div class="flex items-center gap-4">
+            <div class="stat-icon p-3 rounded-xl bg-emerald-50">
+                <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+            </div>
+            <div>
+                <p class="font-display text-2xl font-bold text-gray-900">{{ $invoices->where('invoice_type', 'manual')->count() }}</p>
+                <p class="text-sm text-gray-500">Manuelles</p>
+            </div>
+        </div>
+    </div>
+
+    {{-- Total Revenue --}}
+    <div class="stat-card bg-white rounded-xl p-6 card-shadow card-hover animate-fade-in animate-delay-3">
+        <div class="flex items-center gap-4">
+            <div class="stat-icon p-3 rounded-xl bg-amber-50">
+                <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                </svg>
+            </div>
+            <div>
+                <p class="font-display text-2xl font-bold text-emerald-600">{{ number_format($invoices->sum('total_ttc'), 0, ',', ' ') }}</p>
+                <p class="text-sm text-gray-500">Chiffre d'affaires (MAD)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 
                 <div class="grid grid-cols-3 gap-8">
                     <!-- Left Column: Generate Invoices -->
@@ -105,44 +167,64 @@
                             </div>
 
                             <div class="overflow-x-auto">
-                                <table class="w-full">
-                                    <thead class="bg-gray-50 border-b">
-                                        <tr>
-                                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">N° Facture</th>
-                                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Date</th>
-                                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Montant HT</th>
-                                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">TVA</th>
-                                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Total TTC</th>
-                                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y">
-                                        @forelse($invoices as $invoice)
-                                        <tr class="hover:bg-gray-50">
-                                            <td class="px-4 py-3 text-sm">{{ $invoice->invoice_number }}</td>
-                                            <td class="px-4 py-3 text-sm">{{ $invoice->invoice_date->format('d F Y') }}</td>
-                                            <td class="px-4 py-3 text-sm">{{ number_format($invoice->montant_ht, 2) }} MAD</td>
-                                            <td class="px-4 py-3 text-sm">{{ number_format($invoice->tva, 2) }} MAD</td>
-                                            <td class="px-4 py-3 text-sm font-semibold">{{ number_format($invoice->total_ttc, 2) }} MAD</td>
-                                            <td class="px-4 py-3">
-                                                <a 
-                                                    href="{{ route('invoices.download', $invoice->id) }}" 
-                                                    class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium"
-                                                    title="Télécharger PDF"
-                                                >
-                                                    ⬇️
-                                                </a>
-                                            </td>
-                                        </tr>
-                                        @empty
-                                        <tr>
-                                            <td colspan="7" class="px-4 py-8 text-center text-gray-500">
-                                                Aucune facture générée. Commencez par entrer un montant global ci-dessus.
-                                            </td>
-                                        </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
+{{-- Replace your table body --}}
+<tbody>
+    @forelse($invoices as $index => $invoice)
+    <tr class="table-row hover:bg-gray-50 border-b border-gray-100" style="animation-delay: {{ $index * 0.05 }}s">
+        <td class="px-4 py-4">
+            <div class="flex items-center gap-3">
+                <span class="font-semibold text-gray-900">{{ $invoice->invoice_number }}</span>
+                @if($invoice->invoice_type === 'manual')
+                    <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-100 text-emerald-700">Manuel</span>
+                @else
+                    <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-700">Auto</span>
+                @endif
+            </div>
+        </td>
+        <td class="px-4 py-4 text-sm text-gray-600">{{ $invoice->invoice_date->format('d/m/Y') }}</td>
+        <td class="px-4 py-4 text-sm font-mono text-gray-700">{{ number_format($invoice->montant_ht, 2, ',', ' ') }} MAD</td>
+        <td class="px-4 py-4 text-sm font-mono text-gray-500">{{ number_format($invoice->tva, 2, ',', ' ') }} MAD</td>
+        <td class="px-4 py-4">
+            <span class="font-semibold font-mono text-gray-900">{{ number_format($invoice->total_ttc, 2, ',', ' ') }} MAD</span>
+        </td>
+        <td class="px-4 py-4">
+            <div class="flex items-center gap-2">
+                <a href="{{ route('invoices.download', $invoice->id) }}" 
+                   class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                   title="Télécharger PDF">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </a>
+                <form action="" method="POST" class="inline" onsubmit="return confirm('Supprimer cette facture?')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </td>
+    </tr>
+    @empty
+    <tr>
+        <td colspan="6" class="px-4 py-16 text-center">
+            <div class="flex flex-col items-center">
+                <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+                <h3 class="font-semibold text-gray-900 mb-1">Aucune facture</h3>
+                <p class="text-sm text-gray-500">Générez votre première facture ci-dessus</p>
+            </div>
+        </td>
+    </tr>
+    @endforelse
+</tbody>
+
                             </div>
                         </div>
                     </div>
