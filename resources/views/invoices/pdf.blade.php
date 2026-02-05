@@ -239,26 +239,29 @@
         font-weight: bold;
     }
     
-    /* ✅ FOOTER - UNIQUEMENT SUR LA DERNIÈRE PAGE */
-    .footer {
+     .footer {
         margin-top: 20px; /* ✅ Marge réduite */
         padding-top: 12px;
         border-top: 2px solid #000;
         font-size: 9px;
         line-height: 1.6;
-        page-break-inside: avoid; /* ✅ Ne se coupe jamais */
+        page-break-inside: avoid;
+        text-align: center;
     }
     .footer-row {
         margin: 2px 0;
+        text-align: center;
     }
     .footer strong {
         font-weight: bold;
     }
     .footer-inline {
-        display: inline;
+        display: block;
+        text-align: center;
     }
     .footer-inline span {
         margin-right: 15px;
+        display: inline-block;
     }
     
     /* ✅ RÈGLES DE PAGINATION */

@@ -74,7 +74,7 @@
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         <option value="CH" {{ old('payment_mode') == 'CH' ? 'selected' : '' }}>Chèque (CH)</option>
                         <option value="ESP" {{ old('payment_mode') == 'ESP' ? 'selected' : '' }}>Espèces (ESP)</option>
-                        <option value="LC" {{ old('payment_mode') == 'LC' ? 'selected' : '' }}>(LC)</option>
+                        <option value="LCN" {{ old('payment_mode') == 'LCN' ? 'selected' : '' }}>(LCN)</option>
                     </select>
                 </div>
             </div>

@@ -245,19 +245,23 @@
         border-top: 2px solid #000;
         font-size: 9px;
         line-height: 1.6;
-        page-break-inside: avoid; /* ✅ Ne se coupe jamais */
+        page-break-inside: avoid;
+        text-align: center;
     }
     .footer-row {
         margin: 2px 0;
+        text-align: center;
     }
     .footer strong {
         font-weight: bold;
     }
     .footer-inline {
-        display: inline;
+        display: block;
+        text-align: center;
     }
     .footer-inline span {
         margin-right: 15px;
+        display: inline-block;
     }
     
     /* ✅ RÈGLES DE PAGINATION */

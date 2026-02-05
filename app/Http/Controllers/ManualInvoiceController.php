@@ -35,7 +35,7 @@ class ManualInvoiceController extends Controller
             'client_phone' => 'nullable|string|max:50',
             'client_ice' => 'required|digits:15',
             'invoice_date' => 'required|date',
-            'payment_mode' => 'required|in:CH,ESP,VIR,CB',
+            'payment_mode' => 'required|in:CH,ESP,LCN',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
