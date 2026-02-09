@@ -7,7 +7,7 @@
 
 <style>
     @page {
-        margin: 8mm 10mm 8mm 10mm; /* ✅ Marges réduites pour plus d'espace */
+        margin: 8mm 10mm 8mm 10mm;
         size: A4;
     }
     
@@ -19,24 +19,24 @@
     
     body {
         font-family: 'DejaVu Sans', 'Arial', sans-serif;
-        font-size: 10px; /* ✅ Taille de police réduite */
+        font-size: 10px;
         color: #000;
-        line-height: 1.3; /* ✅ Interligne réduit */
-        padding: 15px 20px; /* ✅ Padding réduit */
+        line-height: 1.3;
+        padding: 15px 20px;
     }
     
     /* Header Section */
     .header {
         display: table;
         width: 100%;
-        margin-bottom: 12px; /* ✅ Marge réduite */
+        margin-bottom: 12px; 
         border-bottom: 2px solid #000;
-        padding-bottom: 10px; /* ✅ Padding réduit */
+        padding-bottom: 10px;
     }
     .header-left {
         display: table-cell;
         vertical-align: middle;
-        width: 70px; /* ✅ Logo plus petit */
+        width: 70px;
     }
     .header-right {
         display: table-cell;
@@ -44,17 +44,17 @@
         padding-left: 12px;
     }
     .logo {
-        width: 60px; /* ✅ Logo réduit */
+        width: 60px;
         height: auto;
     }
     .company-name {
-        font-size: 20px; /* ✅ Taille réduite */
+        font-size: 20px;
         font-weight: bold;
         margin-bottom: 2px;
         letter-spacing: 0.5px;
     }
     .company-subtitle {
-        font-size: 9px; /* ✅ Taille réduite */
+        font-size: 9px;
         color: #555;
         letter-spacing: 1.5px;
         text-transform: uppercase;
@@ -62,14 +62,14 @@
     
     /* Invoice Title */
     .invoice-title {
-        font-size: 13px; /* ✅ Taille réduite */
+        font-size: 13px;
         font-weight: bold;
-        margin-bottom: 8px; /* ✅ Marge réduite */
+        margin-bottom: 8px;
     }
     
     /* Invoice Info */
     .invoice-info {
-        margin-bottom: 10px; /* ✅ Marge réduite */
+        margin-bottom: 10px;
         font-size: 10px;
     }
     .invoice-info table {
@@ -77,7 +77,7 @@
         border-collapse: collapse;
     }
     .invoice-info td {
-        padding: 3px 0; /* ✅ Padding réduit */
+        padding: 3px 0;
         vertical-align: top;
     }
     .invoice-info .label {
@@ -90,11 +90,11 @@
     
     /* Client Info Box - POUR FACTURES MANUELLES */
     .client-box {
-        margin-bottom: 10px; /* ✅ Marge réduite */
-        padding: 8px 10px; /* ✅ Padding réduit */
+        margin-bottom: 10px;
+        padding: 8px 10px;
         border: 1px solid #ccc;
         background-color: #f9f9f9;
-        page-break-inside: avoid; /* ✅ Évite la coupure */
+        page-break-inside: avoid;
     }
     .client-box .title {
         font-weight: bold;
@@ -104,7 +104,7 @@
         text-transform: uppercase;
     }
     .client-info-row {
-        margin-bottom: 3px; /* ✅ Marge réduite */
+        margin-bottom: 3px;
         font-size: 9px;
     }
     .client-info-row .label {
@@ -117,8 +117,8 @@
     table.items {
         width: 100%;
         border-collapse: collapse;
-        margin: 12px 0; /* ✅ Marge réduite */
-        font-size: 9px; /* ✅ Taille réduite */
+        margin: 12px 0;
+        font-size: 9px;
     }
     table.items thead {
         background-color: #e0e0e0;
@@ -127,7 +127,7 @@
         border: 2px solid #000;
     }
     table.items thead th {
-        padding: 6px 5px; /* ✅ Padding réduit */
+        padding: 6px 5px;
         font-weight: bold;
         text-align: center;
         border-right: 1px solid #999;
@@ -144,13 +144,13 @@
     /* ✅ IMPORTANT: Lignes de produits avec hauteur minimale */
     table.items tbody tr {
         border-bottom: 1px solid #ddd;
-        height: auto; /* ✅ Hauteur automatique */
+        height: auto;
     }
     table.items tbody tr:last-child {
         border-bottom: 2px solid #000;
     }
     table.items tbody td {
-        padding: 4px 5px; /* ✅ Padding minimal */
+        padding: 4px 5px;
         border-right: 1px solid #eee;
         vertical-align: middle;
     }
@@ -181,13 +181,13 @@
     
     /* Totals Section */
     .totals {
-        margin-top: 15px; /* ✅ Marge réduite */
+        margin-top: 15px;
         margin-bottom: 15px;
-        page-break-inside: avoid; /* ✅ Évite la coupure */
+        page-break-inside: avoid;
     }
     .totals-table {
         float: right;
-        width: 260px; /* ✅ Largeur réduite */
+        width: 260px;
         font-size: 10px;
     }
     .totals-table table {
@@ -198,7 +198,7 @@
         border-bottom: 1px solid #ddd;
     }
     .totals-table td {
-        padding: 6px 8px; /* ✅ Padding réduit */
+        padding: 6px 8px;
     }
     .totals-table .label {
         font-weight: bold;
@@ -226,21 +226,21 @@
     /* Amount in Words */
     .amount-words {
         clear: both;
-        margin-top: 20px; /* ✅ Marge réduite */
+        margin-top: 20px;
         margin-bottom: 15px;
-        padding: 10px 12px; /* ✅ Padding réduit */
+        padding: 10px 12px;
         background-color: #f8f8f8;
         border: 1px solid #ddd;
         font-size: 9px;
         line-height: 1.5;
-        page-break-inside: avoid; /* ✅ Évite la coupure */
+        page-break-inside: avoid;
     }
     .amount-words strong {
         font-weight: bold;
     }
     
      .footer {
-        margin-top: 20px; /* ✅ Marge réduite */
+        margin-top: 20px;
         padding-top: 12px;
         border-top: 2px solid #000;
         font-size: 9px;
@@ -277,11 +277,11 @@
         }
         
         table.items thead {
-            display: table-header-group; /* ✅ Header du tableau SE RÉPÈTE */
+            display: table-header-group;
         }
         
         table.items tbody tr {
-            page-break-inside: avoid; /* ✅ Une ligne ne se coupe jamais */
+            page-break-inside: avoid;
         }
         
         /* Totals et footer restent ensemble */

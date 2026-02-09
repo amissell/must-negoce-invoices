@@ -134,8 +134,9 @@ class InvoiceController extends Controller
 
             if ($invoiceAmount < 100) break;
 
-            $montantHT = round($invoiceAmount / 1.2, 2);
-            $tva = round($invoiceAmount - $montantHT, 2);
+            // ✅ CORRECTION: Calcul TVA
+            $tva = round($invoiceAmount * 0.2, 2);
+            $montantHT = round($invoiceAmount - $tva, 2);
 
             $startDate = \Carbon\Carbon::create(2026, 1, 1);
             $endDate = \Carbon\Carbon::now();
@@ -195,8 +196,9 @@ class InvoiceController extends Controller
 
     private function createSingleInvoice($customerName, $items, $totalTtc)
     {
-        $montantHt = round($totalTtc / 1.2, 2);
-        $tva = round($totalTtc - $montantHt, 2);
+        // ✅ CORRECTION: Calcul TVA
+        $tva = round($totalTtc * 0.2, 2);
+        $montantHt = round($totalTtc - $tva, 2);
 
         $invoice = Invoice::create([
             'invoice_number' => $this->generateInvoiceNumber(),
@@ -365,6 +367,5 @@ class InvoiceController extends Controller
         $invoice->delete();
         
         return redirect()->route('invoices.index')->with('success', 'Facture supprimée avec succès!');
-        }
+    }
 }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    

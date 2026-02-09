@@ -57,8 +57,8 @@ class ManualInvoiceController extends Controller
             }
 
             $tvaRate = 20; // 20% TVA
-            $montantHT = $totalTTC / (1 + ($tvaRate / 100));
-            $tva = $totalTTC - $montantHT;
+            $tva= $totalTTC * ($tvaRate / 100);
+            $montantHT = $totalTTC - $tva;
 
             // Generate invoice number
             $invoiceNumber = $this->generateNextInvoiceNumber();
