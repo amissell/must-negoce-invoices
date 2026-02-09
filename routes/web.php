@@ -12,6 +12,9 @@ Route::get('/', [InvoiceController::class, 'index'])->name('invoices.index');
 Route::post('/invoices/generate', [InvoiceController::class, 'generate'])->name('invoices.generate');
 Route::get('/invoices/{id}/download', [InvoiceController::class, 'downloadPdf'])->name('invoices.download');
 Route::delete('/invoices/{id}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');
+// Routes pour éditer les factures
+Route::get('/invoices/{id}/edit', [ManualInvoiceController::class, 'edit'])->name('invoices.edit');
+Route::put('/invoices/{id}', [ManualInvoiceController::class, 'update'])->name('invoices.update');
 
 // Products - Dedicated Page
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');

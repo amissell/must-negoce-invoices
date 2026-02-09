@@ -57,20 +57,22 @@ class ManualInvoiceController extends Controller
             }
 
             $tvaRate = 20; // 20% TVA
-            $tva= $totalTTC * ($tvaRate / 100);
+            // ✅ CORRECTION: TVA = 20% du montant TTC
+            $tva = $totalTTC * ($tvaRate / 100);
+            // ✅ CORRECTION: Montant HT = TTC - TVA
             $montantHT = $totalTTC - $tva;
 
             // Generate invoice number
             $invoiceNumber = $this->generateNextInvoiceNumber();
 
-            // Create the invoice - FIX: client_ice was using validation rule instead of value
+            // Create the invoice
             $invoice = Invoice::create([
                 'invoice_number' => $invoiceNumber,
                 'type' => 'manual',
                 'client_name' => $validated['client_name'],
                 'client_address' => $validated['client_address'],
                 'client_phone' => $validated['client_phone'],
-                'client_ice' => $validated['client_ice'], // FIXED: was 'required|digits:15'
+                'client_ice' => $validated['client_ice'],
                 'invoice_date' => $validated['invoice_date'],
                 'payment_mode' => $validated['payment_mode'],
                 'total_ttc' => $totalTTC,
@@ -185,5 +187,98 @@ class ManualInvoiceController extends Controller
         $pdf = Pdf::loadView('invoices.pdf-manual', compact('invoice', 'amountInWords'));
         
         return $pdf->download("facture_{$invoice->invoice_number}.pdf");
+    }
+
+    /**
+     * Show the form for editing an invoice.
+     */
+    public function edit($id)
+    {
+        $invoice = Invoice::with('items.product')->findOrFail($id);
+        $products = Product::orderBy('name')->get();
+        
+        return view('invoices.edit', compact('invoice', 'products'));
+    }
+
+    /**
+     * Update the specified invoice.
+     */
+    public function update(Request $request, $id)
+    {
+        $invoice = Invoice::findOrFail($id);
+        
+        // Validation
+        $validated = $request->validate([
+            'invoice_number' => 'required|string|max:50',
+            'invoice_date' => 'required|date',
+            'payment_mode' => 'required|in:CH,ESP,LCN',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.unit_price' => 'required|numeric|min:0',
+        ], [
+            'items.required' => 'Vous devez avoir au moins un produit',
+            'items.*.product_id.required' => 'Produit requis',
+            'items.*.quantity.required' => 'Quantité requise',
+            'items.*.unit_price.required' => 'Prix unitaire requis',
+        ]);
+        
+        DB::beginTransaction();
+        
+        try {
+            // Calculate new totals
+            $totalTTC = 0;
+            foreach ($validated['items'] as $item) {
+                $totalTTC += $item['quantity'] * $item['unit_price'];
+            }
+
+            $tvaRate = 20; // 20% TVA
+            // ✅ TVA = 20% du montant TTC
+            $tva = $totalTTC * ($tvaRate / 100);
+            // ✅ Montant HT = TTC - TVA
+            $montantHT = $totalTTC - $tva;
+            
+            // Update invoice basic info
+            $invoice->update([
+                'invoice_number' => $validated['invoice_number'],
+                'invoice_date' => $validated['invoice_date'],
+                'payment_mode' => $validated['payment_mode'],
+                'total_ttc' => $totalTTC,
+                'tva_rate' => $tvaRate,
+                'tva' => $tva,
+                'montant_ht' => $montantHT,
+                'amount_in_words' => $this->numberToWords($totalTTC),
+            ]);
+            
+            // Delete old items
+            $invoice->items()->delete();
+            
+            // Create new items
+            foreach ($validated['items'] as $item) {
+                $product = Product::find($item['product_id']);
+                
+                InvoiceItem::create([
+                    'invoice_id' => $invoice->id,
+                    'product_id' => $item['product_id'],
+                    'description' => $product->name,
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['unit_price'],
+                    'total' => $item['quantity'] * $item['unit_price'],
+                ]);
+            }
+            
+            DB::commit();
+            
+            return redirect()
+                ->route('invoices.index')
+                ->with('success', 'Facture modifiée avec succès!');
+                
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return back()
+                ->withInput()
+                ->with('error', 'Erreur lors de la modification: ' . $e->getMessage());
+        }
     }
 }
