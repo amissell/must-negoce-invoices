@@ -13,6 +13,8 @@ class Invoice extends Model
         'invoice_number',
         'invoice_date',
         'montant_ht',
+        'remise_percentage',
+        'remise_amount',
         'tva',
         'tva_rate',
         'total_ttc',

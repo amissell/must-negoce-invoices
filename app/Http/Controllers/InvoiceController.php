@@ -117,63 +117,75 @@ class InvoiceController extends Controller
             'montant_global_ttc' => 'required|numeric|min:0'
         ]);
 
-        $totalTTC = $request->montant_global_ttc;
+        $totalTTC = (float) $request->montant_global_ttc;
         $maxInvoiceAmount = 4999;
         $minInvoiceAmount = 3000;
 
-        $numberOfInvoices = ceil($totalTTC / $maxInvoiceAmount);
         $remainingAmount = $totalTTC;
         $createdInvoices = 0;
+        $totalGenerated = 0;
 
-        for ($i = 0; $i < $numberOfInvoices; $i++) {
-            if ($remainingAmount <= 0) break;
+        // ✅ نكملو نزيدو فواتير حتى نوصلو للمبلغ المطلوب
+        while ($remainingAmount > 50) {
+            
+            // ✅ حساب المبلغ المستهدف لهاد الفاتورة
+            if ($remainingAmount <= $maxInvoiceAmount) {
+                // إلا بقا أقل من الماكس، نزيدوه كامل
+                $targetInvoiceAmount = $remainingAmount;
+            } else {
+                // عشوائي بين min و max
+                $targetInvoiceAmount = rand($minInvoiceAmount, $maxInvoiceAmount);
+            }
 
-            $invoiceAmount = ($i === $numberOfInvoices - 1)
-                ? min($remainingAmount, $maxInvoiceAmount)
-                : rand($minInvoiceAmount, min($maxInvoiceAmount, $remainingAmount));
+            if ($targetInvoiceAmount < 100) break;
 
-            if ($invoiceAmount < 100) break;
+            // ✅ الحساب الصحيح ديال TVA
+            $montantHT = round($targetInvoiceAmount / 1.2, 2);
+            $tva = round($targetInvoiceAmount - $montantHT, 2);
 
-            // ✅ CORRECTION: Calcul TVA
-            $tva = round($invoiceAmount * 0.2, 2);
-            $montantHT = round($invoiceAmount - $tva, 2);
-
+            // ✅ تاريخ عشوائي بين يناير 2026 و دابا
             $startDate = \Carbon\Carbon::create(2026, 1, 1);
             $endDate = \Carbon\Carbon::now();
             $randomDate = \Carbon\Carbon::createFromTimestamp(rand($startDate->timestamp, $endDate->timestamp));
 
+            // ✅ إنشاء الفاتورة
             $invoice = Invoice::create([
                 'invoice_number' => $this->generateInvoiceNumber(),
                 'invoice_date' => $randomDate,
                 'montant_ht' => $montantHT,
                 'tva' => $tva,
-                'total_ttc' => $invoiceAmount,
+                'total_ttc' => $targetInvoiceAmount,
                 'is_locked' => true,
                 'type' => 'automatic',
                 'client_name' => 'divers',
             ]);
 
+            // ✅ إضافة المنتجات للفاتورة
             $numberOfProducts = rand(300, 400);
             $products = Product::inRandomOrder()->limit($numberOfProducts)->get();
 
             if ($products->isEmpty()) {
                 $invoice->delete();
-                continue;
+                break;
             }
 
-            $itemsRemaining = $invoiceAmount;
+            $actualInvoiceTotal = 0;  // ✅ المبلغ الحقيقي اللي تزاد
+            $itemsAdded = 0;
+            $itemsRemaining = $targetInvoiceAmount;
+
             foreach ($products as $product) {
-                if ($itemsRemaining <= 0) break;
+                if ($itemsRemaining <= 1) break;  // ✅ نوقفو إلا وصلنا قريب للمبلغ
 
                 $quantity = rand(6, 24);
                 $itemTotal = round($quantity * $product->prix_ttc, 2);
 
+                // ✅ تعديل الكمية إلا كان المبلغ كبير
                 while ($itemTotal > $itemsRemaining && $quantity > 1) {
                     $quantity--;
                     $itemTotal = round($quantity * $product->prix_ttc, 2);
                 }
 
-                if ($itemTotal <= 0) continue;
+                if ($itemTotal <= 0 || $itemTotal > $itemsRemaining) continue;
 
                 InvoiceItem::create([
                     'invoice_id' => $invoice->id,
@@ -183,22 +195,50 @@ class InvoiceController extends Controller
                     'total' => $itemTotal
                 ]);
 
+                $actualInvoiceTotal += $itemTotal;  // ✅ نزيدو المبلغ الحقيقي
                 $itemsRemaining -= $itemTotal;
+                $itemsAdded++;
             }
 
-            $remainingAmount -= $invoiceAmount;
+            // ✅ إلا ماتزادش والو، نمسحو الفاتورة
+            if ($itemsAdded === 0 || $actualInvoiceTotal < 100) {
+                $invoice->delete();
+                break;
+            }
+
+            // ✅ نحدثو الفاتورة بالمبلغ الحقيقي
+            $actualMontantHT = round($actualInvoiceTotal / 1.2, 2);
+            $actualTva = round($actualInvoiceTotal - $actualMontantHT, 2);
+            
+            $invoice->update([
+                'montant_ht' => $actualMontantHT,
+                'tva' => $actualTva,
+                'total_ttc' => $actualInvoiceTotal,
+            ]);
+
+            // ✅ نخصمو المبلغ الحقيقي اللي تزاد
+            $remainingAmount -= $actualInvoiceTotal;
+            $totalGenerated += $actualInvoiceTotal;
             $createdInvoices++;
+
+            // ✅ Security: إلا تجاوزنا 100 فاتورة، نوقفو
+            if ($createdInvoices >= 100) {
+                break;
+            }
         }
 
         return redirect()->route('invoices.index')
-            ->with('success', $createdInvoices . ' Facture(s) créée(s) avec succès! Chaque facture < 5000 MAD');
+            ->with('success', $createdInvoices . ' Facture(s) créée(s) avec succès! Total généré: ' . number_format($totalGenerated, 2) . ' MAD / ' . number_format($totalTTC, 2) . ' MAD demandé');
     }
 
+    /**
+     * ✅ إنشاء فاتورة واحدة
+     */
     private function createSingleInvoice($customerName, $items, $totalTtc)
     {
-        // ✅ CORRECTION: Calcul TVA
-        $tva = round($totalTtc * 0.2, 2);
-        $montantHt = round($totalTtc - $tva, 2);
+        // ✅ الحساب الصحيح ديال TVA
+        $montantHt = round($totalTtc / 1.2, 2);
+        $tva = round($totalTtc - $montantHt, 2);
 
         $invoice = Invoice::create([
             'invoice_number' => $this->generateInvoiceNumber(),
@@ -208,13 +248,13 @@ class InvoiceController extends Controller
             'total_ttc' => $totalTtc,
             'is_locked' => true,
             'type' => 'automatic',
-            'client_name' => 'divers',
+            'client_name' => $customerName,
         ]);
 
         foreach ($items as $item) {
             InvoiceItem::create([
                 'invoice_id' => $invoice->id,
-                'product_id' => $item['product']->id,
+                'product_id' => $item['product']->id ?? null,
                 'quantity' => $item['quantity'],
                 'unit_price' => $item['unit_price'],
                 'total' => $item['total'],
@@ -222,6 +262,9 @@ class InvoiceController extends Controller
         }
     }
 
+    /**
+     * ✅ تقسيم الفواتير لأكثر من فاتورة
+     */
     private function splitIntoMultipleInvoices($customerName, $items)
     {
         $max = 4999;
@@ -244,19 +287,44 @@ class InvoiceController extends Controller
         }
     }
 
+    /**
+     * ✅ توليد رقم الفاتورة - يملأ الفراغات الناقصة أولاً
+     */
     private function generateInvoiceNumber()
     {
         $year = date('y');
+        $currentYear = date('Y');
 
-        $last = Invoice::whereYear('created_at', date('Y'))
-            ->orderByDesc('id')
-            ->first();
+        // ✅ جيب جميع الأرقام الموجودة هاد العام
+        $existingNumbers = Invoice::whereYear('created_at', $currentYear)
+            ->pluck('invoice_number')
+            ->map(function($number) use ($year) {
+                // استخرج الرقم من الفورمات: 26/001 → 1
+                $parts = explode('/', $number);
+                return isset($parts[1]) ? (int) $parts[1] : null;
+            })
+            ->filter()
+            ->sort()
+            ->values()
+            ->toArray();
 
-        $next = $last
-            ? ((int) explode('/', $last->invoice_number)[1]) + 1
-            : 1;
+        // ✅ إلا ماكاينش والو، ابدا من 1
+        if (empty($existingNumbers)) {
+            return $year . '/001';
+        }
 
-        return $year . '/' . str_pad($next, 3, '0', STR_PAD_LEFT);
+        // ✅ شوف أول رقم ناقص (gap)
+        $nextNumber = 1;
+        foreach ($existingNumbers as $num) {
+            if ($num != $nextNumber) {
+                // لقينا gap! استعمل هاد الرقم
+                break;
+            }
+            $nextNumber++;
+        }
+
+        // ✅ فورمات الرقم: 26/002
+        return $year . '/' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -358,7 +426,6 @@ class InvoiceController extends Controller
     {
         return redirect()->route('invoices.index');
     }
-
 
     public function destroy($id)
     {

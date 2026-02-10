@@ -263,6 +263,12 @@
         margin-right: 15px;
         display: inline-block;
     }
+    .remise-row {
+        background-color: #ffe6e6;
+    }
+    .remise-row .amount {
+        color: #d32f2f;
+    }
     
     /* ✅ RÈGLES DE PAGINATION */
     @media print {
@@ -377,30 +383,38 @@
             @endforeach
         </tbody>
     </table>
-
     <!-- Totals -->
-    <div class="totals clearfix">
-        <div class="totals-table">
-            <table>
-                <tr class="total-ttc">
-                    <td class="label">MONTANT TTC</td>
-                    <td class="amount">{{ number_format($invoice->total_ttc, 2) }} MAD</td>
-                </tr>
-                <tr>
-                    <td class="label">Taux TVA</td>
-                    <td class="amount">{{ $invoice->tva_rate ?? 20 }}%</td>
-                </tr>
-                <tr>
-                    <td class="label">Montant TVA</td>
-                    <td class="amount">{{ number_format($invoice->tva, 2) }}</td>
-                </tr>
-                <tr>
-                    <td class="label">Montant HT</td>
-                    <td class="amount">{{ number_format($invoice->montant_ht, 2) }}</td>
-                </tr>
-            </table>
-        </div>
+<div class="totals clearfix">
+    <div class="totals-table">
+        <table>
+            <!-- 1. Montant HT first -->
+            <tr>
+                <td class="label">Montant HT</td>
+                <td class="amount">{{ number_format($invoice->montant_ht, 2) }} MAD</td>
+            </tr>
+            
+            <!-- 2. Remise (if exists) -->
+            @if(isset($invoice->remise_percentage) && $invoice->remise_percentage > 0)
+            <tr class="remise-row">
+                <td class="label">Remise {{ $invoice->remise_percentage }}%</td>
+                <td class="amount">- {{ number_format($invoice->remise_amount, 2) }} MAD</td>
+            </tr>
+            @endif
+            
+            <!-- 3. TVA after remise -->
+            <tr>
+                <td class="label">TVA {{ $invoice->tva_rate ?? 20 }}%</td>
+                <td class="amount">{{ number_format($invoice->tva, 2) }} MAD</td>
+            </tr>
+            
+            <!-- 4. MONTANT TTC at the end -->
+            <tr class="total-ttc">
+                <td class="label">MONTANT TTC</td>
+                <td class="amount">{{ number_format($invoice->total_ttc, 2) }} MAD</td>
+            </tr>
+        </table>
     </div>
+</div>
 
     <!-- Amount in Words -->
     <div class="amount-words">

@@ -36,6 +36,7 @@ class ManualInvoiceController extends Controller
             'client_ice' => 'required|digits:15',
             'invoice_date' => 'required|date',
             'payment_mode' => 'required|in:CH,ESP,LCN',
+            'remise_percentage' => 'nullable|numeric|min:0|max:100',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
@@ -50,23 +51,19 @@ class ManualInvoiceController extends Controller
         DB::beginTransaction();
 
         try {
-            // Calculate totals
-            $totalTTC = 0;
+            $montantHT = 0;
             foreach ($validated['items'] as $item) {
-                $totalTTC += $item['quantity'] * $item['unit_price'];
-            }
-
-            $tvaRate = 20; // 20% TVA
-            // ✅ CORRECTION: TVA = 20% du montant TTC
-            $tva = $totalTTC * ($tvaRate / 100);
-            // ✅ CORRECTION: Montant HT = TTC - TVA
-            $montantHT = $totalTTC - $tva;
-
-            // Generate invoice number
-            $invoiceNumber = $this->generateNextInvoiceNumber();
-
-            // Create the invoice
-            $invoice = Invoice::create([
+                $montantHT += $item['quantity'] * $item['unit_price'];
+                }
+                $remisePercentage = $validated['remise_percentage'] ?? 0;
+                $remiseAmount = $montantHT * ($remisePercentage / 100);
+                $montantHTAfterRemise = $montantHT - $remiseAmount;
+                $tvaRate = 20;
+                $tva = $montantHTAfterRemise * ($tvaRate / 100);
+                $totalTTC = $montantHTAfterRemise + $tva;
+                $invoiceNumber = $this->generateNextInvoiceNumber();
+                
+                $invoice = Invoice::create([
                 'invoice_number' => $invoiceNumber,
                 'type' => 'manual',
                 'client_name' => $validated['client_name'],
@@ -79,6 +76,8 @@ class ManualInvoiceController extends Controller
                 'tva_rate' => $tvaRate,
                 'tva' => $tva,
                 'montant_ht' => $montantHT,
+                'remise_percentage' => $remisePercentage,
+                'remise_amount' => $remiseAmount,
                 'amount_in_words' => $this->numberToWords($totalTTC),
             ]);
 
@@ -212,6 +211,7 @@ class ManualInvoiceController extends Controller
             'invoice_number' => 'required|string|max:50',
             'invoice_date' => 'required|date',
             'payment_mode' => 'required|in:CH,ESP,LCN',
+            'remise_percentage' => 'nullable|numeric|min:0|max:100',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
@@ -226,17 +226,16 @@ class ManualInvoiceController extends Controller
         DB::beginTransaction();
         
         try {
-            // Calculate new totals
-            $totalTTC = 0;
+            $montantHT = 0;
             foreach ($validated['items'] as $item) {
-                $totalTTC += $item['quantity'] * $item['unit_price'];
-            }
-
-            $tvaRate = 20; // 20% TVA
-            // ✅ TVA = 20% du montant TTC
-            $tva = $totalTTC * ($tvaRate / 100);
-            // ✅ Montant HT = TTC - TVA
-            $montantHT = $totalTTC - $tva;
+                $montantHT += $item['quantity'] * $item['unit_price'];
+                }
+                $remisePercentage = $validated['remise_percentage'] ?? 0;
+                $remiseAmount = $montantHT * ($remisePercentage / 100);
+                $montantHTAfterRemise = $montantHT - $remiseAmount;
+                $tvaRate = 20;
+                $tva = $montantHTAfterRemise * ($tvaRate / 100);
+                $totalTTC = $montantHTAfterRemise + $tva;
             
             // Update invoice basic info
             $invoice->update([
@@ -247,6 +246,8 @@ class ManualInvoiceController extends Controller
                 'tva_rate' => $tvaRate,
                 'tva' => $tva,
                 'montant_ht' => $montantHT,
+                'remise_percentage' => $remisePercentage,
+                'remise_amount' => $remiseAmount,
                 'amount_in_words' => $this->numberToWords($totalTTC),
             ]);
             

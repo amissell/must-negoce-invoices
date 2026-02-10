@@ -167,13 +167,24 @@
                 <p class="text-lg font-medium">Aucun article ajouté</p>
                 <p class="text-sm mt-1">Cliquez sur "Ajouter un Article" pour commencer</p>
             </div>
-
             <!-- Totals -->
             <div class="mt-8 flex justify-end">
                 <div class="w-full md:w-96 bg-gray-50 rounded-lg p-6 space-y-3">
                     <div class="flex justify-between text-sm">
                         <span class="font-medium text-gray-700">Montant HT:</span>
                         <span id="montantHT" class="font-mono font-semibold text-gray-900">0.00 MAD</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm border-t border-gray-300 pt-3">
+                        <span class="font-medium text-gray-700">Remise (%):</span>
+                        <div class="flex items-center">
+                            <input type="number"
+                            id="remiseInput" name="remise_percentage" min="0" max="100" step="0.01" value="0" class="w-20 px-2 py-1 border border-gray-300 rounded text-right font-mono text-sm focus:ring-2 focus:ring-blue-500">
+                            <span class="ml-1 text-gray-600">%</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="font-medium text-gray-700">Montant Remise:</span>
+                        <span id="montantRemise" class="font-mono font-semibold text-red-600">0.00 MAD</span>
                     </div>
                     <div class="flex justify-between text-sm">
                         <span class="font-medium text-gray-700">TVA (20%):</span>
@@ -250,13 +261,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const noItemsMessage = document.getElementById('noItemsMessage');
     const addItemBtn = document.getElementById('addItemBtn');
     const submitBtn = document.getElementById('submitBtn');
+    const remiseInput = document.getElementById('remiseInput');
 
     // Add item button click
     addItemBtn.addEventListener('click', addItem);
-
-    // Add item function
-    // Add item function
 function addItem() {
+    addItemBtn.addEventListener('click', addItem);
+    remiseInput.addEventListener('input', calculateGrandTotal);
     const template = document.getElementById('itemRowTemplate');
     const clone = template.content.cloneNode(true);
     
@@ -322,22 +333,31 @@ function attachRowEventListeners(row) {
         row.querySelector('.item-total').textContent = total.toFixed(2);
         calculateGrandTotal();
     }
-
-    // Calculate grand total
-    // Calculate grand total
-function calculateGrandTotal() {
+    function calculateGrandTotal() {
     let montantHT = 0;
     
-    // Sum all item totals (these are HT prices)
+    // Sum all item totals (HT prices)
     document.querySelectorAll('.item-total').forEach(span => {
         montantHT += parseFloat(span.textContent) || 0;
     });
 
+    // Get remise percentage
+    const remisePercentage = parseFloat(remiseInput.value) || 0;
+    const montantRemise = montantHT * (remisePercentage / 100);
+    
+    // Calculate HT after remise
+    const montantHTAfterRemise = montantHT - montantRemise;
+    
+    // Calculate TVA on HT after remise
     const tvaRate = 0.20; // 20%
-    const tva = montantHT * tvaRate;
-    const totalTTC = montantHT + tva;
+    const tva = montantHTAfterRemise * tvaRate;
+    
+    // Calculate TTC
+    const totalTTC = montantHTAfterRemise + tva;
 
+    // Update display
     document.getElementById('montantHT').textContent = montantHT.toFixed(2) + ' MAD';
+    document.getElementById('montantRemise').textContent = montantRemise.toFixed(2) + ' MAD';
     document.getElementById('tvaAmount').textContent = tva.toFixed(2) + ' MAD';
     document.getElementById('totalTTC').textContent = totalTTC.toFixed(2) + ' MAD';
 }
