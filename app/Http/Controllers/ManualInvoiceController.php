@@ -7,6 +7,7 @@ use App\Models\InvoiceItem;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class ManualInvoiceController extends Controller
@@ -28,7 +29,6 @@ class ManualInvoiceController extends Controller
      */
     public function store(Request $request)
     {
-        // Validate the request
         $validated = $request->validate([
             'client_name' => 'required|string|max:255',
             'client_address' => 'nullable|string|max:500',
@@ -54,16 +54,18 @@ class ManualInvoiceController extends Controller
             $montantHT = 0;
             foreach ($validated['items'] as $item) {
                 $montantHT += $item['quantity'] * $item['unit_price'];
-                }
-                $remisePercentage = $validated['remise_percentage'] ?? 0;
-                $remiseAmount = $montantHT * ($remisePercentage / 100);
-                $montantHTAfterRemise = $montantHT - $remiseAmount;
-                $tvaRate = 20;
-                $tva = $montantHTAfterRemise * ($tvaRate / 100);
-                $totalTTC = $montantHTAfterRemise + $tva;
-                $invoiceNumber = $this->generateNextInvoiceNumber();
-                
-                $invoice = Invoice::create([
+            }
+            
+            $remisePercentage = $validated['remise_percentage'] ?? 0;
+            $remiseAmount = $montantHT * ($remisePercentage / 100);
+            $montantHTAfterRemise = $montantHT - $remiseAmount;
+            $tvaRate = 20;
+            $tva = $montantHTAfterRemise * ($tvaRate / 100);
+            $totalTTC = $montantHTAfterRemise + $tva;
+            $invoiceNumber = $this->generateNextInvoiceNumber();
+            
+            // ✅ Create invoice with user tracking
+            $invoice = Invoice::create([
                 'invoice_number' => $invoiceNumber,
                 'type' => 'manual',
                 'client_name' => $validated['client_name'],
@@ -79,6 +81,7 @@ class ManualInvoiceController extends Controller
                 'remise_percentage' => $remisePercentage,
                 'remise_amount' => $remiseAmount,
                 'amount_in_words' => $this->numberToWords($totalTTC),
+                'created_by' => Auth::id(), // ✅ Track who created it
             ]);
 
             // Create invoice items
@@ -99,7 +102,7 @@ class ManualInvoiceController extends Controller
 
             return redirect()
                 ->route('invoices.index', $invoice)
-                ->with('success', 'Facture manuelle créée avec succès!');
+                ->with('success', 'Facture manuelle créée avec succès par ' . Auth::user()->name . '!');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -115,7 +118,7 @@ class ManualInvoiceController extends Controller
      */
     private function generateNextInvoiceNumber(): string
     {
-        $year = date('y'); // Last 2 digits of year
+        $year = date('y');
         
         $lastInvoice = Invoice::where('invoice_number', 'like', $year . '/%')
             ->orderByRaw('CAST(SUBSTRING(invoice_number, 4) AS UNSIGNED) DESC')
@@ -179,10 +182,8 @@ class ManualInvoiceController extends Controller
     {
         $invoice = Invoice::with('items.product')->findOrFail($id);
         
-        // Convert amount to words in French
         $amountInWords = $this->numberToWords($invoice->total_ttc);
         
-        // Use pdf-manual.blade.php template for manual invoices
         $pdf = Pdf::loadView('invoices.pdf-manual', compact('invoice', 'amountInWords'));
         
         return $pdf->download("facture_{$invoice->invoice_number}.pdf");
@@ -206,7 +207,6 @@ class ManualInvoiceController extends Controller
     {
         $invoice = Invoice::findOrFail($id);
         
-        // Validation
         $validated = $request->validate([
             'invoice_number' => 'required|string|max:50',
             'invoice_date' => 'required|date',
@@ -229,15 +229,16 @@ class ManualInvoiceController extends Controller
             $montantHT = 0;
             foreach ($validated['items'] as $item) {
                 $montantHT += $item['quantity'] * $item['unit_price'];
-                }
-                $remisePercentage = $validated['remise_percentage'] ?? 0;
-                $remiseAmount = $montantHT * ($remisePercentage / 100);
-                $montantHTAfterRemise = $montantHT - $remiseAmount;
-                $tvaRate = 20;
-                $tva = $montantHTAfterRemise * ($tvaRate / 100);
-                $totalTTC = $montantHTAfterRemise + $tva;
+            }
             
-            // Update invoice basic info
+            $remisePercentage = $validated['remise_percentage'] ?? 0;
+            $remiseAmount = $montantHT * ($remisePercentage / 100);
+            $montantHTAfterRemise = $montantHT - $remiseAmount;
+            $tvaRate = 20;
+            $tva = $montantHTAfterRemise * ($tvaRate / 100);
+            $totalTTC = $montantHTAfterRemise + $tva;
+            
+            // ✅ Update invoice with user tracking
             $invoice->update([
                 'invoice_number' => $validated['invoice_number'],
                 'invoice_date' => $validated['invoice_date'],
@@ -249,6 +250,7 @@ class ManualInvoiceController extends Controller
                 'remise_percentage' => $remisePercentage,
                 'remise_amount' => $remiseAmount,
                 'amount_in_words' => $this->numberToWords($totalTTC),
+                'updated_by' => Auth::id(), // ✅ Track who updated it
             ]);
             
             // Delete old items
@@ -272,7 +274,7 @@ class ManualInvoiceController extends Controller
             
             return redirect()
                 ->route('invoices.index')
-                ->with('success', 'Facture modifiée avec succès!');
+                ->with('success', 'Facture modifiée avec succès par ' . Auth::user()->name . '!');
                 
         } catch (\Exception $e) {
             DB::rollBack();

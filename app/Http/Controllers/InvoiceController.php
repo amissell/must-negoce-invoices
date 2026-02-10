@@ -8,12 +8,14 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Helpers\NumberToFrenchWords;
+use Illuminate\Support\Facades\Auth;
 
 class InvoiceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Invoice::with('items')->latest('invoice_date');
+        // ✅ Load invoices with creator information
+        $query = Invoice::with(['items', 'creator'])->latest('invoice_date');
 
         // Filter by type
         if ($request->has('type')) {
@@ -125,30 +127,24 @@ class InvoiceController extends Controller
         $createdInvoices = 0;
         $totalGenerated = 0;
 
-        // ✅ نكملو نزيدو فواتير حتى نوصلو للمبلغ المطلوب
         while ($remainingAmount > 50) {
             
-            // ✅ حساب المبلغ المستهدف لهاد الفاتورة
             if ($remainingAmount <= $maxInvoiceAmount) {
-                // إلا بقا أقل من الماكس، نزيدوه كامل
                 $targetInvoiceAmount = $remainingAmount;
             } else {
-                // عشوائي بين min و max
                 $targetInvoiceAmount = rand($minInvoiceAmount, $maxInvoiceAmount);
             }
 
             if ($targetInvoiceAmount < 100) break;
 
-            // ✅ الحساب الصحيح ديال TVA
             $montantHT = round($targetInvoiceAmount / 1.2, 2);
             $tva = round($targetInvoiceAmount - $montantHT, 2);
 
-            // ✅ تاريخ عشوائي بين يناير 2026 و دابا
             $startDate = \Carbon\Carbon::create(2026, 1, 1);
             $endDate = \Carbon\Carbon::now();
             $randomDate = \Carbon\Carbon::createFromTimestamp(rand($startDate->timestamp, $endDate->timestamp));
 
-            // ✅ إنشاء الفاتورة
+            // ✅ Add user tracking
             $invoice = Invoice::create([
                 'invoice_number' => $this->generateInvoiceNumber(),
                 'invoice_date' => $randomDate,
@@ -158,9 +154,9 @@ class InvoiceController extends Controller
                 'is_locked' => true,
                 'type' => 'automatic',
                 'client_name' => 'divers',
+                'created_by' => Auth::id(), // ✅ Track who created it
             ]);
 
-            // ✅ إضافة المنتجات للفاتورة
             $numberOfProducts = rand(300, 400);
             $products = Product::inRandomOrder()->limit($numberOfProducts)->get();
 
@@ -169,17 +165,16 @@ class InvoiceController extends Controller
                 break;
             }
 
-            $actualInvoiceTotal = 0;  // ✅ المبلغ الحقيقي اللي تزاد
+            $actualInvoiceTotal = 0;
             $itemsAdded = 0;
             $itemsRemaining = $targetInvoiceAmount;
 
             foreach ($products as $product) {
-                if ($itemsRemaining <= 1) break;  // ✅ نوقفو إلا وصلنا قريب للمبلغ
+                if ($itemsRemaining <= 1) break;
 
                 $quantity = rand(6, 24);
                 $itemTotal = round($quantity * $product->prix_ttc, 2);
 
-                // ✅ تعديل الكمية إلا كان المبلغ كبير
                 while ($itemTotal > $itemsRemaining && $quantity > 1) {
                     $quantity--;
                     $itemTotal = round($quantity * $product->prix_ttc, 2);
@@ -195,18 +190,16 @@ class InvoiceController extends Controller
                     'total' => $itemTotal
                 ]);
 
-                $actualInvoiceTotal += $itemTotal;  // ✅ نزيدو المبلغ الحقيقي
+                $actualInvoiceTotal += $itemTotal;
                 $itemsRemaining -= $itemTotal;
                 $itemsAdded++;
             }
 
-            // ✅ إلا ماتزادش والو، نمسحو الفاتورة
             if ($itemsAdded === 0 || $actualInvoiceTotal < 100) {
                 $invoice->delete();
                 break;
             }
 
-            // ✅ نحدثو الفاتورة بالمبلغ الحقيقي
             $actualMontantHT = round($actualInvoiceTotal / 1.2, 2);
             $actualTva = round($actualInvoiceTotal - $actualMontantHT, 2);
             
@@ -214,14 +207,13 @@ class InvoiceController extends Controller
                 'montant_ht' => $actualMontantHT,
                 'tva' => $actualTva,
                 'total_ttc' => $actualInvoiceTotal,
+                'updated_by' => Auth::id(), // ✅ Track who updated it
             ]);
 
-            // ✅ نخصمو المبلغ الحقيقي اللي تزاد
             $remainingAmount -= $actualInvoiceTotal;
             $totalGenerated += $actualInvoiceTotal;
             $createdInvoices++;
 
-            // ✅ Security: إلا تجاوزنا 100 فاتورة، نوقفو
             if ($createdInvoices >= 100) {
                 break;
             }
@@ -232,11 +224,10 @@ class InvoiceController extends Controller
     }
 
     /**
-     * ✅ إنشاء فاتورة واحدة
+     * ✅ Créer une facture unique avec tracking utilisateur
      */
     private function createSingleInvoice($customerName, $items, $totalTtc)
     {
-        // ✅ الحساب الصحيح ديال TVA
         $montantHt = round($totalTtc / 1.2, 2);
         $tva = round($totalTtc - $montantHt, 2);
 
@@ -249,6 +240,7 @@ class InvoiceController extends Controller
             'is_locked' => true,
             'type' => 'automatic',
             'client_name' => $customerName,
+            'created_by' => Auth::id(), // ✅ Track creator
         ]);
 
         foreach ($items as $item) {
@@ -263,7 +255,7 @@ class InvoiceController extends Controller
     }
 
     /**
-     * ✅ تقسيم الفواتير لأكثر من فاتورة
+     * ✅ Diviser en plusieurs factures
      */
     private function splitIntoMultipleInvoices($customerName, $items)
     {
@@ -288,18 +280,16 @@ class InvoiceController extends Controller
     }
 
     /**
-     * ✅ توليد رقم الفاتورة - يملأ الفراغات الناقصة أولاً
+     * ✅ Générer le numéro de facture
      */
     private function generateInvoiceNumber()
     {
         $year = date('y');
         $currentYear = date('Y');
 
-        // ✅ جيب جميع الأرقام الموجودة هاد العام
         $existingNumbers = Invoice::whereYear('created_at', $currentYear)
             ->pluck('invoice_number')
             ->map(function($number) use ($year) {
-                // استخرج الرقم من الفورمات: 26/001 → 1
                 $parts = explode('/', $number);
                 return isset($parts[1]) ? (int) $parts[1] : null;
             })
@@ -308,27 +298,23 @@ class InvoiceController extends Controller
             ->values()
             ->toArray();
 
-        // ✅ إلا ماكاينش والو، ابدا من 1
         if (empty($existingNumbers)) {
             return $year . '/001';
         }
 
-        // ✅ شوف أول رقم ناقص (gap)
         $nextNumber = 1;
         foreach ($existingNumbers as $num) {
             if ($num != $nextNumber) {
-                // لقينا gap! استعمل هاد الرقم
                 break;
             }
             $nextNumber++;
         }
 
-        // ✅ فورمات الرقم: 26/002
         return $year . '/' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
     }
 
     /**
-     * Download PDF - automatically selects the correct template based on invoice type
+     * Download PDF
      */
     public function downloadPdf($id)
     {
@@ -336,10 +322,9 @@ class InvoiceController extends Controller
         $safeNumber = str_replace('/', '-', $invoice->invoice_number);
         $amountInWords = NumberToFrenchWords::convert($invoice->total_ttc);
 
-        // Select the appropriate template based on invoice type
         $template = $invoice->type === 'manual' 
-            ? 'invoices.pdf-manual'    // For manual invoices with full client info
-            : 'invoices.pdf';           // For automatic invoices (simple version)
+            ? 'invoices.pdf-manual'
+            : 'invoices.pdf';
 
         $pdf = Pdf::loadView($template, compact('invoice', 'amountInWords'));
         $pdf->setPaper('A4', 'portrait');
@@ -375,7 +360,8 @@ class InvoiceController extends Controller
             'Mode Paiement',
             'Montant HT',
             'TVA',
-            'Montant TTC'
+            'Montant TTC',
+            'Créé par', // ✅ Added
         ]);
 
         foreach ($invoices as $invoice) {
@@ -390,6 +376,7 @@ class InvoiceController extends Controller
                 number_format($invoice->montant_ht, 2),
                 number_format($invoice->tva, 2),
                 number_format($invoice->total_ttc, 2),
+                $invoice->creator_name, // ✅ Added
             ]);
         }
 
