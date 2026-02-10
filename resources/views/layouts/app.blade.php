@@ -48,6 +48,36 @@
                        class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('invoices.manual.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
                         ✏️ Facture Manuelle
                     </a>
+
+                    {{-- User Menu --}}
+                    <div class="ml-4 relative group">
+                        <button class="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-white/10 transition-all">
+                            <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                                <span class="text-sm font-semibold">{{ substr(auth()->user()->name, 0, 1) }}</span>
+                            </div>
+                            <span class="text-sm font-medium">{{ auth()->user()->name }}</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        
+                        {{-- Dropdown Menu --}}
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                            <div class="p-3 border-b border-gray-100">
+                                <p class="text-sm font-semibold text-gray-800">{{ auth()->user()->name }}</p>
+                                <p class="text-xs text-gray-500">{{ auth()->user()->email }}</p>
+                            </div>
+                            <form method="POST" action="{{ route('logout') }}" class="p-2">
+                                @csrf
+                                <button type="submit" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-all flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                    </svg>
+                                    Déconnexion
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
 
                 {{-- Mobile Menu Button --}}
@@ -65,6 +95,20 @@
                 <a href="{{ route('invoices.index') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">📊 Tableau de Bord</a>
                 <a href="{{ route('products.index') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">📦 Produits</a>
                 <a href="{{ route('invoices.manual.create') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">✏️ Facture Manuelle</a>
+                
+                {{-- Mobile User Info --}}
+                <div class="border-t border-white/10 pt-3 mt-3">
+                    <div class="px-4 py-2 text-white/80 text-sm">
+                        <p class="font-semibold">{{ auth()->user()->name }}</p>
+                        <p class="text-xs text-white/60">{{ auth()->user()->email }}</p>
+                    </div>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="w-full text-left px-4 py-2 rounded-lg hover:bg-white/10 text-red-300 hover:text-red-200 transition-all">
+                            Déconnexion
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </nav>
