@@ -89,7 +89,7 @@
             </div>
         </div>
 
-        <!-- Client Information Section (if manual invoice) -->
+        <!-- Client Information Section -->
         @if($invoice->type === 'manual' && $invoice->client_name && $invoice->client_name !== 'divers')
         <div class="bg-gray-50 px-6 py-4 border-t border-b border-gray-200">
             <h2 class="text-xl font-semibold text-gray-800">Informations Client</h2>
@@ -100,36 +100,31 @@
                 <!-- Client Name -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Nom du Client</label>
-                    <input type="text" value="{{ $invoice->client_name }}" readonly
-                           class="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-700">
+                    <input type="text" name="client_name" value="{{ old('client_name', $invoice->client_name) }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
 
                 <!-- Client Phone -->
-                @if($invoice->client_phone)
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Téléphone</label>
-                    <input type="text" value="{{ $invoice->client_phone }}" readonly
-                           class="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-700">
+                    <input type="tel" name="client_phone" value="{{ old('client_phone', $invoice->client_phone) }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
-                @endif
 
                 <!-- Client ICE -->
-                @if($invoice->client_ice)
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">ICE</label>
-                    <input type="text" value="{{ $invoice->client_ice }}" readonly
-                           class="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-700">
+                    <input type="text" name="client_ice" value="{{ old('client_ice', $invoice->client_ice) }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           pattern="[0-9]{15}" maxlength="15">
                 </div>
-                @endif
 
                 <!-- Client Address -->
-                @if($invoice->client_address)
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Adresse</label>
-                    <input type="text" value="{{ $invoice->client_address }}" readonly
-                           class="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-700">
+                    <input type="text" name="client_address" value="{{ old('client_address', $invoice->client_address) }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
-                @endif
             </div>
         </div>
         @endif
@@ -156,8 +151,8 @@
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produit</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prix Unit. TTC</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total TTC</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prix Unit.</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                         </tr>
                     </thead>
@@ -210,21 +205,34 @@
                 <p class="text-sm mt-1">Cliquez sur "Ajouter un Article" pour commencer</p>
             </div>
 
-            <!-- Totals -->
+            <!-- Totals - SAME AS CREATE PAGE -->
             <div class="mt-8 flex justify-end">
                 <div class="w-full md:w-96 bg-gray-50 rounded-lg p-6 space-y-3">
                     <div class="flex justify-between text-sm">
-                        <span class="font-medium text-gray-700">Total TTC:</span>
-                        <span id="totalTTC" class="font-mono font-semibold text-gray-900">{{ number_format($invoice->total_ttc, 2) }} MAD</span>
+                        <span class="font-medium text-gray-700">Montant HT:</span>
+                        <span id="montantHT" class="font-mono font-semibold text-gray-900">0.00 MAD</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm border-t border-gray-300 pt-3">
+                        <span class="font-medium text-gray-700">Remise (%):</span>
+                        <div class="flex items-center">
+                            <input type="number" id="remiseInput" name="remise_percentage" min="0" max="100" step="0.01" 
+                                   value="{{ old('remise_percentage', $invoice->remise_percentage ?? 0) }}" 
+                                   class="w-20 px-2 py-1 border border-gray-300 rounded text-right font-mono text-sm focus:ring-2 focus:ring-blue-500">
+                            <span class="ml-1 text-gray-600">%</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="font-medium text-gray-700">Montant Remise:</span>
+                        <span id="montantRemise" class="font-mono font-semibold text-red-600">0.00 MAD</span>
                     </div>
                     <div class="flex justify-between text-sm">
                         <span class="font-medium text-gray-700">TVA (20%):</span>
-                        <span id="tvaAmount" class="font-mono font-semibold text-gray-900">{{ number_format($invoice->tva, 2) }} MAD</span>
+                        <span id="tvaAmount" class="font-mono font-semibold text-gray-900">0.00 MAD</span>
                     </div>
                     <div class="border-t border-gray-300 pt-3">
                         <div class="flex justify-between text-lg">
-                            <span class="font-bold text-gray-900">Montant HT:</span>
-                            <span id="montantHT" class="font-mono font-bold text-blue-600">{{ number_format($invoice->montant_ht, 2) }} MAD</span>
+                            <span class="font-bold text-gray-900">MONTANT TTC:</span>
+                            <span id="totalTTC" class="font-mono font-bold text-blue-600">0.00 MAD</span>
                         </div>
                     </div>
                 </div>
@@ -292,6 +300,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const noItemsMessage = document.getElementById('noItemsMessage');
     const addItemBtn = document.getElementById('addItemBtn');
     const submitBtn = document.getElementById('submitBtn');
+    const remiseInput = document.getElementById('remiseInput');
 
     // Attach listeners to existing rows
     document.querySelectorAll('.item-row').forEach(row => {
@@ -304,6 +313,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add item button click
     addItemBtn.addEventListener('click', addItem);
+    
+    // Remise input change
+    remiseInput.addEventListener('input', calculateGrandTotal);
 
     // Add item function
     function addItem() {
@@ -372,22 +384,34 @@ document.addEventListener('DOMContentLoaded', function() {
         calculateGrandTotal();
     }
 
-    // Calculate grand total
+    // Calculate grand total - SAME LOGIC AS CREATE PAGE
     function calculateGrandTotal() {
-        let totalTTC = 0;
+        let montantHT = 0;
         
-        // Sum all item totals (TTC prices)
+        // Sum all item totals (HT prices)
         document.querySelectorAll('.item-total').forEach(span => {
-            totalTTC += parseFloat(span.textContent) || 0;
+            montantHT += parseFloat(span.textContent) || 0;
         });
 
-        // Calculate TVA and HT
-        const tva = totalTTC * 0.20;
-        const montantHT = totalTTC - tva;
+        // Get remise percentage
+        const remisePercentage = parseFloat(remiseInput.value) || 0;
+        const montantRemise = montantHT * (remisePercentage / 100);
+        
+        // Calculate HT after remise
+        const montantHTAfterRemise = montantHT - montantRemise;
+        
+        // Calculate TVA on HT after remise
+        const tvaRate = 0.20; // 20%
+        const tva = montantHTAfterRemise * tvaRate;
+        
+        // Calculate TTC
+        const totalTTC = montantHTAfterRemise + tva;
 
-        document.getElementById('totalTTC').textContent = totalTTC.toFixed(2) + ' MAD';
-        document.getElementById('tvaAmount').textContent = tva.toFixed(2) + ' MAD';
+        // Update display
         document.getElementById('montantHT').textContent = montantHT.toFixed(2) + ' MAD';
+        document.getElementById('montantRemise').textContent = montantRemise.toFixed(2) + ' MAD';
+        document.getElementById('tvaAmount').textContent = tva.toFixed(2) + ' MAD';
+        document.getElementById('totalTTC').textContent = totalTTC.toFixed(2) + ' MAD';
     }
 
     // Update submit button state
