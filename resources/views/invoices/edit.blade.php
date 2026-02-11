@@ -25,13 +25,11 @@
             {{ session('success') }}
         </div>
     @endif
-
     @if(session('error'))
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {{ session('error') }}
         </div>
     @endif
-
     @if($errors->any())
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             <ul class="list-disc list-inside">
@@ -42,16 +40,21 @@
         </div>
     @endif
 
-    <!-- Form -->
     <form id="editInvoiceForm" method="POST" action="{{ route('invoices.update', $invoice->id) }}" class="bg-white shadow-lg rounded-lg overflow-hidden">
         @csrf
         @method('PUT')
-        
+
+        {{-- ✅ Hidden inputs — valeurs calculées côté JS --}}
+        <input type="hidden" name="montant_ht"    id="hiddenMontantHT"    value="{{ $invoice->montant_ht }}">
+        <input type="hidden" name="tva_amount"    id="hiddenTva"          value="{{ $invoice->tva }}">
+        <input type="hidden" name="total_ttc"     id="hiddenTotalTTC"     value="{{ $invoice->total_ttc }}">
+        <input type="hidden" name="remise_amount" id="hiddenRemiseAmount" value="{{ $invoice->remise_amount ?? 0 }}">
+
         <!-- Invoice Information Section -->
         <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
             <h2 class="text-xl font-semibold text-gray-800">Informations de la Facture</h2>
         </div>
-        
+
         <div class="p-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Invoice Number -->
@@ -74,7 +77,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">Mode de Paiement <span class="text-red-500">*</span></label>
                     <select name="payment_mode" required
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="CH" {{ old('payment_mode', $invoice->payment_mode) == 'CH' ? 'selected' : '' }}>Chèque (CH)</option>
+                        <option value="CH"  {{ old('payment_mode', $invoice->payment_mode) == 'CH'  ? 'selected' : '' }}>Chèque (CH)</option>
                         <option value="ESP" {{ old('payment_mode', $invoice->payment_mode) == 'ESP' ? 'selected' : '' }}>Espèces (ESP)</option>
                         <option value="LCN" {{ old('payment_mode', $invoice->payment_mode) == 'LCN' ? 'selected' : '' }}>(LCN)</option>
                     </select>
@@ -94,32 +97,25 @@
         <div class="bg-gray-50 px-6 py-4 border-t border-b border-gray-200">
             <h2 class="text-xl font-semibold text-gray-800">Informations Client</h2>
         </div>
-        
+
         <div class="p-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Client Name -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Nom du Client</label>
                     <input type="text" name="client_name" value="{{ old('client_name', $invoice->client_name) }}"
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
-
-                <!-- Client Phone -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Téléphone</label>
                     <input type="tel" name="client_phone" value="{{ old('client_phone', $invoice->client_phone) }}"
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
-
-                <!-- Client ICE -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">ICE</label>
                     <input type="text" name="client_ice" value="{{ old('client_ice', $invoice->client_ice) }}"
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                            pattern="[0-9]{15}" maxlength="15">
                 </div>
-
-                <!-- Client Address -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Adresse</label>
                     <input type="text" name="client_address" value="{{ old('client_address', $invoice->client_address) }}"
@@ -132,8 +128,13 @@
         <!-- Products Section -->
         <div class="bg-gray-50 px-6 py-4 border-t border-b border-gray-200">
             <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold text-gray-800">Articles de la Facture</h2>
-                <button type="button" id="addItemBtn" 
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-800">Articles de la Facture</h2>
+                    <p class="text-xs text-blue-600 mt-1 font-medium">
+                        ℹ️ Les prix unitaires sont en <strong>TTC</strong> — la TVA 20% sera extraite automatiquement
+                    </p>
+                </div>
+                <button type="button" id="addItemBtn"
                         class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
@@ -151,8 +152,12 @@
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produit</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prix Unit.</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Prix Unit. <span class="text-blue-500 font-bold">(TTC)</span>
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Total <span class="text-blue-500 font-bold">(TTC)</span>
+                            </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                         </tr>
                     </thead>
@@ -163,8 +168,8 @@
                                 <select name="items[{{ $index }}][product_id]" required class="product-select w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                                     <option value="">Sélectionner un produit</option>
                                     @foreach($products as $product)
-                                        <option value="{{ $product->id }}" 
-                                                data-price="{{ $product->prix_ttc }}" 
+                                        <option value="{{ $product->id }}"
+                                                data-price="{{ $product->prix_ttc }}"
                                                 data-name="{{ $product->name }}"
                                                 {{ $item->product_id == $product->id ? 'selected' : '' }}>
                                             {{ $product->name }}
@@ -181,7 +186,7 @@
                                        class="price-input w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-right font-mono">
                             </td>
                             <td class="px-6 py-4">
-                                <span class="item-total font-mono font-semibold text-gray-900">{{ number_format($item->total, 2) }}</span>
+                                <span class="item-total font-mono font-semibold text-gray-900">{{ number_format($item->total, 2, '.', '') }}</span>
                             </td>
                             <td class="px-6 py-4">
                                 <button type="button" class="remove-item text-red-600 hover:text-red-800 transition">
@@ -205,34 +210,55 @@
                 <p class="text-sm mt-1">Cliquez sur "Ajouter un Article" pour commencer</p>
             </div>
 
-            <!-- Totals - SAME AS CREATE PAGE -->
+            <!-- ✅ Totals — même logique que create (TTC → HT) -->
             <div class="mt-8 flex justify-end">
                 <div class="w-full md:w-96 bg-gray-50 rounded-lg p-6 space-y-3">
+
+                    {{-- Total TTC brut --}}
                     <div class="flex justify-between text-sm">
-                        <span class="font-medium text-gray-700">Montant HT:</span>
-                        <span id="montantHT" class="font-mono font-semibold text-gray-900">0.00 MAD</span>
+                        <span class="font-medium text-gray-500">Total TTC brut:</span>
+                        <span id="totalBrut" class="font-mono font-semibold text-gray-500">0.00 MAD</span>
                     </div>
+
+                    {{-- Remise --}}
                     <div class="flex justify-between items-center text-sm border-t border-gray-300 pt-3">
                         <span class="font-medium text-gray-700">Remise (%):</span>
                         <div class="flex items-center">
-                            <input type="number" id="remiseInput" name="remise_percentage" min="0" max="100" step="0.01" 
-                                   value="{{ old('remise_percentage', $invoice->remise_percentage ?? 0) }}" 
+                            <input type="number" id="remiseInput" name="remise_percentage"
+                                   min="0" max="100" step="0.01"
+                                   value="{{ old('remise_percentage', $invoice->remise_percentage ?? 0) }}"
                                    class="w-20 px-2 py-1 border border-gray-300 rounded text-right font-mono text-sm focus:ring-2 focus:ring-blue-500">
                             <span class="ml-1 text-gray-600">%</span>
                         </div>
                     </div>
                     <div class="flex justify-between text-sm">
                         <span class="font-medium text-gray-700">Montant Remise:</span>
-                        <span id="montantRemise" class="font-mono font-semibold text-red-600">0.00 MAD</span>
+                        <span id="montantRemise" class="font-mono font-semibold text-red-600">- 0.00 MAD</span>
                     </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="font-medium text-gray-700">TVA (20%):</span>
-                        <span id="tvaAmount" class="font-mono font-semibold text-gray-900">0.00 MAD</span>
+
+                    {{-- TTC net --}}
+                    <div class="flex justify-between text-sm border-t border-gray-300 pt-3">
+                        <span class="font-bold text-gray-800">Montant TTC:</span>
+                        <span id="totalTTC" class="font-mono font-bold text-blue-600">0.00 MAD</span>
                     </div>
-                    <div class="border-t border-gray-300 pt-3">
+
+                    {{-- TVA extraite --}}
+                    <div class="flex justify-between text-sm bg-yellow-50 rounded px-2 py-1">
+                        <span class="font-medium text-gray-700">
+                            dont TVA 20%
+                            <span class="text-xs text-gray-400">(TTC ÷ 1.20 × 0.20)</span>:
+                        </span>
+                        <span id="tvaAmount" class="font-mono font-semibold text-orange-600">0.00 MAD</span>
+                    </div>
+
+                    {{-- ✅ Montant HT = TTC ÷ 1.20 --}}
+                    <div class="border-t-2 border-gray-800 pt-3">
                         <div class="flex justify-between text-lg">
-                            <span class="font-bold text-gray-900">MONTANT TTC:</span>
-                            <span id="totalTTC" class="font-mono font-bold text-blue-600">0.00 MAD</span>
+                            <span class="font-bold text-gray-900">
+                                MONTANT HT:
+                                <span class="text-xs font-normal text-gray-400">(TTC ÷ 1.20)</span>
+                            </span>
+                            <span id="montantHT" class="font-mono font-bold text-green-600">0.00 MAD</span>
                         </div>
                     </div>
                 </div>
@@ -242,7 +268,7 @@
         <!-- Submit Button -->
         <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
             <div class="flex justify-end space-x-3">
-                <a href="{{ route('invoices.index') }}" 
+                <a href="{{ route('invoices.index') }}"
                    class="inline-flex items-center px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg transition">
                     Annuler
                 </a>
@@ -258,7 +284,7 @@
     </form>
 </div>
 
-<!-- Product Selection Modal Template (hidden) -->
+<!-- Item Row Template -->
 <template id="itemRowTemplate">
     <tr class="item-row">
         <td class="px-6 py-4">
@@ -277,7 +303,8 @@
         </td>
         <td class="px-6 py-4">
             <input type="number" name="items[INDEX][unit_price]" step="0.01" min="0" required
-                   class="price-input w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-right font-mono">
+                   class="price-input w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-right font-mono"
+                   placeholder="Prix TTC">
         </td>
         <td class="px-6 py-4">
             <span class="item-total font-mono font-semibold text-gray-900">0.00</span>
@@ -294,127 +321,110 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    let itemIndex = {{ $invoice->items->count() }};
-    const itemsBody = document.getElementById('itemsBody');
-    const noItemsMessage = document.getElementById('noItemsMessage');
+document.addEventListener('DOMContentLoaded', function () {
+
+    const TVA_RATE = 0.20;
+
+    let itemIndex    = {{ $invoice->items->count() }};
+    const itemsBody  = document.getElementById('itemsBody');
+    const noItemsMsg = document.getElementById('noItemsMessage');
     const addItemBtn = document.getElementById('addItemBtn');
-    const submitBtn = document.getElementById('submitBtn');
+    const submitBtn  = document.getElementById('submitBtn');
     const remiseInput = document.getElementById('remiseInput');
 
-    // Attach listeners to existing rows
-    document.querySelectorAll('.item-row').forEach(row => {
-        attachRowEventListeners(row);
-    });
-
-    // Initial calculation
-    calculateGrandTotal();
+    // ─── Init ────────────────────────────────────────────────────────────────
+    document.querySelectorAll('.item-row').forEach(row => attachRowEventListeners(row));
+    calculateGrandTotal();   // ✅ calcul immédiat au chargement
     updateSubmitButton();
 
-    // Add item button click
     addItemBtn.addEventListener('click', addItem);
-    
-    // Remise input change
     remiseInput.addEventListener('input', calculateGrandTotal);
 
-    // Add item function
+    // ─── Ajouter une ligne ───────────────────────────────────────────────────
     function addItem() {
         const template = document.getElementById('itemRowTemplate');
-        const clone = template.content.cloneNode(true);
-        
-        // Replace INDEX with actual index
+        const clone    = template.content.cloneNode(true);
+
         const row = clone.querySelector('tr');
         row.innerHTML = row.innerHTML.replaceAll('INDEX', itemIndex);
-        
         itemsBody.appendChild(clone);
-        
-        // Hide no items message
-        noItemsMessage.style.display = 'none';
-        
-        // Get the actual appended row
+        noItemsMsg.style.display = 'none';
+
         const addedRow = itemsBody.lastElementChild;
-        
-        // Attach event listeners to the newly added row
         attachRowEventListeners(addedRow);
-        
+
         itemIndex++;
         updateSubmitButton();
     }
 
-    // Attach event listeners to a row
+    // ─── Listeners sur chaque ligne ──────────────────────────────────────────
     function attachRowEventListeners(row) {
         const productSelect = row.querySelector('.product-select');
         const quantityInput = row.querySelector('.quantity-input');
-        const priceInput = row.querySelector('.price-input');
-        const removeBtn = row.querySelector('.remove-item');
+        const priceInput    = row.querySelector('.price-input');
+        const removeBtn     = row.querySelector('.remove-item');
 
-        // Product selection
-        productSelect.addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const price = selectedOption.getAttribute('data-price');
-            
+        productSelect.addEventListener('change', function () {
+            const price = this.options[this.selectedIndex].getAttribute('data-price');
             if (price && price !== '') {
                 priceInput.value = parseFloat(price).toFixed(2);
                 calculateRowTotal(row);
             }
         });
 
-        // Quantity or price change
         quantityInput.addEventListener('input', () => calculateRowTotal(row));
-        priceInput.addEventListener('input', () => calculateRowTotal(row));
+        priceInput.addEventListener('input',    () => calculateRowTotal(row));
 
-        // Remove button
-        removeBtn.addEventListener('click', function() {
+        removeBtn.addEventListener('click', function () {
             row.remove();
-            if (itemsBody.children.length === 0) {
-                noItemsMessage.style.display = 'block';
-            }
+            if (itemsBody.children.length === 0) noItemsMsg.style.display = 'block';
             calculateGrandTotal();
             updateSubmitButton();
         });
     }
 
-    // Calculate row total
+    // ─── Total TTC d'une ligne ────────────────────────────────────────────────
     function calculateRowTotal(row) {
-        const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
-        const price = parseFloat(row.querySelector('.price-input').value) || 0;
-        const total = quantity * price;
-        
-        row.querySelector('.item-total').textContent = total.toFixed(2);
+        const qty   = parseFloat(row.querySelector('.quantity-input').value) || 0;
+        const price = parseFloat(row.querySelector('.price-input').value)    || 0;
+        row.querySelector('.item-total').textContent = (qty * price).toFixed(2);
         calculateGrandTotal();
     }
 
-    // Calculate grand total - SAME LOGIC AS CREATE PAGE
+    // ─── ✅ CALCUL PRINCIPAL : TTC → HT → TVA ────────────────────────────────
+    //   totalBrut  = Σ (qté × prix_ttc)
+    //   remise     = totalBrut × remise%
+    //   totalTTC   = totalBrut − remise
+    //   montantHT  = totalTTC ÷ 1.20
+    //   tva        = totalTTC − montantHT
+    // ─────────────────────────────────────────────────────────────────────────
     function calculateGrandTotal() {
-        let montantHT = 0;
-        
-        // Sum all item totals (HT prices)
+
+        let totalBrut = 0;
         document.querySelectorAll('.item-total').forEach(span => {
-            montantHT += parseFloat(span.textContent) || 0;
+            totalBrut += parseFloat(span.textContent) || 0;
         });
 
-        // Get remise percentage
-        const remisePercentage = parseFloat(remiseInput.value) || 0;
-        const montantRemise = montantHT * (remisePercentage / 100);
-        
-        // Calculate HT after remise
-        const montantHTAfterRemise = montantHT - montantRemise;
-        
-        // Calculate TVA on HT after remise
-        const tvaRate = 0.20; // 20%
-        const tva = montantHTAfterRemise * tvaRate;
-        
-        // Calculate TTC
-        const totalTTC = montantHTAfterRemise + tva;
+        const remisePct    = parseFloat(remiseInput.value) || 0;
+        const remiseAmount = totalBrut * (remisePct / 100);
+        const totalTTC     = totalBrut - remiseAmount;
+        const montantHT    = totalTTC / (1 + TVA_RATE);   // ÷ 1.20
+        const tva          = totalTTC - montantHT;
 
-        // Update display
-        document.getElementById('montantHT').textContent = montantHT.toFixed(2) + ' MAD';
-        document.getElementById('montantRemise').textContent = montantRemise.toFixed(2) + ' MAD';
-        document.getElementById('tvaAmount').textContent = tva.toFixed(2) + ' MAD';
-        document.getElementById('totalTTC').textContent = totalTTC.toFixed(2) + ' MAD';
+        // ─ Affichage ─
+        document.getElementById('totalBrut').textContent     = totalBrut.toFixed(2)    + ' MAD';
+        document.getElementById('montantRemise').textContent = '- ' + remiseAmount.toFixed(2) + ' MAD';
+        document.getElementById('totalTTC').textContent      = totalTTC.toFixed(2)     + ' MAD';
+        document.getElementById('tvaAmount').textContent     = tva.toFixed(2)          + ' MAD';
+        document.getElementById('montantHT').textContent     = montantHT.toFixed(2)    + ' MAD';
+
+        // ─ Hidden inputs pour le serveur ─
+        document.getElementById('hiddenMontantHT').value    = montantHT.toFixed(2);
+        document.getElementById('hiddenTva').value          = tva.toFixed(2);
+        document.getElementById('hiddenTotalTTC').value     = totalTTC.toFixed(2);
+        document.getElementById('hiddenRemiseAmount').value = remiseAmount.toFixed(2);
     }
 
-    // Update submit button state
     function updateSubmitButton() {
         submitBtn.disabled = itemsBody.children.length === 0;
     }

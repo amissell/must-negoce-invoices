@@ -6,308 +6,148 @@
     <title>Facture {{ $invoice->invoice_number }}</title>
 <style>
     @page {
-        margin: 8mm 10mm 8mm 10mm; 
+        margin: 8mm 10mm 8mm 10mm;
         size: A4;
     }
-    
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-    
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
         font-family: 'DejaVu Sans', 'Arial', sans-serif;
-        font-size: 10px; /* ✅ Taille de police réduite */
+        font-size: 10px;
         color: #000;
-        line-height: 1.3; /* ✅ Interligne réduit */
-        padding: 15px 20px; /* ✅ Padding réduit */
+        line-height: 1.3;
+        padding: 15px 20px;
     }
-    
-    /* Header Section */
+
+    /* ── Header ─────────────────────────────────────────────────────── */
     .header {
         display: table;
         width: 100%;
-        margin-bottom: 12px; /* ✅ Marge réduite */
+        margin-bottom: 12px;
         border-bottom: 2px solid #000;
-        padding-bottom: 10px; /* ✅ Padding réduit */
+        padding-bottom: 10px;
     }
-    .header-left {
-        display: table-cell;
-        vertical-align: middle;
-        width: 70px; /* ✅ Logo plus petit */
-    }
-    .header-right {
-        display: table-cell;
-        vertical-align: middle;
-        padding-left: 12px;
-    }
-    .logo {
-        width: 60px; /* ✅ Logo réduit */
-        height: auto;
-    }
-    .company-name {
-        font-size: 20px; /* ✅ Taille réduite */
-        font-weight: bold;
-        margin-bottom: 2px;
-        letter-spacing: 0.5px;
-    }
-    .company-subtitle {
-        font-size: 9px; /* ✅ Taille réduite */
-        color: #555;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-    }
-    
-    /* Invoice Title */
-    .invoice-title {
-        font-size: 13px; /* ✅ Taille réduite */
-        font-weight: bold;
-        margin-bottom: 8px; /* ✅ Marge réduite */
-    }
-    
-    /* Invoice Info */
-    .invoice-info {
-        margin-bottom: 10px; /* ✅ Marge réduite */
-        font-size: 10px;
-    }
-    .invoice-info table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    .invoice-info td {
-        padding: 3px 0; /* ✅ Padding réduit */
-        vertical-align: top;
-    }
-    .invoice-info .label {
-        font-weight: bold;
-        width: 25%;
-    }
-    .invoice-info .value {
-        width: 25%;
-    }
-    
-    /* Client Info Box - POUR FACTURES MANUELLES */
-    .client-box {
-        margin-bottom: 10px; /* ✅ Marge réduite */
-        padding: 8px 10px; /* ✅ Padding réduit */
-        border: 1px solid #ccc;
-        background-color: #f9f9f9;
-        page-break-inside: avoid; /* ✅ Évite la coupure */
-    }
-    .client-box .title {
-        font-weight: bold;
-        font-size: 10px;
-        margin-bottom: 6px;
-        color: #333;
-        text-transform: uppercase;
-    }
-    .client-info-row {
-        margin-bottom: 3px; /* ✅ Marge réduite */
-        font-size: 9px;
-    }
-    .client-info-row .label {
-        font-weight: bold;
-        display: inline-block;
-        width: 70px;
-    }
-    
-    /* Products Table - ✅ OPTIMISÉ POUR MAXIMUM DE LIGNES */
+    .header-left  { display: table-cell; vertical-align: middle; width: 70px; }
+    .header-right { display: table-cell; vertical-align: middle; padding-left: 12px; }
+    .logo { width: 60px; height: auto; }
+    .company-name     { font-size: 20px; font-weight: bold; margin-bottom: 2px; letter-spacing: 0.5px; }
+    .company-subtitle { font-size: 9px; color: #555; letter-spacing: 1.5px; text-transform: uppercase; }
+
+    /* ── Invoice Title & Info ────────────────────────────────────────── */
+    .invoice-title { font-size: 13px; font-weight: bold; margin-bottom: 8px; }
+    .invoice-info  { margin-bottom: 10px; font-size: 10px; }
+    .invoice-info table  { width: 100%; border-collapse: collapse; }
+    .invoice-info td     { padding: 3px 0; vertical-align: top; }
+    .invoice-info .label { font-weight: bold; width: 25%; }
+    .invoice-info .value { width: 25%; }
+
+    /* ── Client Box ──────────────────────────────────────────────────── */
+    .client-box        { margin-bottom: 10px; padding: 8px 10px; border: 1px solid #ccc; background-color: #f9f9f9; page-break-inside: avoid; }
+    .client-box .title { font-weight: bold; font-size: 10px; margin-bottom: 6px; color: #333; text-transform: uppercase; }
+    .client-info-row        { margin-bottom: 3px; font-size: 9px; }
+    .client-info-row .label { font-weight: bold; display: inline-block; width: 70px; }
+
+    /* ── Products Table ──────────────────────────────────────────────── */
     table.items {
         width: 100%;
         border-collapse: collapse;
-        margin: 12px 0; /* ✅ Marge réduite */
-        font-size: 9px; /* ✅ Taille réduite */
+        margin: 12px 0;
+        font-size: 9px;
     }
-    table.items thead {
-        background-color: #e0e0e0;
-    }
-    table.items thead tr {
-        border: 2px solid #000;
-    }
-    table.items thead th {
-        padding: 6px 5px; /* ✅ Padding réduit */
+    table.items thead             { background-color: #e0e0e0; }
+    table.items thead tr          { border: 2px solid #000; }
+    table.items thead th          { padding: 6px 5px; font-weight: bold; text-align: center; border-right: 1px solid #999; font-size: 10px; }
+    table.items thead th:first-child { text-align: left; padding-left: 8px; }
+    table.items thead th:last-child  { border-right: none; }
+
+    table.items tbody tr           { border-bottom: 1px solid #ddd; height: auto; }
+    table.items tbody tr:last-child { border-bottom: 2px solid #000; }
+    table.items tbody td           { padding: 4px 5px; border-right: 1px solid #eee; vertical-align: middle; }
+    table.items tbody td:last-child { border-right: none; }
+
+    table.items td.description { text-align: left; padding-left: 8px; width: 50%; }
+    table.items td.qty         { text-align: center; width: 12%; font-family: 'DejaVu Sans Mono', monospace; }
+    table.items td.price       { text-align: right;  width: 18%; font-family: 'DejaVu Sans Mono', monospace; }
+    table.items td.total       { text-align: right;  width: 20%; font-weight: 600; font-family: 'DejaVu Sans Mono', monospace; }
+
+    /* ✅ Badge "TTC" dans l'entête du tableau */
+    .badge-ttc {
+        display: inline-block;
+        background-color: #1d4ed8;
+        color: #fff;
+        font-size: 7px;
         font-weight: bold;
-        text-align: center;
-        border-right: 1px solid #999;
-        font-size: 10px;
-    }
-    table.items thead th:first-child {
-        text-align: left;
-        padding-left: 8px;
-    }
-    table.items thead th:last-child {
-        border-right: none;
-    }
-    
-    /* ✅ IMPORTANT: Lignes de produits avec hauteur minimale */
-    table.items tbody tr {
-        border-bottom: 1px solid #ddd;
-        height: auto; /* ✅ Hauteur automatique */
-    }
-    table.items tbody tr:last-child {
-        border-bottom: 2px solid #000;
-    }
-    table.items tbody td {
-        padding: 4px 5px; /* ✅ Padding minimal */
-        border-right: 1px solid #eee;
+        padding: 1px 4px;
+        border-radius: 3px;
+        letter-spacing: 0.5px;
+        margin-left: 3px;
         vertical-align: middle;
     }
-    table.items tbody td:last-child {
-        border-right: none;
-    }
-    table.items td.description {
-        text-align: left;
-        padding-left: 8px;
-        width: 50%;
-    }
-    table.items td.qty {
-        text-align: center;
-        width: 12%;
-        font-family: 'DejaVu Sans Mono', monospace;
-    }
-    table.items td.price {
-        text-align: right;
-        width: 18%;
-        font-family: 'DejaVu Sans Mono', monospace;
-    }
-    table.items td.total {
-        text-align: right;
-        width: 20%;
-        font-weight: 600;
-        font-family: 'DejaVu Sans Mono', monospace;
-    }
-    
-    /* Totals Section */
-    .totals {
-        margin-top: 15px; /* ✅ Marge réduite */
-        margin-bottom: 15px;
-        page-break-inside: avoid; /* ✅ Évite la coupure */
-    }
-    .totals-table {
-        float: right;
-        width: 260px; /* ✅ Largeur réduite */
-        font-size: 10px;
-    }
-    .totals-table table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    .totals-table tr {
-        border-bottom: 1px solid #ddd;
-    }
-    .totals-table td {
-        padding: 6px 8px; /* ✅ Padding réduit */
-    }
-    .totals-table .label {
-        font-weight: bold;
-        text-align: left;
-        width: 55%;
-    }
-    .totals-table .amount {
-        text-align: right;
-        font-weight: 600;
-        width: 45%;
-        font-family: 'DejaVu Sans Mono', monospace;
-    }
-    .total-ttc {
-        background-color: #f0f0f0;
-        font-size: 11px;
-        border-top: 2px solid #000 !important;
-        border-bottom: 2px solid #000 !important;
-    }
-    .total-ttc .label,
-    .total-ttc .amount {
-        font-weight: bold;
-        padding: 8px;
-    }
-    
-    /* Amount in Words */
+
+    /* ── Totals ──────────────────────────────────────────────────────── */
+    .totals        { margin-top: 15px; margin-bottom: 15px; page-break-inside: avoid; }
+    .totals-table  { float: right; width: 280px; font-size: 10px; }
+    .totals-table table     { width: 100%; border-collapse: collapse; }
+    .totals-table tr        { border-bottom: 1px solid #ddd; }
+    .totals-table td        { padding: 6px 8px; }
+    .totals-table .label    { font-weight: bold; text-align: left; width: 55%; }
+    .totals-table .amount   { text-align: right; font-weight: 600; width: 45%; font-family: 'DejaVu Sans Mono', monospace; }
+
+    /* ✅ Ligne TTC (affichée en premier) */
+    .row-ttc { background-color: #eff6ff; border-top: 2px solid #1d4ed8 !important; }
+    .row-ttc .label  { font-weight: bold; color: #1d4ed8; }
+    .row-ttc .amount { font-weight: bold; color: #1d4ed8; }
+
+    /* ✅ Ligne remise */
+    .remise-row .amount { color: #d32f2f; }
+
+    /* ✅ Séparateur extraction TVA/HT */
+    .row-separator td { border-top: 1px dashed #999 !important; background-color: #fafafa; }
+    .row-separator .label  { font-size: 8px; color: #888; font-style: italic; font-weight: normal; }
+
+    /* ✅ Ligne HT finale */
+    .total-ht { background-color: #f0f0f0; border-top: 2px solid #000 !important; border-bottom: 2px solid #000 !important; }
+    .total-ht .label, .total-ht .amount { font-weight: bold; padding: 8px; }
+
+    /* ── Amount in Words ─────────────────────────────────────────────── */
     .amount-words {
         clear: both;
-        margin-top: 20px; /* ✅ Marge réduite */
-        margin-bottom: 15px;
-        padding: 10px 12px; /* ✅ Padding réduit */
+        margin-top: 20px; margin-bottom: 15px;
+        padding: 10px 12px;
         background-color: #f8f8f8;
         border: 1px solid #ddd;
-        font-size: 9px;
-        line-height: 1.5;
-        page-break-inside: avoid; /* ✅ Évite la coupure */
+        font-size: 9px; line-height: 1.5;
+        page-break-inside: avoid;
     }
-    .amount-words strong {
-        font-weight: bold;
-    }
-    
-    /* ✅ FOOTER - UNIQUEMENT SUR LA DERNIÈRE PAGE */
+
+    /* ── Footer ──────────────────────────────────────────────────────── */
     .footer {
-        margin-top: 20px; /* ✅ Marge réduite */
-        padding-top: 12px;
+        margin-top: 20px; padding-top: 12px;
         border-top: 2px solid #000;
-        font-size: 9px;
-        line-height: 1.6;
+        font-size: 9px; line-height: 1.6;
         page-break-inside: avoid;
         text-align: center;
     }
-    .footer-row {
-        margin: 2px 0;
-        text-align: center;
-    }
-    .footer strong {
-        font-weight: bold;
-    }
-    .footer-inline {
-        display: block;
-        text-align: center;
-    }
-    .footer-inline span {
-        margin-right: 15px;
-        display: inline-block;
-    }
-    .remise-row {
-        background-color: #ffe6e6;
-    }
-    .remise-row .amount {
-        color: #d32f2f;
-    }
-    
-    /* ✅ RÈGLES DE PAGINATION */
+    .footer-row    { margin: 2px 0; text-align: center; }
+    .footer-inline { display: block; text-align: center; }
+    .footer-inline span { margin-right: 15px; display: inline-block; }
+
+    /* ── Pagination ───────────────────────────────────────────────────── */
     @media print {
-        /* Le header ne se répète PAS sur chaque page */
-        .header {
-            page-break-after: avoid;
-        }
-        
-        /* Le tableau peut continuer sur plusieurs pages */
-        table.items {
-            page-break-inside: auto;
-        }
-        
-        table.items thead {
-            display: table-header-group; /* ✅ Header du tableau SE RÉPÈTE */
-        }
-        
-        table.items tbody tr {
-            page-break-inside: avoid; /* ✅ Une ligne ne se coupe jamais */
-        }
-        
-        /* Totals et footer restent ensemble */
-        .totals,
-        .amount-words,
-        .footer {
-            page-break-inside: avoid;
-        }
+        .header               { page-break-after: avoid; }
+        table.items           { page-break-inside: auto; }
+        table.items thead     { display: table-header-group; }
+        table.items tbody tr  { page-break-inside: avoid; }
+        .totals, .amount-words, .footer { page-break-inside: avoid; }
     }
-    
-    /* Clearfix */
-    .clearfix::after {
-        content: "";
-        display: table;
-        clear: both;
-    }
+
+    .clearfix::after { content: ""; display: table; clear: both; }
 </style>
 </head>
 <body>
-    <!-- Header with Logo -->
+
+    <!-- Header -->
     <div class="header">
         <div class="header-left">
             <img src="{{ public_path('images/must-negoce-logo.png') }}" alt="Logo" class="logo">
@@ -318,7 +158,7 @@
         </div>
     </div>
 
-    <!-- Invoice Title & Basic Information -->
+    <!-- Invoice Title & Info -->
     <div class="invoice-title">Facture pour</div>
     <div class="invoice-info">
         <table>
@@ -335,12 +175,12 @@
         </table>
     </div>
 
-    <!-- Client Information Box - SECTION POUR FACTURES MANUELLES -->
+    <!-- Client Box -->
     <div class="client-box">
         <div class="title">Informations Client</div>
         <div class="client-info-row">
             <span class="label">Nom :</span>
-            <span>{{ $invoice->client_name}}</span>
+            <span>{{ $invoice->client_name }}</span>
         </div>
         @if($invoice->client_phone)
         <div class="client-info-row">
@@ -363,13 +203,18 @@
     </div>
 
     <!-- Products Table -->
+    {{--
+        ✅ Les prix unitaires sont TTC.
+           Montant HT = Total TTC ÷ 1.20
+           TVA        = Total TTC − HT
+    --}}
     <table class="items">
         <thead>
             <tr>
                 <th>Description</th>
                 <th>Qté</th>
-                <th>Prix unitaire</th>
-                <th>Prix total</th>
+                <th>Prix unitaire <span class="badge-ttc">TTC</span></th>
+                <th>Prix total <span class="badge-ttc">TTC</span></th>
             </tr>
         </thead>
         <tbody>
@@ -383,44 +228,58 @@
             @endforeach
         </tbody>
     </table>
-    <!-- Totals -->
-<div class="totals clearfix">
-    <div class="totals-table">
-        <table>
-            <!-- 1. Montant HT first -->
-            <tr>
-                <td class="label">Montant HT</td>
-                <td class="amount">{{ number_format($invoice->montant_ht, 2) }} MAD</td>
-            </tr>
-            
-            <!-- 2. Remise (if exists) -->
-            @if(isset($invoice->remise_percentage) && $invoice->remise_percentage > 0)
-            <tr class="remise-row">
-                <td class="label">Remise {{ $invoice->remise_percentage }}%</td>
-                <td class="amount">- {{ number_format($invoice->remise_amount, 2) }} MAD</td>
-            </tr>
-            @endif
-            
-            <!-- 3. TVA after remise -->
-            <tr>
-                <td class="label">TVA {{ $invoice->tva_rate ?? 20 }}%</td>
-                <td class="amount">{{ number_format($invoice->tva, 2) }} MAD</td>
-            </tr>
-            
-            <!-- 4. MONTANT TTC at the end -->
-            <tr class="total-ttc">
-                <td class="label">MONTANT TTC</td>
-                <td class="amount">{{ number_format($invoice->total_ttc, 2) }} MAD</td>
-            </tr>
-        </table>
+
+    <!-- ✅ Totals — ordre : TTC → (Remise) → extraction TVA/HT → MONTANT HT -->
+    <div class="totals clearfix">
+        <div class="totals-table">
+            <table>
+
+                {{-- 1. Total TTC (= somme des lignes) --}}
+                <tr class="row-ttc">
+                    <td class="label">Total TTC</td>
+                    <td class="amount">{{ number_format($invoice->total_ttc, 2) }} MAD</td>
+                </tr>
+
+                {{-- 2. Remise si applicable --}}
+                @if(isset($invoice->remise_percentage) && $invoice->remise_percentage > 0)
+                <tr class="remise-row">
+                    <td class="label">Remise {{ $invoice->remise_percentage }}%</td>
+                    <td class="amount">- {{ number_format($invoice->remise_amount, 2) }} MAD</td>
+                </tr>
+                <tr class="row-ttc">
+                    <td class="label">TTC après remise</td>
+                    <td class="amount">
+                        {{ number_format($invoice->total_ttc, 2) }} MAD
+                    </td>
+                </tr>
+                @endif
+
+                {{-- 3. Séparateur "extraction" --}}
+                <tr class="row-separator">
+                    <td class="label" colspan="2">Détail TVA incluse (÷ 1.20)</td>
+                </tr>
+
+                {{-- 4. TVA extraite --}}
+                <tr>
+                    <td class="label">dont TVA {{ $invoice->tva_rate ?? 20 }}%</td>
+                    <td class="amount">{{ number_format($invoice->tva, 2) }} MAD</td>
+                </tr>
+
+                {{-- 5. MONTANT HT = TTC ÷ 1.20 --}}
+                <tr class="total-ht">
+                    <td class="label">MONTANT HT</td>
+                    <td class="amount">{{ number_format($invoice->montant_ht, 2) }} MAD</td>
+                </tr>
+
+            </table>
+        </div>
     </div>
-</div>
 
     <!-- Amount in Words -->
     <div class="amount-words">
-        <strong>Arrêter la présence facture a la somme :</strong> {{ strtoupper($amountInWords) }}
+        <strong>Arrêter la présente facture à la somme :</strong> {{ strtoupper($amountInWords) }}
     </div>
-    
+
     <!-- Footer -->
     <div class="footer">
         <div class="footer-row"><strong>Adresse:</strong> MASSIRA 1 C IMM 90 MARRAKECH</div>
@@ -432,5 +291,6 @@
             <span><strong>TP:</strong> 92105859</span>
         </div>
     </div>
+
 </body>
 </html>
