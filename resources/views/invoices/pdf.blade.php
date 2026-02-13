@@ -320,7 +320,7 @@
                 <td class="label">N° FACTURE :</td>
                 <td class="value">{{ $invoice->invoice_number }}</td>
                 <td class="label">DATE :</td>
-                <td class="value">{{ $invoice->invoice_date->format('n/j/Y') }}</td>
+                <td class="value">{{ \Carbon\Carbon::parse($invoice->invoice_date)->locale('fr')->isoFormat('D MMMM YYYY') }}</td>
             </tr>
             <tr>
                 <td class="label">Nom de client :</td>

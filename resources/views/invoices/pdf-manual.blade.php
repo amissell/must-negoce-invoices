@@ -71,20 +71,6 @@
     table.items td.price       { text-align: right;  width: 18%; font-family: 'DejaVu Sans Mono', monospace; }
     table.items td.total       { text-align: right;  width: 20%; font-weight: 600; font-family: 'DejaVu Sans Mono', monospace; }
 
-    /* ✅ Badge "TTC" dans l'entête du tableau */
-    .badge-ttc {
-        display: inline-block;
-        background-color: #1d4ed8;
-        color: #fff;
-        font-size: 7px;
-        font-weight: bold;
-        padding: 1px 4px;
-        border-radius: 3px;
-        letter-spacing: 0.5px;
-        margin-left: 3px;
-        vertical-align: middle;
-    }
-
     /* ── Totals ──────────────────────────────────────────────────────── */
     .totals        { margin-top: 15px; margin-bottom: 15px; page-break-inside: avoid; }
     .totals-table  { float: right; width: 280px; font-size: 10px; }
@@ -94,21 +80,23 @@
     .totals-table .label    { font-weight: bold; text-align: left; width: 55%; }
     .totals-table .amount   { text-align: right; font-weight: 600; width: 45%; font-family: 'DejaVu Sans Mono', monospace; }
 
-    /* ✅ Ligne TTC (affichée en premier) */
-    .row-ttc { background-color: #eff6ff; border-top: 2px solid #1d4ed8 !important; }
-    .row-ttc .label  { font-weight: bold; color: #1d4ed8; }
-    .row-ttc .amount { font-weight: bold; color: #1d4ed8; }
-
-    /* ✅ Ligne remise */
+    /* Ligne HT */
+    .row-ht { background-color: #f0f0f0; }
+    
+    /* Ligne remise */
     .remise-row .amount { color: #d32f2f; }
-
-    /* ✅ Séparateur extraction TVA/HT */
-    .row-separator td { border-top: 1px dashed #999 !important; background-color: #fafafa; }
-    .row-separator .label  { font-size: 8px; color: #888; font-style: italic; font-weight: normal; }
-
-    /* ✅ Ligne HT finale */
-    .total-ht { background-color: #f0f0f0; border-top: 2px solid #000 !important; border-bottom: 2px solid #000 !important; }
-    .total-ht .label, .total-ht .amount { font-weight: bold; padding: 8px; }
+    
+    /* Ligne TVA */
+    .row-tva { }
+    
+    /* Ligne TTC finale (la plus importante) */
+    .total-ttc { 
+        background-color: #eff6ff; 
+        border-top: 2px solid #1d4ed8 !important; 
+        border-bottom: 2px solid #1d4ed8 !important;
+    }
+    .total-ttc .label  { font-weight: bold; color: #1d4ed8; padding: 8px; }
+    .total-ttc .amount { font-weight: bold; color: #1d4ed8; padding: 8px; font-size: 11px; }
 
     /* ── Amount in Words ─────────────────────────────────────────────── */
     .amount-words {
@@ -166,7 +154,7 @@
                 <td class="label">N° FACTURE :</td>
                 <td class="value">{{ $invoice->invoice_number }}</td>
                 <td class="label">DATE :</td>
-                <td class="value">{{ $invoice->invoice_date->format('d/m/Y') }}</td>
+                <td class="value">{{ \Carbon\Carbon::parse($invoice->invoice_date)->locale('fr')->isoFormat('D MMMM YYYY') }}</td>
             </tr>
             <tr>
                 <td class="label">MODE DE PAY :</td>
@@ -203,18 +191,13 @@
     </div>
 
     <!-- Products Table -->
-    {{--
-        ✅ Les prix unitaires sont TTC.
-           Montant HT = Total TTC ÷ 1.20
-           TVA        = Total TTC − HT
-    --}}
     <table class="items">
         <thead>
             <tr>
                 <th>Description</th>
                 <th>Qté</th>
-                <th>Prix unitaire <span class="badge-ttc">TTC</span></th>
-                <th>Prix total <span class="badge-ttc">TTC</span></th>
+                <th>Prix unitaire</th>
+                <th>Prix total</th>
             </tr>
         </thead>
         <tbody>
@@ -229,48 +212,35 @@
         </tbody>
     </table>
 
-    <!-- ✅ Totals — ordre : TTC → (Remise) → extraction TVA/HT → MONTANT HT -->
+    <!-- ✅ CORRECT ORDER: HT → Remise → TVA → TTC -->
     <div class="totals clearfix">
         <div class="totals-table">
             <table>
-
-                {{-- 1. Total TTC (= somme des lignes) --}}
-                <tr class="row-ttc">
-                    <td class="label">Total TTC</td>
-                    <td class="amount">{{ number_format($invoice->total_ttc, 2) }} MAD</td>
-                </tr>
-
-                {{-- 2. Remise si applicable --}}
-                @if(isset($invoice->remise_percentage) && $invoice->remise_percentage > 0)
-                <tr class="remise-row">
-                    <td class="label">Remise {{ $invoice->remise_percentage }}%</td>
-                    <td class="amount">- {{ number_format($invoice->remise_amount, 2) }} MAD</td>
-                </tr>
-                <tr class="row-ttc">
-                    <td class="label">TTC après remise</td>
-                    <td class="amount">
-                        {{ number_format($invoice->total_ttc, 2) }} MAD
-                    </td>
-                </tr>
-                @endif
-
-                {{-- 3. Séparateur "extraction" --}}
-                <tr class="row-separator">
-                    <td class="label" colspan="2">Détail TVA incluse (÷ 1.20)</td>
-                </tr>
-
-                {{-- 4. TVA extraite --}}
-                <tr>
-                    <td class="label">dont TVA {{ $invoice->tva_rate ?? 20 }}%</td>
-                    <td class="amount">{{ number_format($invoice->tva, 2) }} MAD</td>
-                </tr>
-
-                {{-- 5. MONTANT HT = TTC ÷ 1.20 --}}
-                <tr class="total-ht">
+                {{-- 1. Montant HT --}}
+                <tr class="row-ht">
                     <td class="label">MONTANT HT</td>
                     <td class="amount">{{ number_format($invoice->montant_ht, 2) }} MAD</td>
                 </tr>
-
+                
+                {{-- 2. Remise (si applicable) --}}
+                @if(isset($invoice->remise_percentage) && $invoice->remise_percentage > 0)
+                <tr class="remise-row">
+                    <td class="label">Remise ({{ $invoice->remise_percentage }}%)</td>
+                    <td class="amount">- {{ number_format($invoice->remise_amount, 2) }} MAD</td>
+                </tr>
+                @endif
+                
+                {{-- 3. TVA --}}
+                <tr class="row-tva">
+                    <td class="label">TVA ({{ $invoice->tva_rate ?? 20 }}%)</td>
+                    <td class="amount">{{ number_format($invoice->tva, 2) }} MAD</td>
+                </tr>
+                
+                {{-- 4. TOTAL TTC (le plus important) --}}
+                <tr class="total-ttc">
+                    <td class="label">TOTAL TTC</td>
+                    <td class="amount">{{ number_format($invoice->total_ttc, 2) }} MAD</td>
+                </tr>
             </table>
         </div>
     </div>

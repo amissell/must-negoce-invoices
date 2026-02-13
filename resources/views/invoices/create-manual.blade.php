@@ -65,12 +65,14 @@
                     <input type="text" value="{{ $nextInvoiceNumber }}" readonly
                            class="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-700 font-mono">
                 </div>
-
-                <!-- Invoice Date -->
+                <!-- Invoice Date - CORRIGÉ ✅ -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Date <span class="text-red-500">*</span></label>
-                    <input type="date" name="invoice_date" value="{{ old('invoice_date', date('Y-m-d')) }}" required
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <input type="date"
+                    name="invoice_date"
+                    value="{{ old('invoice_date', \Carbon\Carbon::now()->format('Y-m-d')) }}"
+                    required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
 
                 <!-- Payment Mode -->
