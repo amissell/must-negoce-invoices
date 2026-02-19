@@ -1,10 +1,13 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\InvoiceController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\ManualInvoiceController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\ManualInvoiceController;
+use App\Http\Controllers\ProductController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SuiviVendeurController;
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -24,12 +27,6 @@ Route::middleware('guest')->group(function () {
 // Logout Route (Accessible only to authenticated users)
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 
-/*
-|--------------------------------------------------------------------------
-| Protected Dashboard Routes
-|--------------------------------------------------------------------------
-| All these routes require authentication
-*/
 
 Route::middleware('auth')->group(function () {
     
@@ -54,5 +51,8 @@ Route::middleware('auth')->group(function () {
     Route::prefix('invoices/manual')->name('invoices.manual.')->group(function () {
         Route::get('/create', [ManualInvoiceController::class, 'create'])->name('create');
         Route::post('/store', [ManualInvoiceController::class, 'store'])->name('store');
-    });
+});
+Route::middleware(['auth'])->group(function () {
+    Route::resource('suivi-vendeurs', SuiviVendeurController::class);
+});
 });

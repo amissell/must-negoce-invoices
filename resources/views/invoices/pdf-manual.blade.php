@@ -252,7 +252,7 @@
 
     <!-- Footer -->
     <div class="footer">
-        <div class="footer-row"><strong>Adresse:</strong> MASSIRA 1 C IMM 90 MARRAKECH</div>
+        <div class="footer-row"><strong>Adresse:</strong>MASSIRA 1 C IMM 90 MARRAKECH</div>
         <div class="footer-row"><strong>Tel :</strong> 0632629412</div>
         <div class="footer-row footer-inline">
             <span><strong>R.C:</strong> 86613</span>
