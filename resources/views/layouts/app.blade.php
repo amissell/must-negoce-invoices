@@ -26,7 +26,8 @@
         <div class="flex items-center justify-between h-16">
 
             {{-- Logo --}}
-            <a href="{{ route('invoices.index') }}" class="flex items-center gap-3">
+            <a href="{{ auth()->user()->isAdmin() ? route('invoices.index') : route('suivi-vendeurs.index') }}"
+               class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -40,6 +41,9 @@
 
             {{-- Navigation Links --}}
             <div class="hidden md:flex items-center gap-1">
+
+                {{-- ADMIN ONLY links --}}
+                @if(auth()->user()->isAdmin())
                 <a href="{{ route('invoices.index') }}"
                    class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('invoices.index') ? 'bg-white/20' : 'hover:bg-white/10' }}">
                     📊 Tableau de Bord
@@ -52,24 +56,30 @@
                    class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('invoices.manual.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
                     ✏️ Facture Manuelle
                 </a>
+                @endif
 
-                {{-- ✅ Suivi Vendeurs Button with Badge --}}
+                {{-- Suivi Vendeurs — visible to ALL authenticated users --}}
                 <a href="{{ route('suivi-vendeurs.index') }}"
                    class="relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
-                          {{ request()->routeIs('vendeurs.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                          {{ request()->routeIs('suivi-vendeurs.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
                     Suivi Vendeurs
-                    {{-- Badge Alerte si Reste > 5000 --}}
                     @if(isset($sidebarStats) && $sidebarStats->total_reste > 5000)
                     <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold
-                                 rounded-full flex items-center justify-center animate-pulse">
-                        !
-                    </span>
+                                 rounded-full flex items-center justify-center animate-pulse">!</span>
                     @endif
                 </a>
+
+                {{-- ADMIN ONLY: Users management --}}
+                @if(auth()->user()->isAdmin())
+                <a href="{{ route('admin.users') }}"
+                   class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('admin.users*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                    👥 Utilisateurs
+                </a>
+                @endif
 
                 {{-- User Menu --}}
                 <div class="ml-2 relative group">
@@ -86,6 +96,10 @@
                         <div class="p-3 border-b border-gray-100">
                             <p class="text-sm font-semibold text-gray-800">{{ auth()->user()->name }}</p>
                             <p class="text-xs text-gray-500">{{ auth()->user()->email }}</p>
+                            <span class="inline-block mt-1 text-xs font-bold px-2 py-0.5 rounded-full
+                                {{ auth()->user()->isAdmin() ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700' }}">
+                                {{ ucfirst(auth()->user()->role) }}
+                            </span>
                         </div>
                         <form method="POST" action="{{ route('logout') }}" class="p-2">
                             @csrf
@@ -112,19 +126,30 @@
     {{-- Mobile Menu --}}
     <div id="mobileMenu" class="hidden md:hidden border-t border-white/10">
         <div class="px-4 py-3 space-y-2">
+            @if(auth()->user()->isAdmin())
             <a href="{{ route('invoices.index') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">📊 Tableau de Bord</a>
             <a href="{{ route('products.index') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">📦 Produits</a>
             <a href="{{ route('invoices.manual.create') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">✏️ Facture Manuelle</a>
+            @endif
+
             <a href="{{ route('suivi-vendeurs.index') }}" class="flex items-center justify-between px-4 py-2 rounded-lg hover:bg-white/10">
                 <span>👥 Suivi Vendeurs</span>
                 @if(isset($sidebarStats) && $sidebarStats->total_reste > 5000)
                 <span class="w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">!</span>
                 @endif
             </a>
+
+            @if(auth()->user()->isAdmin())
+            <a href="{{ route('admin.users') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">👥 Utilisateurs</a>
+            @endif
+
             <div class="border-t border-white/10 pt-3 mt-3">
                 <div class="px-4 py-2 text-white/80 text-sm">
                     <p class="font-semibold">{{ auth()->user()->name }}</p>
                     <p class="text-xs text-white/60">{{ auth()->user()->email }}</p>
+                    <span class="text-xs font-bold {{ auth()->user()->isAdmin() ? 'text-indigo-300' : 'text-amber-300' }}">
+                        {{ ucfirst(auth()->user()->role) }}
+                    </span>
                 </div>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf

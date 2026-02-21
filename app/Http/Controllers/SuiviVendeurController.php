@@ -28,13 +28,19 @@ class SuiviVendeurController extends Controller
             ->where('jour_repos', 0)
             ->get();
 
+        $blGlobal = $toutesLignes->sum('bl');
+        $caGlobal = $toutesLignes->sum('chiffre');
+
         $statsGlobales = [
-            'ca_total'    => $toutesLignes->sum('chiffre'),
-            'encaisse'    => $toutesLignes->sum('total_paye'),
-            'reste'       => $toutesLignes->sum('chiffre') - $toutesLignes->sum('total_paye'),
-            'bl_total'    => $toutesLignes->sum('bl'),
-            'taux_global' => $toutesLignes->sum('chiffre') > 0
-                ? round(($toutesLignes->sum('total_paye') / $toutesLignes->sum('chiffre')) * 100, 1)
+            'ca_total'     => $caGlobal,
+            'encaisse'     => $toutesLignes->sum('total_paye'),
+            'reste'        => $caGlobal - $toutesLignes->sum('total_paye'),
+            'bl_total'     => $blGlobal,
+            'taux_global'  => $caGlobal > 0
+                ? round(($toutesLignes->sum('total_paye') / $caGlobal) * 100, 1)
+                : 0,
+            'drops_global' => $blGlobal > 0
+                ? round($caGlobal / $blGlobal, 2)
                 : 0,
         ];
 
@@ -43,14 +49,16 @@ class SuiviVendeurController extends Controller
             ->map(function ($entries) {
                 $caTotal  = $entries->sum('chiffre');
                 $encaisse = $entries->sum('total_paye');
+                $blTotal  = $entries->sum('bl');
                 $sorted   = $entries->sortByDesc('chiffre');
 
                 return [
                     'ca_total'      => $caTotal,
                     'encaisse'      => $encaisse,
                     'reste'         => $caTotal - $encaisse,
-                    'bl'            => $entries->sum('bl'),
+                    'bl'            => $blTotal,
                     'taux'          => $caTotal > 0 ? round(($encaisse / $caTotal) * 100, 1) : 0,
+                    'drops'         => $blTotal > 0 ? round($caTotal / $blTotal, 2) : 0,
                     'meilleur_jour' => $sorted->first(),
                     'pire_jour'     => $sorted->last(),
                     'jours'         => $entries->sortBy('date'),
@@ -84,10 +92,60 @@ class SuiviVendeurController extends Controller
 
         $lignes = $query->orderBy('date', 'desc')->paginate(30);
 
+        // ── INACTIVITÉ ───────────────────────────────────────────────────
+        $JOURS_OUVRES_LIMITE = 26;
+
+        $joursTravaillables = collect();
+        $cursor  = Carbon::create($annee, $mois, 1)->startOfMonth();
+        $finMois = Carbon::create($annee, $mois, 1)->endOfMonth();
+        while ($cursor->lte($finMois)) {
+            if ($cursor->dayOfWeek !== Carbon::SUNDAY) {
+                $joursTravaillables->push($cursor->toDateString());
+            }
+            $cursor->addDay();
+        }
+        $totalJoursOuvres = $joursTravaillables->count();
+
+        $inactiviteParVendeur = [];
+        $tousVendeurs = SuiviVendeur::whereBetween('date', [$debut, $fin])
+            ->distinct()
+            ->orderBy('vendeur_nom')
+            ->pluck('vendeur_nom');
+
+        foreach ($tousVendeurs as $nom) {
+            $entrees = SuiviVendeur::whereBetween('date', [$debut, $fin])
+                ->where('vendeur_nom', $nom)
+                ->get();
+
+            $joursAvecEntree = $entrees->pluck('date')
+                ->map(fn($d) => (string) $d)
+                ->unique();
+
+            $joursActifs  = $entrees->where('jour_repos', false)->count();
+            $joursRepos   = $entrees->where('jour_repos', true)->count();
+            $joursAbsents = $totalJoursOuvres - $joursAvecEntree->count();
+
+            $absenceAutorisee = max(0, $totalJoursOuvres - $JOURS_OUVRES_LIMITE);
+            $joursAuDela      = max(0, $joursAbsents - $absenceAutorisee);
+
+            $inactiviteParVendeur[$nom] = [
+                'jours_actifs'  => $joursActifs,
+                'jours_repos'   => $joursRepos,
+                'jours_absents' => $joursAbsents,
+                'jours_au_dela' => $joursAuDela,
+                'statut'        => $joursAuDela >= 5 ? 'critique'
+                                 : ($joursAuDela >= 2 ? 'attention' : 'ok'),
+            ];
+        }
+
+        $inactiviteParVendeur = collect($inactiviteParVendeur)
+            ->sortByDesc('jours_au_dela');
+
         return view('suivi_vendeurs.index', compact(
             'lignes', 'suiviParVendeur', 'statsGlobales',
             'vendeurs', 'mois', 'annee',
-            'chartDates', 'chartDataCA', 'toutesLignes'
+            'chartDates', 'chartDataCA', 'toutesLignes',
+            'inactiviteParVendeur', 'totalJoursOuvres'
         ));
     }
 
@@ -113,7 +171,6 @@ class SuiviVendeurController extends Controller
 
         $validated['jour_repos'] = $request->boolean('jour_repos');
 
-        // Force zeros for repos days — server-side safety
         if ($validated['jour_repos']) {
             $validated['chiffre']     = 0;
             $validated['total_paye']  = 0;
@@ -151,7 +208,6 @@ class SuiviVendeurController extends Controller
 
         $validated['jour_repos'] = $request->boolean('jour_repos');
 
-        // Force zeros for repos days — server-side safety
         if ($validated['jour_repos']) {
             $validated['chiffre']     = 0;
             $validated['total_paye']  = 0;
