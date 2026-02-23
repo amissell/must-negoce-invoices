@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SuiviVendeur;
+use App\Models\SuiviCategorie;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -178,12 +179,24 @@ class SuiviVendeurController extends Controller
             $validated['heure_debut'] = null;
             $validated['heure_fin']   = null;
         }
-
         $validated['created_by'] = Auth::id();
-        SuiviVendeur::create($validated);
+$suiviVendeur = SuiviVendeur::create($validated);
 
-        return redirect()->route('suivi-vendeurs.index')
-            ->with('success', '✅ Entrée ajoutée avec succès !');
+// زيد الcatégories
+if ($request->has('categories')) {
+    foreach ($request->categories as $cat) {
+        if (!empty($cat['categorie'])) {
+            $suiviVendeur->categories()->create([
+                'categorie' => $cat['categorie'],
+                'quantite'  => $cat['quantite'] ?? 0,
+                'ca'        => $cat['ca'] ?? 0,
+            ]);
+        }
+    }
+}
+
+return redirect()->route('suivi-vendeurs.index')
+    ->with('success', '✅ Entrée ajoutée avec succès !');
     }
 
     public function edit(SuiviVendeur $suiviVendeur)
@@ -254,11 +267,19 @@ class SuiviVendeurController extends Controller
 
     $chartDates = $lignes->map(fn($l) => Carbon::parse($l->date)->format('d/m'))->values();
     $chartCA    = $lignes->pluck('chiffre')->values();
+    $categoriesStats = SuiviCategorie::whereHas('suiviVendeur', function($q) use ($nom, $debut, $fin) {
+    $q->where('vendeur_nom', $nom)
+      ->whereBetween('date', [$debut, $fin]);
+})
+->selectRaw('categorie, SUM(quantite) as total_quantite, SUM(ca) as total_ca')
+->groupBy('categorie')
+->orderByDesc('total_ca')
+->get();
 
     return view('suivi_vendeurs.show', compact(
         'nom', 'lignes', 'mois', 'annee',
         'caTotal', 'encaisse', 'blTotal', 'taux', 'drops',
-        'meilleurJour', 'pireJour', 'chartDates', 'chartCA'
+        'meilleurJour', 'pireJour', 'chartDates', 'chartCA', 'categoriesStats'
     ));
 }
 }

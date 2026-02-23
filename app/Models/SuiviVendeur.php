@@ -39,4 +39,9 @@ class SuiviVendeur extends Model
         if ($this->chiffre == 0) return 0;
         return round(($this->total_paye / $this->chiffre) * 100, 1);
     }
+
+    public function categories()
+    {
+        return $this->hasMany(SuiviCategorie::class);
+    }
 }

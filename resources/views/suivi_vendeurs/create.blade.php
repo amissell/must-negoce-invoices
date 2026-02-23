@@ -388,6 +388,35 @@
                         </div>
                     </label>
                 </div>
+                {{-- ─── Section 4 : Catégories ─── --}}
+                <div class="mb-8">
+                    <div class="section-label"><span>📦 Catégories vendues ce jour</span></div>
+                    <div id="categories-container">
+                        <div class="categorie-row" style="display:flex;gap:10px;margin-bottom:10px;align-items:center">
+                            <select name="categories[0][categorie]" class="field-input" style="flex:2">
+                                <option value="">— Choisir catégorie —</option>
+                                <option value="COMPACT">COMPACT</option>
+                                <option value="SPARK">SPARK</option>
+                                <option value="SILLA">SILLA</option>
+                                <option value="NETTOYAGE">NETTOYAGE</option>
+                                <option value="ECO-SOLUTIONS">ECO-SOLUTIONS</option>
+                                <option value="EL FEDDAN GROS">EL FEDDAN GROS</option>
+                                <option value="COUCHES">COUCHES</option>
+                                <option value="FEDDANE DETAIL">FEDDANE DETAIL</option>
+                                <option value="FOOD">FOOD</option>
+                                <option value="TCOSMÉTIQUE">TCOSMÉTIQUE</option>
+                            </select>
+                            <input type="number" name="categories[0][quantite]" placeholder="Qté"
+                            class="field-input" style="flex:1" min="0">
+                            <input type="number" name="categories[0][ca]" placeholder="CA (DH)"
+                            class="field-input" style="flex:1" step="0.01" min="0">
+                        </div>
+                    </div>
+                    <button type="button" onclick="addCategorie()"
+                    style="margin-top:8px;padding:8px 18px;background:#EEF2FF;color:#4338CA;border:1.5px solid #C7D2FE;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit">
+                    ➕ Ajouter une catégorie
+                </button>
+            </div>
 
                 {{-- ─── Actions ─── --}}
                 <div class="flex items-center justify-between pt-6" style="border-top:1px solid #F1F5F9">
@@ -495,5 +524,40 @@ document.getElementById('selectVendeur').addEventListener('change', function () 
         this.setAttribute('name', 'vendeur_nom');
     }
 });
+
+
+// ── Catégories dynamiques ──
+let catIndex = 1;
+function addCategorie() {
+    const container = document.getElementById('categories-container');
+    const row = document.createElement('div');
+    row.className = 'categorie-row';
+    row.style = 'display:flex;gap:10px;margin-bottom:10px;align-items:center';
+    row.innerHTML = `
+        <select name="categories[${catIndex}][categorie]" class="field-input" style="flex:2">
+            <option value="">— Choisir catégorie —</option>
+            <option value="COMPACT">COMPACT</option>
+            <option value="SPARK">SPARK</option>
+            <option value="SILLA">SILLA</option>
+            <option value="NETTOYAGE">NETTOYAGE</option>
+            <option value="ECO-SOLUTIONS">ECO-SOLUTIONS</option>
+            <option value="EL FEDDAN GROS">EL FEDDAN GROS</option>
+            <option value="COUCHES">COUCHES</option>
+            <option value="FEDDANE DETAIL">FEDDANE DETAIL</option>
+            <option value="FOOD">FOOD</option>
+            <option value="TCOSMÉTIQUE">TCOSMÉTIQUE</option>
+        </select>
+        <input type="number" name="categories[${catIndex}][quantite]" placeholder="Qté"
+               class="field-input" style="flex:1" min="0">
+        <input type="number" name="categories[${catIndex}][ca]" placeholder="CA (DH)"
+               class="field-input" style="flex:1" step="0.01" min="0">
+        <button type="button" onclick="this.parentElement.remove()"
+                style="padding:8px 12px;background:#FEF2F2;color:#B91C1C;border:1.5px solid #FCA5A5;border-radius:10px;font-weight:700;cursor:pointer">
+            🗑️
+        </button>
+    `;
+    container.appendChild(row);
+    catIndex++;
+}
 </script>
 @endpush
