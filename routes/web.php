@@ -50,6 +50,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/suivi-vendeurs/{suiviVendeur}/edit',           [SuiviVendeurController::class, 'edit'])->name('suivi-vendeurs.edit');
     Route::put('/suivi-vendeurs/{suiviVendeur}',                [SuiviVendeurController::class, 'update'])->name('suivi-vendeurs.update');
     Route::delete('/suivi-vendeurs/{suiviVendeur}',             [SuiviVendeurController::class, 'destroy'])->name('suivi-vendeurs.destroy');
+    Route::get('/suivi-vendeurs/vendeur/{nom}', [SuiviVendeurController::class, 'showVendeur'])->name('suivi-vendeurs.show');
 });
 
 // ── AUTH (admin + superviseur) — lecture suivi vendeurs ──

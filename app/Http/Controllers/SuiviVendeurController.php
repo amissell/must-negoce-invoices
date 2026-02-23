@@ -228,4 +228,37 @@ class SuiviVendeurController extends Controller
         return redirect()->route('suivi-vendeurs.index')
             ->with('success', '🗑️ Entrée supprimée !');
     }
+
+
+    public function showVendeur(Request $request, string $nom)
+{
+    $mois  = $request->get('mois', Carbon::now()->month);
+    $annee = $request->get('annee', Carbon::now()->year);
+
+    $debut = Carbon::create($annee, $mois, 1)->startOfMonth()->toDateString();
+    $fin   = Carbon::create($annee, $mois, 1)->endOfMonth()->toDateString();
+
+    $lignes = SuiviVendeur::where('vendeur_nom', $nom)
+        ->whereBetween('date', [$debut, $fin])
+        ->where('jour_repos', 0)
+        ->orderBy('date')
+        ->get();
+
+    $caTotal      = $lignes->sum('chiffre');
+    $encaisse     = $lignes->sum('total_paye');
+    $blTotal      = $lignes->sum('bl');
+    $taux         = $caTotal > 0 ? round(($encaisse / $caTotal) * 100, 1) : 0;
+    $drops        = $blTotal > 0 ? round($caTotal / $blTotal, 2) : 0;
+    $meilleurJour = $lignes->sortByDesc('chiffre')->first();
+    $pireJour     = $lignes->sortBy('chiffre')->first();
+
+    $chartDates = $lignes->map(fn($l) => Carbon::parse($l->date)->format('d/m'))->values();
+    $chartCA    = $lignes->pluck('chiffre')->values();
+
+    return view('suivi_vendeurs.show', compact(
+        'nom', 'lignes', 'mois', 'annee',
+        'caTotal', 'encaisse', 'blTotal', 'taux', 'drops',
+        'meilleurJour', 'pireJour', 'chartDates', 'chartCA'
+    ));
+}
 }

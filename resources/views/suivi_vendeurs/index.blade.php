@@ -133,6 +133,18 @@
     .badge-repos     { background: #FFF7ED; color: #EA580C; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
 
     .row-highlight { background: #FFF9C4 !important; }
+
+    .btn-voir-details {
+        display: block; margin-top: 10px; padding: 8px;
+        background: #EEF2FF; color: #4338CA;
+        border: 1.5px solid #C7D2FE; border-radius: 10px;
+        font-weight: 700; font-size: 12px; text-decoration: none;
+        text-align: center; transition: all 0.2s;
+    }
+    .btn-voir-details:hover {
+        background: #4F46E5; color: white; border-color: #4F46E5;
+        transform: translateY(-1px);
+    }
 </style>
 @endpush
 
@@ -145,7 +157,7 @@
         <div class="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
                 <div class="flex items-center gap-3 mb-2">
-                    <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-content-center">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                   d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
@@ -165,7 +177,6 @@
                 </p>
             </div>
 
-            {{-- "Nouvelle Saisie" button: ADMIN ONLY --}}
             @if(auth()->user()->isAdmin())
             <a href="{{ route('suivi-vendeurs.create') }}"
                class="inline-flex items-center gap-2 px-5 py-2.5 bg-white hover:bg-white/90 text-indigo-600 font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 text-sm">
@@ -361,52 +372,60 @@
             $isSelected = request('vendeur') == $nom;
         @endphp
         <div class="vendor-card {{ $c['class'] }} fade-in-up {{ $isSelected ? 'ring-2 ring-indigo-400 ring-offset-2' : '' }}"
-             style="animation-delay: {{ 0.2 + $i * 0.06 }}s; cursor:pointer"
-             onclick="filterByVendeur('{{ $nom }}')">
-            <div class="vendor-badge {{ $c['gradient'] }}">{{ strtoupper(substr($nom, 0, 2)) }}</div>
-            <h3 class="font-bold text-gray-900 text-base mb-1">{{ $nom }}</h3>
-            <p class="text-xs text-gray-500 font-semibold mb-1">{{ $stats['bl'] ?? 0 }} BL</p>
-            @if($inf)
-                @if($inf['jours_au_dela'] > 0)
-                    <span class="badge-{{ $inf['statut'] }} text-xs mb-3 inline-block">+{{ $inf['jours_au_dela'] }}j inactif</span>
-                @else
-                    <span class="badge-ok text-xs mb-3 inline-block">✓ Actif</span>
+             style="animation-delay: {{ 0.2 + $i * 0.06 }}s">
+            {{-- Badge cliquable pour filtrer --}}
+            <div style="cursor:pointer" onclick="filterByVendeur('{{ $nom }}')">
+                <div class="vendor-badge {{ $c['gradient'] }}">{{ strtoupper(substr($nom, 0, 2)) }}</div>
+                <h3 class="font-bold text-gray-900 text-base mb-1">{{ $nom }}</h3>
+                <p class="text-xs text-gray-500 font-semibold mb-1">{{ $stats['bl'] ?? 0 }} BL</p>
+                @if($inf)
+                    @if($inf['jours_au_dela'] > 0)
+                        <span class="badge-{{ $inf['statut'] }} text-xs mb-3 inline-block">+{{ $inf['jours_au_dela'] }}j inactif</span>
+                    @else
+                        <span class="badge-ok text-xs mb-3 inline-block">✓ Actif</span>
+                    @endif
                 @endif
-            @endif
-            <div class="space-y-2 text-sm mt-2">
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-600 font-medium">CA Total</span>
-                    <span class="font-bold {{ $c['text'] }}">{{ number_format($stats['ca_total'] ?? 0, 0, ',', ' ') }}</span>
+                <div class="space-y-2 text-sm mt-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 font-medium">CA Total</span>
+                        <span class="font-bold {{ $c['text'] }}">{{ number_format($stats['ca_total'] ?? 0, 0, ',', ' ') }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 font-medium">Encaissé</span>
+                        <span class="font-bold text-emerald-600">{{ number_format($stats['encaisse'] ?? 0, 0, ',', ' ') }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 font-medium">Reste</span>
+                        <span class="font-bold {{ ($stats['reste'] ?? 0) > 5000 ? 'text-red-600' : 'text-gray-600' }}">
+                            {{ number_format($stats['reste'] ?? 0, 0, ',', ' ') }}
+                        </span>
+                    </div>
                 </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-600 font-medium">Encaissé</span>
-                    <span class="font-bold text-emerald-600">{{ number_format($stats['encaisse'] ?? 0, 0, ',', ' ') }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-600 font-medium">Reste</span>
-                    <span class="font-bold {{ ($stats['reste'] ?? 0) > 5000 ? 'text-red-600' : 'text-gray-600' }}">
-                        {{ number_format($stats['reste'] ?? 0, 0, ',', ' ') }}
+                <div class="drops-mini">
+                    <span class="drops-mini-label">📉 Drops</span>
+                    <span class="drops-mini-value">
+                        {{ ($stats['bl'] ?? 0) > 0 ? number_format($stats['drops'] ?? 0, 0, ',', ' ') . ' DH/BL' : '—' }}
                     </span>
                 </div>
+                <div class="progress-ring">
+                    <div class="progress-fill bg-gradient-to-r {{ $c['fill'] }}" style="width: {{ min($taux, 100) }}%"></div>
+                </div>
+                <div class="text-center mt-2">
+                    <span class="font-extrabold {{ $c['text'] }} text-lg">{{ $taux }}%</span>
+                </div>
+                @if(isset($stats['meilleur_jour']) && $stats['meilleur_jour'])
+                <div class="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
+                    🏆 Meilleur: {{ \Carbon\Carbon::parse($stats['meilleur_jour']->date)->format('d/m') }}
+                    — <span class="font-bold">{{ number_format($stats['meilleur_jour']->chiffre, 0, ',', ' ') }}</span>
+                </div>
+                @endif
             </div>
-            <div class="drops-mini">
-                <span class="drops-mini-label">📉 Drops</span>
-                <span class="drops-mini-value">
-                    {{ ($stats['bl'] ?? 0) > 0 ? number_format($stats['drops'] ?? 0, 0, ',', ' ') . ' DH/BL' : '—' }}
-                </span>
-            </div>
-            <div class="progress-ring">
-                <div class="progress-fill bg-gradient-to-r {{ $c['fill'] }}" style="width: {{ min($taux, 100) }}%"></div>
-            </div>
-            <div class="text-center mt-2">
-                <span class="font-extrabold {{ $c['text'] }} text-lg">{{ $taux }}%</span>
-            </div>
-            @if(isset($stats['meilleur_jour']) && $stats['meilleur_jour'])
-            <div class="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
-                🏆 Meilleur: {{ \Carbon\Carbon::parse($stats['meilleur_jour']->date)->format('d/m') }}
-                — <span class="font-bold">{{ number_format($stats['meilleur_jour']->chiffre, 0, ',', ' ') }}</span>
-            </div>
-            @endif
+
+            {{-- ✅ BOUTON VOIR DÉTAILS --}}
+            <a href="{{ route('suivi-vendeurs.show', ['nom' => $nom]) }}" class="btn-voir-details">
+                📊 Voir détails
+            </a>
+
         </div>
         @endforeach
     </div>
@@ -428,6 +447,8 @@
                         <th class="text-center">TAUX %</th>
                         <th class="text-center">📉 DROPS</th>
                         <th class="text-center">RANK</th>
+                        {{-- ✅ COLONNE DÉTAILS --}}
+                        <th class="text-center">DÉTAILS</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -475,6 +496,13 @@
                         <td class="text-center">
                             @php $rankClass = $rank == 1 ? 'rank-1' : ($rank == 2 ? 'rank-2' : ($rank == 3 ? 'rank-3' : 'rank-other')); @endphp
                             <span class="badge-rank {{ $rankClass }}">{{ $rank++ }}</span>
+                        </td>
+                        {{-- ✅ BOUTON VOIR DÉTAILS --}}
+                        <td class="text-center">
+                            <a href="{{ route('suivi-vendeurs.show', ['nom' => $nom]) }}"
+                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-all">
+                                📊 Voir détails
+                            </a>
                         </td>
                     </tr>
                     @endforeach
@@ -542,7 +570,6 @@
                         <th class="text-center">BL</th>
                         <th class="text-center">📉 DROPS</th>
                         <th class="text-center">HEURES</th>
-                        {{-- Actions column: ADMIN ONLY --}}
                         @if(auth()->user()->isAdmin())
                         <th class="text-center">ACTIONS</th>
                         @endif
@@ -597,7 +624,6 @@
                             {{ $ligne->heure_fin ? \Carbon\Carbon::parse($ligne->heure_fin)->format('H:i') : '—' }}
                         </td>
 
-                        {{-- Edit / Delete: ADMIN ONLY --}}
                         @if(auth()->user()->isAdmin())
                         <td class="text-center">
                             <div class="flex items-center justify-center gap-2">
