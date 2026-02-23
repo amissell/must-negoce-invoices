@@ -38,4 +38,40 @@ class UserController extends Controller
 
         return back()->with('success', "🗑️ Utilisateur {$name} supprimé avec succès.");
     }
+
+    public function create()
+{
+    return view('admin.users_create');
+}
+
+public function store(Request $request)
+{
+    $request->validate([
+        'name'     => 'required|string|max:255',
+        'email'    => 'required|email|unique:users,email',
+        'password' => 'required|min:8|confirmed',
+        'role'     => 'required|in:admin,superviseur',
+    ]);
+
+    User::create([
+        'name'     => $request->name,
+        'email'    => $request->email,
+        'password' => bcrypt($request->password),
+        'role'     => $request->role,
+        'status'   => 'approved',
+    ]);
+
+    return redirect()->route('admin.users')->with('success', '✅ Utilisateur créé avec succès !');
+}
+public function approve(User $user)
+{
+    $user->update(['status' => 'approved', 'role' => 'superviseur']);
+    return back()->with('success', "✅ {$user->name} a été approuvé !");
+    }
+    
+    public function reject(User $user)
+    {
+        $user->update(['status' => 'rejected']);
+        return back()->with('success', "❌ {$user->name} a été rejeté.");
+    }
 }

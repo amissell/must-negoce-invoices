@@ -40,7 +40,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // Gestion des utilisateurs
     Route::get('/admin/users',                    [UserController::class, 'index'])->name('admin.users');
     Route::put('/admin/users/{user}/role',         [UserController::class, 'updateRole'])->name('admin.users.role');
-    Route::delete('/admin/users/{user}',           [UserController::class, 'destroy'])->name('admin.users.destroy'); // 👈 NEW
+    Route::delete('/admin/users/{user}',           [UserController::class, 'destroy'])->name('admin.users.destroy');
+    Route::get('/admin/users/create',  [UserController::class, 'create'])->name('admin.users.create');
+    Route::post('/admin/users',        [UserController::class, 'store'])->name('admin.users.store');
 
     // Suivi vendeurs — ÉCRITURE
     Route::get('/suivi-vendeurs/create',                        [SuiviVendeurController::class, 'create'])->name('suivi-vendeurs.create');
@@ -53,4 +55,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
 // ── AUTH (admin + superviseur) — lecture suivi vendeurs ──
 Route::middleware(['auth'])->group(function () {
     Route::get('/suivi-vendeurs', [SuiviVendeurController::class, 'index'])->name('suivi-vendeurs.index');
+    Route::post('/admin/users/{user}/approve', [UserController::class, 'approve'])->name('admin.users.approve');
+    Route::post('/admin/users/{user}/reject',  [UserController::class, 'reject'])->name('admin.users.reject');
 });
