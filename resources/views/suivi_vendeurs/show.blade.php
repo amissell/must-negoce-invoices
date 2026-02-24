@@ -81,14 +81,102 @@
     </div>
     @endif
 
-    {{-- Chart --}}
+    {{-- Chart CA --}}
     <div style="background:white;border-radius:20px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,0.06)">
         <h3 style="font-weight:700;color:#1E293B;margin:0 0 20px">📈 Évolution CA</h3>
         <canvas id="caChart" height="80"></canvas>
     </div>
 
-    {{-- Tableau --}}
+    {{-- ══ CATÉGORIES ══ --}}
     <div style="background:white;border-radius:20px;box-shadow:0 4px 20px rgba(0,0,0,0.06);overflow:hidden">
+        {{-- Header --}}
+        <div style="background:linear-gradient(135deg,#4F46E5,#7C3AED);padding:20px 28px;display:flex;justify-content:space-between;align-items:center">
+            <h2 style="color:white;font-weight:800;font-size:18px;margin:0">📦 Catégories Vendues</h2>
+            <span style="background:rgba(255,255,255,0.2);color:white;padding:4px 14px;border-radius:999px;font-size:13px;font-weight:700">
+                {{ $categoriesStats->count() }} catégories
+            </span>
+        </div>
+
+        @if($categoriesStats->count() > 0)
+
+        {{-- Chart Catégories --}}
+        <div style="padding:24px;border-bottom:1px solid #F1F5F9">
+            <canvas id="catChart" height="100"></canvas>
+        </div>
+
+        {{-- Tableau --}}
+        <table style="width:100%;border-collapse:collapse">
+            <thead>
+                <tr style="background:#F8FAFC">
+                    <th style="padding:14px 20px;text-align:left;font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;border-bottom:2px solid #E2E8F0">#</th>
+                    <th style="padding:14px 20px;text-align:left;font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;border-bottom:2px solid #E2E8F0">Catégorie</th>
+                    <th style="padding:14px 20px;text-align:right;font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;border-bottom:2px solid #E2E8F0">Quantité</th>
+                    <th style="padding:14px 20px;text-align:right;font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;border-bottom:2px solid #E2E8F0">CA (DH)</th>
+                    <th style="padding:14px 20px;text-align:left;font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;border-bottom:2px solid #E2E8F0">% du CA</th>
+                </tr>
+            </thead>
+            <tbody>
+                @php
+                    $catColors = ['#4F46E5','#F97316','#10B981','#EF4444','#8B5CF6','#F59E0B','#14B8A6','#EC4899','#6366F1','#84CC16'];
+                @endphp
+                @foreach($categoriesStats as $i => $cat)
+                @php
+                    $pct = $caTotal > 0 ? round(($cat->total_ca / $caTotal) * 100, 1) : 0;
+                    $color = $catColors[$i % count($catColors)];
+                @endphp
+                <tr style="border-top:1px solid #F1F5F9" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='white'">
+                    <td style="padding:16px 20px;font-weight:700;color:#94A3B8;font-size:13px">{{ $loop->iteration }}</td>
+                    <td style="padding:16px 20px">
+                        <span style="background:{{ $color }}20;color:{{ $color }};padding:5px 14px;border-radius:999px;font-size:13px;font-weight:700;border:1px solid {{ $color }}40">
+                            {{ $cat->categorie }}
+                        </span>
+                    </td>
+                    <td style="padding:16px 20px;text-align:right;font-weight:700;color:#6366F1;font-size:15px">
+                        {{ number_format($cat->total_quantite, 0, ',', ' ') }}
+                    </td>
+                    <td style="padding:16px 20px;text-align:right;font-weight:800;color:#10B981;font-size:15px">
+                        {{ number_format($cat->total_ca, 2, ',', ' ') }} DH
+                    </td>
+                    <td style="padding:16px 20px;min-width:160px">
+                        <div style="display:flex;align-items:center;gap:10px">
+                            <div style="flex:1;background:#F1F5F9;border-radius:999px;height:8px;overflow:hidden">
+                                <div style="height:100%;background:{{ $color }};border-radius:999px;width:{{ $pct }}%;transition:width 1s"></div>
+                            </div>
+                            <span style="font-size:12px;font-weight:800;color:{{ $color }};min-width:36px">{{ $pct }}%</span>
+                        </div>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+            {{-- Total --}}
+            <tfoot>
+                <tr style="background:#F8FAFC;border-top:2px solid #E2E8F0">
+                    <td colspan="2" style="padding:16px 20px;font-weight:800;color:#1E293B">TOTAL</td>
+                    <td style="padding:16px 20px;text-align:right;font-weight:800;color:#6366F1">
+                        {{ number_format($categoriesStats->sum('total_quantite'), 0, ',', ' ') }}
+                    </td>
+                    <td style="padding:16px 20px;text-align:right;font-weight:800;color:#10B981">
+                        {{ number_format($categoriesStats->sum('total_ca'), 2, ',', ' ') }} DH
+                    </td>
+                    <td style="padding:16px 20px;font-weight:800;color:#4F46E5">100%</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        @else
+        <div style="padding:48px;text-align:center;color:#94A3B8">
+            <div style="font-size:40px;margin-bottom:12px">📦</div>
+            <div style="font-weight:600">Aucune catégorie enregistrée pour ce mois</div>
+            <div style="font-size:13px;margin-top:6px">Les catégories apparaîtront lors de la prochaine saisie</div>
+        </div>
+        @endif
+    </div>
+
+    {{-- Tableau des jours --}}
+    <div style="background:white;border-radius:20px;box-shadow:0 4px 20px rgba(0,0,0,0.06);overflow:hidden">
+        <div style="background:linear-gradient(135deg,#4F46E5,#7C3AED);padding:20px 28px">
+            <h2 style="color:white;font-weight:800;font-size:18px;margin:0">📋 Détail par Jour</h2>
+        </div>
         <table style="width:100%;border-collapse:collapse">
             <thead>
                 <tr style="background:#F8FAFC">
@@ -125,6 +213,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script>
+// Chart CA évolution
 new Chart(document.getElementById('caChart'), {
     type: 'line',
     data: {
@@ -150,5 +239,76 @@ new Chart(document.getElementById('caChart'), {
         }
     }
 });
+
+// Chart Catégories
+@if($categoriesStats->count() > 0)
+const catLabels = @json($categoriesStats->pluck('categorie'));
+const catCA     = @json($categoriesStats->pluck('total_ca'));
+const catQte    = @json($categoriesStats->pluck('total_quantite'));
+const catColors = ['#4F46E5','#F97316','#10B981','#EF4444','#8B5CF6','#F59E0B','#14B8A6','#EC4899','#6366F1','#84CC16'];
+
+new Chart(document.getElementById('catChart'), {
+    type: 'bar',
+    data: {
+        labels: catLabels,
+        datasets: [
+            {
+                label: 'CA (DH)',
+                data: catCA,
+                backgroundColor: catColors.map(c => c + 'CC'),
+                borderColor: catColors,
+                borderWidth: 2,
+                borderRadius: 10,
+                yAxisID: 'yCA',
+            },
+            {
+                label: 'Quantité',
+                data: catQte,
+                type: 'line',
+                borderColor: '#F59E0B',
+                backgroundColor: 'rgba(245,158,11,0.15)',
+                borderWidth: 2.5,
+                tension: 0.4,
+                pointBackgroundColor: '#F59E0B',
+                pointRadius: 5,
+                fill: false,
+                yAxisID: 'yQte',
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: { font: { size: 12, weight: 600 }, boxWidth: 14, padding: 16 }
+            },
+            tooltip: {
+                callbacks: {
+                    label: ctx => ctx.dataset.label === 'CA (DH)'
+                        ? ` CA: ${ctx.parsed.y.toLocaleString('fr-MA')} DH`
+                        : ` Qté: ${ctx.parsed.y.toLocaleString('fr-MA')}`
+                }
+            }
+        },
+        scales: {
+            yCA: {
+                beginAtZero: true,
+                position: 'left',
+                ticks: { callback: v => (v/1000).toFixed(0)+'k DH', font: { size: 11 } },
+                grid: { color: '#F1F5F9' }
+            },
+            yQte: {
+                beginAtZero: true,
+                position: 'right',
+                ticks: { font: { size: 11 } },
+                grid: { display: false }
+            },
+            x: { ticks: { font: { size: 11, weight: 600 } }, grid: { display: false } }
+        }
+    }
+});
+@endif
 </script>
 @endsection

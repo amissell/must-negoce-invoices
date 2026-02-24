@@ -93,7 +93,7 @@ class SuiviVendeurController extends Controller
 
         $lignes = $query->orderBy('date', 'desc')->paginate(30);
 
-        // ── INACTIVITÉ ───────────────────────────────────────────────────
+        // ── INACTIVITÉ ─────────────────────────────────────────────────────
         $JOURS_OUVRES_LIMITE = 26;
 
         $joursTravaillables = collect();
@@ -179,24 +179,25 @@ class SuiviVendeurController extends Controller
             $validated['heure_debut'] = null;
             $validated['heure_fin']   = null;
         }
+
         $validated['created_by'] = Auth::id();
-$suiviVendeur = SuiviVendeur::create($validated);
+        $suiviVendeur = SuiviVendeur::create($validated);
 
-// زيد الcatégories
-if ($request->has('categories')) {
-    foreach ($request->categories as $cat) {
-        if (!empty($cat['categorie'])) {
-            $suiviVendeur->categories()->create([
-                'categorie' => $cat['categorie'],
-                'quantite'  => $cat['quantite'] ?? 0,
-                'ca'        => $cat['ca'] ?? 0,
-            ]);
+        // ── Enregistrer les catégories ──────────────────────────────────
+        if ($request->has('categories')) {
+            foreach ($request->categories as $cat) {
+                if (!empty($cat['categorie'])) {
+                    $suiviVendeur->categories()->create([
+                        'categorie' => $cat['categorie'],
+                        'quantite'  => $cat['quantite'] ?? 0,
+                        'ca'        => $cat['ca'] ?? 0,
+                    ]);
+                }
+            }
         }
-    }
-}
 
-return redirect()->route('suivi-vendeurs.index')
-    ->with('success', '✅ Entrée ajoutée avec succès !');
+        return redirect()->route('suivi-vendeurs.index')
+            ->with('success', '✅ Entrée ajoutée avec succès !');
     }
 
     public function edit(SuiviVendeur $suiviVendeur)
@@ -231,6 +232,21 @@ return redirect()->route('suivi-vendeurs.index')
 
         $suiviVendeur->update($validated);
 
+        // ── Supprimer les anciennes catégories et les remplacer ──────────
+        $suiviVendeur->categories()->delete();
+
+        if ($request->has('categories')) {
+            foreach ($request->categories as $cat) {
+                if (!empty($cat['categorie'])) {
+                    $suiviVendeur->categories()->create([
+                        'categorie' => $cat['categorie'],
+                        'quantite'  => $cat['quantite'] ?? 0,
+                        'ca'        => $cat['ca'] ?? 0,
+                    ]);
+                }
+            }
+        }
+
         return redirect()->route('suivi-vendeurs.index')
             ->with('success', '✅ Entrée mise à jour !');
     }
@@ -242,44 +258,46 @@ return redirect()->route('suivi-vendeurs.index')
             ->with('success', '🗑️ Entrée supprimée !');
     }
 
-
     public function showVendeur(Request $request, string $nom)
-{
-    $mois  = $request->get('mois', Carbon::now()->month);
-    $annee = $request->get('annee', Carbon::now()->year);
+    {
+        $mois  = $request->get('mois', Carbon::now()->month);
+        $annee = $request->get('annee', Carbon::now()->year);
 
-    $debut = Carbon::create($annee, $mois, 1)->startOfMonth()->toDateString();
-    $fin   = Carbon::create($annee, $mois, 1)->endOfMonth()->toDateString();
+        $debut = Carbon::create($annee, $mois, 1)->startOfMonth()->toDateString();
+        $fin   = Carbon::create($annee, $mois, 1)->endOfMonth()->toDateString();
 
-    $lignes = SuiviVendeur::where('vendeur_nom', $nom)
-        ->whereBetween('date', [$debut, $fin])
-        ->where('jour_repos', 0)
-        ->orderBy('date')
+        $lignes = SuiviVendeur::where('vendeur_nom', $nom)
+            ->whereBetween('date', [$debut, $fin])
+            ->where('jour_repos', 0)
+            ->orderBy('date')
+            ->get();
+
+        $caTotal      = $lignes->sum('chiffre');
+        $encaisse     = $lignes->sum('total_paye');
+        $blTotal      = $lignes->sum('bl');
+        $taux         = $caTotal > 0 ? round(($encaisse / $caTotal) * 100, 1) : 0;
+        $drops        = $blTotal > 0 ? round($caTotal / $blTotal, 2) : 0;
+        $meilleurJour = $lignes->sortByDesc('chiffre')->first();
+        $pireJour     = $lignes->sortBy('chiffre')->first();
+
+        $chartDates = $lignes->map(fn($l) => Carbon::parse($l->date)->format('d/m'))->values();
+        $chartCA    = $lignes->pluck('chiffre')->values();
+
+        // ── Statistiques par catégorie ──────────────────────────────────
+        $categoriesStats = SuiviCategorie::whereHas('suiviVendeur', function ($q) use ($nom, $debut, $fin) {
+            $q->where('vendeur_nom', $nom)
+              ->whereBetween('date', [$debut, $fin]);
+        })
+        ->selectRaw('categorie, SUM(quantite) as total_quantite, SUM(ca) as total_ca')
+        ->groupBy('categorie')
+        ->orderByDesc('total_ca')
         ->get();
 
-    $caTotal      = $lignes->sum('chiffre');
-    $encaisse     = $lignes->sum('total_paye');
-    $blTotal      = $lignes->sum('bl');
-    $taux         = $caTotal > 0 ? round(($encaisse / $caTotal) * 100, 1) : 0;
-    $drops        = $blTotal > 0 ? round($caTotal / $blTotal, 2) : 0;
-    $meilleurJour = $lignes->sortByDesc('chiffre')->first();
-    $pireJour     = $lignes->sortBy('chiffre')->first();
-
-    $chartDates = $lignes->map(fn($l) => Carbon::parse($l->date)->format('d/m'))->values();
-    $chartCA    = $lignes->pluck('chiffre')->values();
-    $categoriesStats = SuiviCategorie::whereHas('suiviVendeur', function($q) use ($nom, $debut, $fin) {
-    $q->where('vendeur_nom', $nom)
-      ->whereBetween('date', [$debut, $fin]);
-})
-->selectRaw('categorie, SUM(quantite) as total_quantite, SUM(ca) as total_ca')
-->groupBy('categorie')
-->orderByDesc('total_ca')
-->get();
-
-    return view('suivi_vendeurs.show', compact(
-        'nom', 'lignes', 'mois', 'annee',
-        'caTotal', 'encaisse', 'blTotal', 'taux', 'drops',
-        'meilleurJour', 'pireJour', 'chartDates', 'chartCA', 'categoriesStats'
-    ));
-}
+        return view('suivi_vendeurs.show', compact(
+            'nom', 'lignes', 'mois', 'annee',
+            'caTotal', 'encaisse', 'blTotal', 'taux', 'drops',
+            'meilleurJour', 'pireJour', 'chartDates', 'chartCA',
+            'categoriesStats'
+        ));
+    }
 }
