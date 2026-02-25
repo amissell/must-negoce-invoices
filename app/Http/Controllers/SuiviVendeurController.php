@@ -92,62 +92,63 @@ class SuiviVendeurController extends Controller
         $vendeurs = SuiviVendeur::distinct()->orderBy('vendeur_nom')->pluck('vendeur_nom');
 
         $lignes = $query->orderBy('date', 'desc')->paginate(30);
-
-        // ── INACTIVITÉ ─────────────────────────────────────────────────────
-        $JOURS_OUVRES_LIMITE = 26;
-
+        $CIBLE_JOURS = 26;
+        
+        $isCurrentMonth = (Carbon::now()->year == $annee && Carbon::now()->month == $mois);
+        $finCalcul      = $isCurrentMonth
+        ? Carbon::now()
+        : Carbon::create($annee, $mois, 1)->endOfMonth();
+        
         $joursTravaillables = collect();
-        $cursor  = Carbon::create($annee, $mois, 1)->startOfMonth();
-        $finMois = Carbon::create($annee, $mois, 1)->endOfMonth();
-        while ($cursor->lte($finMois)) {
+        $cursor = Carbon::create($annee, $mois, 1)->startOfMonth();
+        while ($cursor->lte($finCalcul)) {
             if ($cursor->dayOfWeek !== Carbon::SUNDAY) {
                 $joursTravaillables->push($cursor->toDateString());
-            }
-            $cursor->addDay();
-        }
-        $totalJoursOuvres = $joursTravaillables->count();
+                }
+                $cursor->addDay();
+                }
+                $totalJoursOuvres = $joursTravaillables->count();
+                $joursAttendus    = min($totalJoursOuvres, $CIBLE_JOURS);
+                
+                $inactiviteParVendeur = [];
+                $tousVendeurs = SuiviVendeur::whereBetween('date', [$debut, $fin])
+                ->distinct()
+                ->orderBy('vendeur_nom')
+                ->pluck('vendeur_nom');
+                
+                foreach ($tousVendeurs as $nom) {
+                    $entrees = SuiviVendeur::whereBetween('date', [$debut, $fin])
+                    ->where('vendeur_nom', $nom)
+                    ->get();
+                    
+                    $joursActifs    = $entrees->where('jour_repos', false)->count();
+                    $joursRepos     = $entrees->where('jour_repos', true)->count();
+                    $joursPresences = $joursActifs + $joursRepos;
+                    $joursAbsents   = max(0, $joursAttendus - $joursPresences);
+                    $joursAuDela    = max(0, $joursAttendus - $joursActifs);
+                    $joursRestants  = max(0, $CIBLE_JOURS - $joursActifs);
+                    
+                    $inactiviteParVendeur[$nom] = [
+                        'jours_actifs'   => $joursActifs,
+                        'jours_repos'    => $joursRepos,
+                        'jours_absents'  => $joursAbsents,
+                        'jours_au_dela'  => $joursAuDela,
+                        'jours_restants' => $joursRestants,
+                        'statut'         => $joursAuDela >= 10 ? 'critique'
+                          : ($joursAuDela >= 4  ? 'attention' : 'ok'),
+                          ];
+                          }
+                          
+                          $inactiviteParVendeur = collect($inactiviteParVendeur)
+                          ->sortByDesc('jours_au_dela');
 
-        $inactiviteParVendeur = [];
-        $tousVendeurs = SuiviVendeur::whereBetween('date', [$debut, $fin])
-            ->distinct()
-            ->orderBy('vendeur_nom')
-            ->pluck('vendeur_nom');
-
-        foreach ($tousVendeurs as $nom) {
-            $entrees = SuiviVendeur::whereBetween('date', [$debut, $fin])
-                ->where('vendeur_nom', $nom)
-                ->get();
-
-            $joursAvecEntree = $entrees->pluck('date')
-                ->map(fn($d) => (string) $d)
-                ->unique();
-
-            $joursActifs  = $entrees->where('jour_repos', false)->count();
-            $joursRepos   = $entrees->where('jour_repos', true)->count();
-            $joursAbsents = $totalJoursOuvres - $joursAvecEntree->count();
-
-            $absenceAutorisee = max(0, $totalJoursOuvres - $JOURS_OUVRES_LIMITE);
-            $joursAuDela      = max(0, $joursAbsents - $absenceAutorisee);
-
-            $inactiviteParVendeur[$nom] = [
-                'jours_actifs'  => $joursActifs,
-                'jours_repos'   => $joursRepos,
-                'jours_absents' => $joursAbsents,
-                'jours_au_dela' => $joursAuDela,
-                'statut'        => $joursAuDela >= 5 ? 'critique'
-                                 : ($joursAuDela >= 2 ? 'attention' : 'ok'),
-            ];
-        }
-
-        $inactiviteParVendeur = collect($inactiviteParVendeur)
-            ->sortByDesc('jours_au_dela');
-
-        return view('suivi_vendeurs.index', compact(
-            'lignes', 'suiviParVendeur', 'statsGlobales',
-            'vendeurs', 'mois', 'annee',
-            'chartDates', 'chartDataCA', 'toutesLignes',
-            'inactiviteParVendeur', 'totalJoursOuvres'
-        ));
+                          return view('suivi_vendeurs.index', compact(
+                            'lignes', 'suiviParVendeur', 'statsGlobales',
+                            'vendeurs', 'mois', 'annee',
+                            'chartDates', 'chartDataCA', 'toutesLignes',
+                            'inactiviteParVendeur', 'totalJoursOuvres',
+                            'joursAttendus', 'CIBLE_JOURS'
+                            ));
     }
 
     public function create()

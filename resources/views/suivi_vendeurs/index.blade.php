@@ -287,7 +287,9 @@
     <div class="table-card fade-in-up" style="animation-delay: 0.18s">
         <div class="table-header flex items-center justify-between flex-wrap gap-2">
             <h2 class="text-lg font-extrabold flex items-center gap-2">⏱️ INACTIVITÉ PAR VENDEUR — limite 26 jours</h2>
-            <span class="text-sm bg-white/20 rounded-lg px-3 py-1 font-semibold">{{ $totalJoursOuvres }} jours ouvrés ce mois</span>
+            <span class="text-sm bg-white/20 rounded-lg px-3 py-1 font-semibold">
+                🎯 Objectif: {{ $joursAttendus }}j &nbsp;·&nbsp; Disponibles: {{ $totalJoursOuvres }}j
+            </span>
         </div>
         @php $nbCritiques = $inactiviteParVendeur->where('statut','critique')->count(); @endphp
         @if($nbCritiques > 0)
