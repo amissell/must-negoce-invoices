@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
+
 class SuiviVendeurController extends Controller
 {
     public function index(Request $request)
@@ -98,7 +99,6 @@ class SuiviVendeurController extends Controller
         $finCalcul      = $isCurrentMonth
         ? Carbon::now()
         : Carbon::create($annee, $mois, 1)->endOfMonth();
-        
         $joursTravaillables = collect();
         $cursor = Carbon::create($annee, $mois, 1)->startOfMonth();
         while ($cursor->lte($finCalcul)) {
@@ -301,4 +301,19 @@ class SuiviVendeurController extends Controller
             'categoriesStats'
         ));
     }
+    public function dailyStats(Request $request)
+    {
+        $date = $request->get('date', now()->toDateString());
+        $stats = \App\Models\SuiviCategorie::whereHas('suiviVendeur', function($q) use ($date) {
+            $q->whereDate('date', $date);
+        })
+        ->selectRaw('categorie, SUM(quantite) as total_quantite, SUM(ca) as total_ca')
+        ->groupBy('categorie')
+        ->get();
+
+    return response()->json([
+        'date' => $date,
+        'stats' => $stats
+    ]);
+}
 }

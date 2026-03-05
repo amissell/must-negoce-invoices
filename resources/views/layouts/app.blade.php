@@ -72,6 +72,13 @@
                                  rounded-full flex items-center justify-center animate-pulse">!</span>
                     @endif
                 </a>
+                {{-- Statistics Button --}}
+                @if(auth()->user()->isAdmin())
+                <button onclick="openStatsModal()"
+                class="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:bg-white/10 flex items-center gap-2">
+                📈 Statistiques
+            </button>
+            @endif
 
                 {{-- ADMIN ONLY: Users management --}}
                 @if(auth()->user()->isAdmin())
@@ -190,6 +197,86 @@
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     @yield('content')
 </main>
+{{-- Statistics Modal --}}
+<div id="statsModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/50" onclick="closeStatsModal()"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-2xl shadow-2xl p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold text-gray-800">📈 Statistiques du Jour</h2>
+            <button onclick="closeStatsModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="mb-4">
+            <input type="date" id="statsDate" value="{{ now()->toDateString() }}"
+                onchange="loadStats()"
+                class="w-full border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div id="statsContent">
+            <div class="text-center py-8 text-gray-400">Chargement...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openStatsModal() {
+    document.getElementById('statsModal').classList.remove('hidden');
+    loadStats();
+}
+function closeStatsModal() {
+    document.getElementById('statsModal').classList.add('hidden');
+}
+function loadStats() {
+    const date = document.getElementById('statsDate').value;
+    document.getElementById('statsContent').innerHTML = '<div class="text-center py-8 text-gray-400">Chargement...</div>';
+    fetch(`/statistics/daily?date=${date}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.stats.length === 0) {
+                document.getElementById('statsContent').innerHTML =
+                    '<div class="text-center py-8 text-gray-400">Aucune vente pour cette date</div>';
+                return;
+            }
+            let totalCA = 0, totalQte = 0, rows = '';
+            data.stats.forEach(s => {
+                totalCA += parseFloat(s.total_ca);
+                totalQte += parseInt(s.total_quantite);
+                rows += `
+                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                        <td class="py-3 px-4 font-medium text-gray-700">${s.categorie}</td>
+                        <td class="py-3 px-4 text-center text-gray-600">${s.total_quantite}</td>
+                        <td class="py-3 px-4 text-right font-semibold text-green-600">${parseFloat(s.total_ca).toLocaleString('fr-FR')} DH</td>
+                    </tr>`;
+            });
+            document.getElementById('statsContent').innerHTML = `
+                <div class="overflow-hidden rounded-xl border border-gray-200">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="py-3 px-4 text-left text-gray-600 font-semibold">Catégorie</th>
+                                <th class="py-3 px-4 text-center text-gray-600 font-semibold">Quantité</th>
+                                <th class="py-3 px-4 text-right text-gray-600 font-semibold">CA</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                        <tfoot class="bg-blue-50">
+                            <tr>
+                                <td class="py-3 px-4 font-bold text-gray-800">Total</td>
+                                <td class="py-3 px-4 text-center font-bold text-gray-800">${totalQte}</td>
+                                <td class="py-3 px-4 text-right font-bold text-blue-700">${totalCA.toLocaleString('fr-FR')} DH</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>`;
+        })
+        .catch(() => {
+            document.getElementById('statsContent').innerHTML =
+                '<div class="text-center py-8 text-red-400">Erreur de chargement</div>';
+        });
+}
+</script>
 
 <script>
     document.getElementById('mobileMenuBtn')?.addEventListener('click', function() {
