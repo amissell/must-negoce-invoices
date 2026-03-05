@@ -72,12 +72,12 @@
                                  rounded-full flex items-center justify-center animate-pulse">!</span>
                     @endif
                 </a>
-                {{-- Statistics Button --}}
+
                 @if(auth()->user()->isAdmin())
-                <button onclick="openStatsModal()"
-                class="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:bg-white/10 flex items-center gap-2">
+                <a href="{{ route('statistics.daily') }}"
+                class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('statistics.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
                 📈 Statistiques
-            </button>
+            </a>
             @endif
 
                 {{-- ADMIN ONLY: Users management --}}

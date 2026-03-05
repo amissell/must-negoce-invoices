@@ -58,6 +58,5 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/suivi-vendeurs', [SuiviVendeurController::class, 'index'])->name('suivi-vendeurs.index');
     Route::post('/admin/users/{user}/approve', [UserController::class, 'approve'])->name('admin.users.approve');
     Route::post('/admin/users/{user}/reject',  [UserController::class, 'reject'])->name('admin.users.reject');
-    Route::get('/statistics/daily', [SuiviVendeurController::class, 'dailyStats'])->name('statistics.daily');
-
+    Route::get('/statistics/daily', [SuiviVendeurController::class, 'dailyStatsPage'])->name('statistics.daily');
 });

@@ -301,19 +301,72 @@ class SuiviVendeurController extends Controller
             'categoriesStats'
         ));
     }
-    public function dailyStats(Request $request)
-    {
-        $date = $request->get('date', now()->toDateString());
-        $stats = \App\Models\SuiviCategorie::whereHas('suiviVendeur', function($q) use ($date) {
-            $q->whereDate('date', $date);
+
+
+    public function dailyStatsPage(Request $request)
+{
+    $dateDebut = $request->get('date_debut', now()->startOfMonth()->toDateString());
+    $dateFin   = $request->get('date_fin', now()->toDateString());
+
+    // Kol jours f had range
+    $jours = SuiviVendeur::whereBetween('date', [$dateDebut, $dateFin])
+        ->where('jour_repos', 0)
+        ->distinct()
+        ->orderBy('date')
+        ->pluck('date');
+
+    // Kol categories kaynin
+    $categories = SuiviCategorie::whereHas('suiviVendeur', function($q) use ($dateDebut, $dateFin) {
+            $q->whereBetween('date', [$dateDebut, $dateFin])->where('jour_repos', 0);
+        })
+        ->distinct()
+        ->pluck('categorie')
+        ->sort()
+        ->values();
+
+    // Data dyal kol categorie par jour
+    $dataParCategorie = [];
+    foreach ($categories as $cat) {
+        $dataParCategorie[$cat] = [];
+        foreach ($jours as $jour) {
+            $total = SuiviCategorie::whereHas('suiviVendeur', function($q) use ($jour) {
+                    $q->whereDate('date', $jour)->where('jour_repos', 0);
+                })
+                ->where('categorie', $cat)
+                ->sum('ca');
+            $dataParCategorie[$cat][] = round($total, 2);
+        }
+    }
+
+    // Stats globales par categorie
+    $categoriesStats = SuiviCategorie::whereHas('suiviVendeur', function($q) use ($dateDebut, $dateFin) {
+            $q->whereBetween('date', [$dateDebut, $dateFin])->where('jour_repos', 0);
         })
         ->selectRaw('categorie, SUM(quantite) as total_quantite, SUM(ca) as total_ca')
         ->groupBy('categorie')
+        ->orderByDesc('total_ca')
         ->get();
 
-    return response()->json([
-        'date' => $date,
-        'stats' => $stats
-    ]);
+    // Table: row = jour, col = categorie
+    $tableData = [];
+    foreach ($jours as $jour) {
+        $row = ['date' => $jour, 'categories' => []];
+        foreach ($categories as $cat) {
+            $row['categories'][$cat] = SuiviCategorie::whereHas('suiviVendeur', function($q) use ($jour) {
+                    $q->whereDate('date', $jour)->where('jour_repos', 0);
+                })
+                ->where('categorie', $cat)
+                ->sum('ca');
+        }
+        $row['total'] = array_sum($row['categories']);
+        $tableData[] = $row;
+    }
+
+    $chartDates = $jours->map(fn($d) => \Carbon\Carbon::parse($d)->format('d/m'))->values();
+
+    return view('suivi_vendeurs.daily_stats', compact(
+        'dateDebut', 'dateFin', 'categories', 'dataParCategorie',
+        'categoriesStats', 'tableData', 'chartDates'
+    ));
 }
 }
