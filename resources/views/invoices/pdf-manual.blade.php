@@ -6,7 +6,7 @@
     <title>Facture {{ $invoice->invoice_number }}</title>
 <style>
     @page {
-        margin: 8mm 10mm 8mm 10mm;
+        margin: 15mm 20mm 15mm 20mm;
         size: A4;
     }
 
@@ -16,17 +16,17 @@
         font-family: 'DejaVu Sans', 'Arial', sans-serif;
         font-size: 10px;
         color: #000;
-        line-height: 1.3;
-        padding: 15px 20px;
+        line-height: 1.4;
+        padding: 20px 30px;
     }
 
     /* ── Header ─────────────────────────────────────────────────────── */
     .header {
         display: table;
         width: 100%;
-        margin-bottom: 12px;
+        margin-bottom: 18px;
         border-bottom: 2px solid #000;
-        padding-bottom: 10px;
+        padding-bottom: 14px;
     }
     .header-left  { display: table-cell; vertical-align: middle; width: 70px; }
     .header-right { display: table-cell; vertical-align: middle; padding-left: 12px; }
@@ -43,7 +43,7 @@
     .invoice-info .value { width: 25%; }
 
     /* ── Client Box ──────────────────────────────────────────────────── */
-    .client-box        { margin-bottom: 10px; padding: 8px 10px; border: 1px solid #ccc; background-color: #f9f9f9; page-break-inside: avoid; }
+    .client-box        { margin-bottom: 15px; padding: 12px 14px; border: 1px solid #ccc; background-color: #f9f9f9; page-break-inside: avoid; }
     .client-box .title { font-weight: bold; font-size: 10px; margin-bottom: 6px; color: #333; text-transform: uppercase; }
     .client-info-row        { margin-bottom: 3px; font-size: 9px; }
     .client-info-row .label { font-weight: bold; display: inline-block; width: 70px; }
@@ -101,14 +101,14 @@
     /* ── Amount in Words ─────────────────────────────────────────────── */
     .amount-words {
         clear: both;
-        margin-top: 20px; margin-bottom: 15px;
-        padding: 10px 12px;
+        margin-top: 25px; margin-bottom: 20px;
+        padding: 12px 15px;
         background-color: #f8f8f8;
         border: 1px solid #ddd;
         font-size: 9px; line-height: 1.5;
         page-break-inside: avoid;
     }
-
+    
     /* ── Footer ──────────────────────────────────────────────────────── */
     .footer {
         margin-top: 20px; padding-top: 12px;

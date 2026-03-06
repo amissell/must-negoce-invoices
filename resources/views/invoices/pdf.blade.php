@@ -7,7 +7,7 @@
 
 <style>
     @page {
-        margin: 8mm 10mm 8mm 10mm;
+        margin: 15mm 20mm 15mm 20mm;
         size: A4;
     }
     
@@ -21,17 +21,17 @@
         font-family: 'DejaVu Sans', 'Arial', sans-serif;
         font-size: 10px;
         color: #000;
-        line-height: 1.3;
-        padding: 15px 20px;
+        line-height: 1.4;
+        padding: 20px 30px;
     }
     
     /* Header Section */
     .header {
         display: table;
         width: 100%;
-        margin-bottom: 12px; 
+        margin-bottom: 18px; 
         border-bottom: 2px solid #000;
-        padding-bottom: 10px;
+        padding-bottom: 14px;
     }
     .header-left {
         display: table-cell;
@@ -90,8 +90,8 @@
     
     /* Client Info Box - POUR FACTURES MANUELLES */
     .client-box {
-        margin-bottom: 10px;
-        padding: 8px 10px;
+        margin-bottom: 15px;
+        padding: 12px 14px;
         border: 1px solid #ccc;
         background-color: #f9f9f9;
         page-break-inside: avoid;
@@ -226,9 +226,9 @@
     /* Amount in Words */
     .amount-words {
         clear: both;
-        margin-top: 20px;
-        margin-bottom: 15px;
-        padding: 10px 12px;
+        margin-top: 25px;
+        margin-bottom: 20px;
+        padding: 12px 15px;
         background-color: #f8f8f8;
         border: 1px solid #ddd;
         font-size: 9px;
