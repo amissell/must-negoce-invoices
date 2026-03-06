@@ -45,6 +45,7 @@
         <span style="font-size:12px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.5px;align-self:center">Rôles :</span>
         <span style="background:#EEF2FF;color:#4338CA;padding:5px 14px;border-radius:999px;font-size:12px;font-weight:800;border:1px solid #C7D2FE">👑 Admin — Accès total</span>
         <span style="background:#F0FDF4;color:#15803D;padding:5px 14px;border-radius:999px;font-size:12px;font-weight:800;border:1px solid #86EFAC">👁 Superviseur — Suivi vendeurs uniquement</span>
+        <span style="background:#FEE2E2;color:#B91C1C;padding:5px 14px;border-radius:999px;font-size:12px;font-weight:800;border:1px solid #FCA5A5">📊 ADV — Facturation uniquement</span>
         <span style="background:#FEF9C3;color:#854D0E;padding:5px 14px;border-radius:999px;font-size:12px;font-weight:800;border:1px solid #FDE047">⏳ En attente d'approbation</span>
     </div>
 
@@ -97,9 +98,11 @@
                     <td style="padding:20px;text-align:center">
                         @if($user->role === 'admin')
                             <span style="background:#EEF2FF;color:#4338CA;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:800;border:1px solid #C7D2FE">👑 Admin</span>
-                        @else
+                            @elseif($user->role === 'adv')
+                            <span style="background:#FEE2E2;color:#B91C1C;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:800;border:1px solid #FCA5A5">📊 ADV</span>
+                            @else
                             <span style="background:#F0FDF4;color:#15803D;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:800;border:1px solid #86EFAC">👁 Superviseur</span>
-                        @endif
+                            @endif
                     </td>
 
                     {{-- Statut --}}
@@ -141,6 +144,7 @@
                             @method('PUT')
                             <select name="role" style="padding:8px 10px;border:2px solid #E2E8F0;border-radius:10px;font-size:13px;font-weight:600;color:#1E293B;background:#F8FAFC;font-family:inherit">
                                 <option value="superviseur" @selected($user->role === 'superviseur')>👁 Superviseur</option>
+                                <option value="adv" @selected($user->role === 'adv')>📊 ADV</option>
                                 <option value="admin"       @selected($user->role === 'admin')>👑 Admin</option>
                             </select>
                             <button type="submit" style="padding:8px 14px;background:linear-gradient(135deg,#4F46E5,#7C3AED);color:white;border:none;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit">

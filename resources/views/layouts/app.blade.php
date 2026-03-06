@@ -26,7 +26,7 @@
         <div class="flex items-center justify-between h-16">
 
             {{-- Logo --}}
-            <a href="{{ auth()->user()->isAdmin() ? route('invoices.index') : route('suivi-vendeurs.index') }}"
+            <a href="{{ (auth()->user()->isAdmin() || auth()->user()->isAdv()) ? route('invoices.index') : route('suivi-vendeurs.index') }}"
                class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -43,8 +43,9 @@
             <div class="hidden md:flex items-center gap-1">
 
                 {{-- ADMIN ONLY links --}}
-                @if(auth()->user()->isAdmin())
+                @if(auth()->user()->isAdmin() || auth()->user()->isAdv())
                 <a href="{{ route('invoices.index') }}"
+
                    class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('invoices.index') ? 'bg-white/20' : 'hover:bg-white/10' }}">
                     📊 Tableau de Bord
                 </a>
@@ -57,23 +58,24 @@
                     ✏️ Facture Manuelle
                 </a>
                 @endif
-
-                {{-- Suivi Vendeurs — visible to ALL authenticated users --}}
+                
+                @if(!auth()->user()->isAdv())
                 <a href="{{ route('suivi-vendeurs.index') }}"
-                   class="relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
-                          {{ request()->routeIs('suivi-vendeurs.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                    Suivi Vendeurs
-                    @if(isset($sidebarStats) && $sidebarStats->total_reste > 5000)
-                    <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold
-                                 rounded-full flex items-center justify-center animate-pulse">!</span>
-                    @endif
-                </a>
-
-                @if(auth()->user()->isAdmin())
+                class="relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
+                {{ request()->routeIs('suivi-vendeurs.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                Suivi Vendeurs
+                @if(isset($sidebarStats) && $sidebarStats->total_reste > 5000)
+                <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold
+                rounded-full flex items-center justify-center animate-pulse">!</span>
+                @endif
+            </a>
+            @endif
+            
+            @if(auth()->user()->isAdmin())
                 <a href="{{ route('statistics.daily') }}"
                 class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('statistics.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
                 📈 Statistiques
@@ -133,7 +135,7 @@
     {{-- Mobile Menu --}}
     <div id="mobileMenu" class="hidden md:hidden border-t border-white/10">
         <div class="px-4 py-3 space-y-2">
-            @if(auth()->user()->isAdmin())
+            @if(auth()->user()->isAdmin() || auth()->user()->isAdv())
             <a href="{{ route('invoices.index') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">📊 Tableau de Bord</a>
             <a href="{{ route('products.index') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">📦 Produits</a>
             <a href="{{ route('invoices.manual.create') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">✏️ Facture Manuelle</a>

@@ -20,7 +20,7 @@ class UserController extends Controller
             return back()->with('error', 'Vous ne pouvez pas modifier votre propre rôle.');
         }
 
-        $request->validate(['role' => 'required|in:admin,superviseur']);
+        $request->validate(['role' => 'required|in:admin,superviseur,adv']);
         $user->update(['role' => $request->role]);
 
         return back()->with('success', "✅ Rôle de {$user->name} mis à jour !");
@@ -50,7 +50,7 @@ public function store(Request $request)
         'name'     => 'required|string|max:255',
         'email'    => 'required|email|unique:users,email',
         'password' => 'required|min:8|confirmed',
-        'role'     => 'required|in:admin,superviseur',
+        'role'     => 'required|in:admin,superviseur,adv',
     ]);
 
     User::create([

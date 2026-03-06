@@ -16,7 +16,6 @@
             ← Retour
         </a>
     </div>
-
     {{-- Date Range Filter --}}
     <form method="GET" style="background:white;border-radius:16px;padding:20px;border:1px solid #E2E8F0;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
         <div style="display:flex;flex-direction:column;gap:4px">
@@ -141,7 +140,6 @@
         <div style="font-size:14px">Changez les dates et réessayez</div>
     </div>
     @endif
-
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>

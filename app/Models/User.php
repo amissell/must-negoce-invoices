@@ -55,4 +55,9 @@ class User extends Authenticatable
     {
         return $this->status === 'rejected';
     }
+
+    public function isAdv(): bool
+    {
+        return $this->role === 'adv';
+    }
 }
