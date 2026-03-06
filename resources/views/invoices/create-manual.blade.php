@@ -137,8 +137,7 @@
                     <h2 class="text-xl font-semibold text-gray-800">Articles de la Facture</h2>
                     {{-- ✅ Badge info: les prix sont TTC --}}
                     <p class="text-xs text-blue-600 mt-1 font-medium">
-                        ℹ️ Les prix unitaires sont en <strong>TTC</strong> — la TVA 20% sera extraite automatiquement
-                    </p>
+                        ℹ️ Les prix unitaires sont en <strong>HT</strong> — TVA 20% sera ajoutée automatiquement</p>
                 </div>
                 <button type="button" id="addItemBtn"
                         class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition">
@@ -159,10 +158,9 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produit</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Prix Unit. <span class="text-blue-500 font-bold">(TTC)</span>
-                            </th>
+                                Prix Unit. <span class="text-blue-500 font-bold">(HT)</span>                            </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Total <span class="text-blue-500 font-bold">(TTC)</span>
+                              Total <span class="text-blue-500 font-bold">(HT)</span>
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                         </tr>
@@ -188,7 +186,7 @@
 
                     {{-- ✅ Total TTC brut (somme des lignes) --}}
                     <div class="flex justify-between text-sm">
-                        <span class="font-medium text-gray-500">Total TTC brut:</span>
+                        <span class="font-medium text-gray-500">Montant HT Brut:</span>
                         <span id="totalBrut" class="font-mono font-semibold text-gray-500">0.00 MAD</span>
                     </div>
 
@@ -209,15 +207,15 @@
 
                     {{-- ✅ Montant TTC après remise --}}
                     <div class="flex justify-between text-sm border-t border-gray-300 pt-3">
-                        <span class="font-bold text-gray-800">Montant TTC:</span>
-                        <span id="totalTTC" class="font-mono font-bold text-blue-600">0.00 MAD</span>
+                        <span class="font-bold text-gray-800">Montant HT Net:</span>
+                        <span id="totalTTC" class="font-mono font-bold text-green-600">0.00 MAD</span>
                     </div>
 
                     {{-- ✅ TVA extraite du TTC (÷ 1.20) --}}
                     <div class="flex justify-between text-sm bg-yellow-50 rounded px-2 py-1">
                         <span class="font-medium text-gray-700">
-                            dont TVA 20%
-                            <span class="text-xs text-gray-400">(TTC ÷ 1.20 × 0.20)</span>:
+                            TVA 20%
+                            <span class="text-xs text-gray-400">(HT Net × 20%)</span>:
                         </span>
                         <span id="tvaAmount" class="font-mono font-semibold text-orange-600">0.00 MAD</span>
                     </div>
@@ -226,8 +224,7 @@
                     <div class="border-t-2 border-gray-800 pt-3">
                         <div class="flex justify-between text-lg">
                             <span class="font-bold text-gray-900">
-                                MONTANT HT:
-                                <span class="text-xs font-normal text-gray-400">(TTC ÷ 1.20)</span>
+                                MONTANT TTC:
                             </span>
                             <span id="montantHT" class="font-mono font-bold text-green-600">0.00 MAD</span>
                         </div>
@@ -373,39 +370,41 @@ document.addEventListener('DOMContentLoaded', function () {
     //   Montant HT        = TTC_net ÷ 1.20
     //   TVA               = TTC_net − HT  (= HT × 20%)
     // ─────────────────────────────────────────────────────────────────────────
+
     function calculateGrandTotal() {
 
-        // 1. Somme des totaux TTC des lignes
-        let totalBrut = 0;
-        document.querySelectorAll('.item-total').forEach(span => {
-            totalBrut += parseFloat(span.textContent) || 0;
-        });
+    // 1. Somme HT brut des lignes
+    let montantHTBrut = 0;
+    document.querySelectorAll('.item-total').forEach(span => {
+        montantHTBrut += parseFloat(span.textContent) || 0;
+    });
 
-        // 2. Remise sur TTC brut
-        const remisePct    = parseFloat(remiseInput.value) || 0;
-        const remiseAmount = totalBrut * (remisePct / 100);
+    // 2. Remise sur HT Brut
+    const remisePct    = parseFloat(remiseInput.value) || 0;
+    const remiseAmount = montantHTBrut * (remisePct / 100);
 
-        // 3. TTC net après remise
-        const totalTTC = totalBrut - remiseAmount;
+    // 3. HT Net = HT Brut - Remise
+    const montantHT = montantHTBrut - remiseAmount;
 
-        // 4. Extraction HT et TVA depuis TTC
-        const montantHT = totalTTC / (1 + TVA_RATE);   // TTC ÷ 1.20
-        const tva       = totalTTC - montantHT;          // TTC − HT
+    // 4. TVA = HT Net × 20%
+    const tva = montantHT * TVA_RATE;
 
-        // ─── Affichage ────────────────────────────────────────────────────
-        document.getElementById('totalBrut').textContent    = totalBrut.toFixed(2)    + ' MAD';
-        document.getElementById('montantRemise').textContent = '- ' + remiseAmount.toFixed(2) + ' MAD';
-        document.getElementById('totalTTC').textContent     = totalTTC.toFixed(2)     + ' MAD';
-        document.getElementById('tvaAmount').textContent    = tva.toFixed(2)          + ' MAD';
-        document.getElementById('montantHT').textContent    = montantHT.toFixed(2)    + ' MAD';
+    // 5. TTC = HT Net + TVA
+    const totalTTC = montantHT + tva;
 
-        // ─── ✅ Remplir les hidden inputs pour le serveur ─────────────────
-        document.getElementById('hiddenMontantHT').value    = montantHT.toFixed(2);
-        document.getElementById('hiddenTva').value          = tva.toFixed(2);
-        document.getElementById('hiddenTotalTTC').value     = totalTTC.toFixed(2);
-        document.getElementById('hiddenRemiseAmount').value = remiseAmount.toFixed(2);
-    }
+    // ─── Affichage ─────────────────────────────────────────────────
+    document.getElementById('totalBrut').textContent     = montantHTBrut.toFixed(2) + ' MAD';
+    document.getElementById('montantRemise').textContent = '- ' + remiseAmount.toFixed(2) + ' MAD';
+    document.getElementById('totalTTC').textContent      = montantHT.toFixed(2)     + ' MAD';
+    document.getElementById('tvaAmount').textContent     = tva.toFixed(2)           + ' MAD';
+    document.getElementById('montantHT').textContent     = totalTTC.toFixed(2)      + ' MAD';
 
+    // ─── Hidden inputs ─────────────────────────────────────────────
+    document.getElementById('hiddenMontantHT').value    = montantHT.toFixed(2);
+    document.getElementById('hiddenTva').value          = tva.toFixed(2);
+    document.getElementById('hiddenTotalTTC').value     = totalTTC.toFixed(2);
+    document.getElementById('hiddenRemiseAmount').value = remiseAmount.toFixed(2);
+}
     // ─── Activer/désactiver le bouton Créer ─────────────────────────────────
     function updateSubmitButton() {
         submitBtn.disabled = itemsBody.children.length === 0;

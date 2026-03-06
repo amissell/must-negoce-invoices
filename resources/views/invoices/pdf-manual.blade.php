@@ -217,18 +217,29 @@
         <div class="totals-table">
             <table>
                 {{-- 1. Montant HT --}}
-                <tr class="row-ht">
-                    <td class="label">MONTANT HT</td>
-                    <td class="amount">{{ number_format($invoice->montant_ht, 2) }} MAD</td>
-                </tr>
-                
-                {{-- 2. Remise (si applicable) --}}
-                @if(isset($invoice->remise_percentage) && $invoice->remise_percentage > 0)
-                <tr class="remise-row">
-                    <td class="label">Remise ({{ $invoice->remise_percentage }}%)</td>
-                    <td class="amount">- {{ number_format($invoice->remise_amount, 2) }} MAD</td>
-                </tr>
-                @endif
+                {{-- 1. Montant HT Brut (somme des lignes) --}}
+@php
+    $htBrut = $invoice->items->sum(function($item) {
+        return $item->quantity * $item->unit_price;
+    });
+@endphp
+<tr class="row-ht">
+    <td class="label">MONTANT HT</td>
+    <td class="amount">{{ number_format($htBrut, 2) }} MAD</td>
+</tr>
+
+@if(isset($invoice->remise_percentage) && $invoice->remise_percentage > 0)
+<tr class="remise-row">
+    <td class="label">Remise ({{ $invoice->remise_percentage }}%)</td>
+    <td class="amount">- {{ number_format($invoice->remise_amount, 2) }} MAD</td>
+</tr>
+
+{{-- 3. HT Net --}}
+<tr class="row-ht">
+    <td class="label">MONTANT HT NET</td>
+    <td class="amount">{{ number_format($invoice->montant_ht, 2) }} MAD</td>
+</tr>
+@endif
                 
                 {{-- 3. TVA --}}
                 <tr class="row-tva">
