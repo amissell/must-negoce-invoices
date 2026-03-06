@@ -43,15 +43,20 @@ class LoginController extends Controller
         return back()->with('error', '⏳ Votre compte est en attente d\'approbation par l\'administrateur.');
     }
 
-    // Redirect superviseur to suivi-vendeurs
-    if (!$user->isAdmin()) {
-        return redirect()->route('suivi-vendeurs.index')
-            ->with('success', 'Bienvenue ' . $user->name . '!');
-    }
-
-    return redirect()->intended(route('invoices.index'))
+    // Redirect adv to invoices
+    if ($user->isAdv()) {
+        return redirect()->route('invoices.index')
         ->with('success', 'Bienvenue ' . $user->name . '!');
-}
+        }
+        
+        if (!$user->isAdmin()) {
+            return redirect()->route('suivi-vendeurs.index')
+            ->with('success', 'Bienvenue ' . $user->name . '!');
+            }
+            
+            return redirect()->intended(route('invoices.index'))
+            ->with('success', 'Bienvenue ' . $user->name . '!');
+        }
 
         return back()->withErrors([
             'email' => 'Les identifiants fournis sont incorrects.',
