@@ -218,11 +218,12 @@
             <table>
                 {{-- 1. Montant HT --}}
                 {{-- 1. Montant HT Brut (somme des lignes) --}}
-@php
-    $htBrut = $invoice->items->sum(function($item) {
-        return $item->quantity * $item->unit_price;
-    });
-@endphp
+                @php
+                $ttcBrut = $invoice->items->sum(function($item) {
+                    return $item->quantity * $item->unit_price;
+                    });
+                    $htBrut = $ttcBrut / 1.20;
+                    @endphp
 <tr class="row-ht">
     <td class="label">MONTANT HT</td>
     <td class="amount">{{ number_format($htBrut, 2) }} MAD</td>

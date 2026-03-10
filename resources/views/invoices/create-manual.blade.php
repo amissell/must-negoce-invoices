@@ -158,9 +158,9 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produit</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Prix Unit. <span class="text-blue-500 font-bold">(HT)</span>                            </th>
+                                Prix Unit. <span class="text-blue-500 font-bold">(TTC)</span>                            </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Total <span class="text-blue-500 font-bold">(HT)</span>
+                              Total <span class="text-blue-500 font-bold">(TTC)</span>
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                         </tr>
@@ -371,36 +371,40 @@ document.addEventListener('DOMContentLoaded', function () {
     //   TVA               = TTC_net − HT  (= HT × 20%)
     // ─────────────────────────────────────────────────────────────────────────
 
+
     function calculateGrandTotal() {
 
-    // 1. Somme HT brut des lignes
-    let montantHTBrut = 0;
+    // 1. Somme TTC des lignes
+    let ttcBrut = 0;
     document.querySelectorAll('.item-total').forEach(span => {
-        montantHTBrut += parseFloat(span.textContent) || 0;
+        ttcBrut += parseFloat(span.textContent) || 0;
     });
 
-    // 2. Remise sur HT Brut
+    // 2. HT Brut = TTC ÷ 1.20
+    const htBrut = ttcBrut / 1.20;
+
+    // 3. Remise sur HT Brut
     const remisePct    = parseFloat(remiseInput.value) || 0;
-    const remiseAmount = montantHTBrut * (remisePct / 100);
+    const remiseAmount = htBrut * (remisePct / 100);
 
-    // 3. HT Net = HT Brut - Remise
-    const montantHT = montantHTBrut - remiseAmount;
+    // 4. HT Net = HT Brut - Remise
+    const htNet = htBrut - remiseAmount;
 
-    // 4. TVA = HT Net × 20%
-    const tva = montantHT * TVA_RATE;
+    // 5. TVA = HT Net × 20%
+    const tva = htNet * TVA_RATE;
 
-    // 5. TTC = HT Net + TVA
-    const totalTTC = montantHT + tva;
+    // 6. TTC Final = HT Net + TVA
+    const totalTTC = htNet + tva;
 
-    // ─── Affichage ─────────────────────────────────────────────────
-    document.getElementById('totalBrut').textContent     = montantHTBrut.toFixed(2) + ' MAD';
+    // Affichage
+    document.getElementById('totalBrut').textContent     = htBrut.toFixed(2)      + ' MAD';
     document.getElementById('montantRemise').textContent = '- ' + remiseAmount.toFixed(2) + ' MAD';
-    document.getElementById('totalTTC').textContent      = montantHT.toFixed(2)     + ' MAD';
-    document.getElementById('tvaAmount').textContent     = tva.toFixed(2)           + ' MAD';
-    document.getElementById('montantHT').textContent     = totalTTC.toFixed(2)      + ' MAD';
+    document.getElementById('totalTTC').textContent      = htNet.toFixed(2)        + ' MAD';
+    document.getElementById('tvaAmount').textContent     = tva.toFixed(2)          + ' MAD';
+    document.getElementById('montantHT').textContent     = totalTTC.toFixed(2)     + ' MAD';
 
-    // ─── Hidden inputs ─────────────────────────────────────────────
-    document.getElementById('hiddenMontantHT').value    = montantHT.toFixed(2);
+    // Hidden inputs
+    document.getElementById('hiddenMontantHT').value    = htNet.toFixed(2);
     document.getElementById('hiddenTva').value          = tva.toFixed(2);
     document.getElementById('hiddenTotalTTC').value     = totalTTC.toFixed(2);
     document.getElementById('hiddenRemiseAmount').value = remiseAmount.toFixed(2);
