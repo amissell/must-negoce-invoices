@@ -7,6 +7,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SuiviVendeurController;
+use App\Http\Controllers\ClientController;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login',    [LoginController::class, 'showLoginForm'])->name('login');
@@ -18,7 +19,7 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 
 // ── ADMIN + ADV ────────────────────────────────────────
-Route::middleware(['auth', 'admin_or_adv'])->group(function () {
+Route::middleware(['auth', 'admin_or_adv'])->group (function () {
     Route::get('/', [InvoiceController::class, 'index'])->name('invoices.index');
     Route::post('/invoices/generate',         [InvoiceController::class, 'generate'])->name('invoices.generate');
     Route::get('/invoices/{id}/download',     [InvoiceController::class, 'downloadPdf'])->name('invoices.download');
@@ -29,6 +30,8 @@ Route::middleware(['auth', 'admin_or_adv'])->group(function () {
     Route::get('/products',          [ProductController::class, 'index'])->name('products.index');
     Route::post('/products',         [ProductController::class, 'store'])->name('products.store');
     Route::delete('/products/{id}',  [ProductController::class, 'destroy'])->name('products.destroy');
+    Route::get('/clients/search', [ClientController::class, 'search'])->name('clients.search');
+    Route::resource('clients', ClientController::class);
 
     Route::prefix('invoices/manual')->name('invoices.manual.')->group(function () {
         Route::get('/create',  [ManualInvoiceController::class, 'create'])->name('create');

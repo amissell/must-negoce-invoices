@@ -53,6 +53,10 @@
                    class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('products.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
                     📦 Produits
                 </a>
+                <a href="{{ route('clients.index') }}"
+                class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('clients.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                👥 Clients
+            </a>
                 <a href="{{ route('invoices.manual.create') }}"
                    class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('invoices.manual.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
                     ✏️ Facture Manuelle
@@ -138,6 +142,7 @@
             @if(auth()->user()->isAdmin() || auth()->user()->isAdv())
             <a href="{{ route('invoices.index') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">📊 Tableau de Bord</a>
             <a href="{{ route('products.index') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">📦 Produits</a>
+            <a href="{{ route('clients.index') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">👥 Clients</a>
             <a href="{{ route('invoices.manual.create') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">✏️ Facture Manuelle</a>
             @endif
 

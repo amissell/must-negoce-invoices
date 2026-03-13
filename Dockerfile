@@ -28,12 +28,12 @@ RUN mkdir -p /home/laravel/.composer && \
     chown -R laravel:laravel /home/laravel
 
 # Set user
-USER laravel
 
 # Copy package files and install Node dependencies (for Vite)
 COPY package*.json ./
-RUN npm install
+RUN npm install --no-optional
 
+USER laravel
 # Copy remaining files
 COPY . .
 

@@ -12,45 +12,36 @@ use Illuminate\Support\Facades\Auth;
 class InvoiceController extends Controller
 {
     public function index(Request $request)
-    {
-        // ✅ Load invoices with creator information
-        $query = Invoice::with(['items', 'creator'])->latest('invoice_date');
+{
+    $query = Invoice::with('creator')->latest();
 
-        // Filter by type
-        if ($request->has('type')) {
-            if ($request->type === 'manual') {
-                $query->manual();
-            } elseif ($request->type === 'automatic') {
-                $query->automatic();
-            }
-        }
-
-        // Search filter
-        if ($request->has('search') && $request->search) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('invoice_number', 'like', "%{$search}%")
-                  ->orWhere('client_name', 'like', "%{$search}%")
-                  ->orWhere('client_email', 'like', "%{$search}%")
-                  ->orWhere('client_phone', 'like', "%{$search}%");
-            });
-        }
-
-        $invoices = $query->paginate(15);
-
-        $totalInvoices = Invoice::count();
-        $manualCount = Invoice::manual()->count();
-        $automaticCount = Invoice::automatic()->count();
-        $products = Product::all();
-
-        return view('invoices.index', compact(
-            'invoices',
-            'totalInvoices',
-            'manualCount',
-            'automaticCount',
-            'products'
-        ));
+    // ── Filtre par type ──────────────────────────────────────
+    if ($request->filled('type')) {
+        $query->where('type', $request->type);
     }
+
+    // ── Recherche par N° facture, client, ICE ───────────────
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function ($q) use ($search) {
+            $q->where('invoice_number', 'like', "%{$search}%")
+              ->orWhere('client_name',  'like', "%{$search}%")
+              ->orWhere('client_ice',   'like', "%{$search}%");
+        });
+    }
+
+    $invoices       = $query->paginate(15)->withQueryString();
+    $totalInvoices  = Invoice::count();
+    $automaticCount = Invoice::where('type', 'automatic')->count();
+    $manualCount    = Invoice::where('type', 'manual')->count();
+
+    return view('invoices.index', compact(
+        'invoices',
+        'totalInvoices',
+        'automaticCount',
+        'manualCount'
+    ));
+}
 
     public function store(Request $request)
     {

@@ -4,7 +4,6 @@
 
 @section('content')
 <div class="container mx-auto px-4 py-8">
-    <!-- Header -->
     <div class="mb-6">
         <div class="flex items-center justify-between">
             <div>
@@ -21,21 +20,15 @@
     </div>
 
     @if(session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-            {{ session('success') }}
-        </div>
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">{{ session('success') }}</div>
     @endif
     @if(session('error'))
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {{ session('error') }}
-        </div>
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{{ session('error') }}</div>
     @endif
     @if($errors->any())
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             <ul class="list-disc list-inside">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
+                @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
             </ul>
         </div>
     @endif
@@ -44,46 +37,36 @@
         @csrf
         @method('PUT')
 
-        {{-- ✅ Hidden inputs — valeurs calculées côté JS --}}
         <input type="hidden" name="montant_ht"    id="hiddenMontantHT"    value="{{ $invoice->montant_ht }}">
         <input type="hidden" name="tva_amount"    id="hiddenTva"          value="{{ $invoice->tva }}">
         <input type="hidden" name="total_ttc"     id="hiddenTotalTTC"     value="{{ $invoice->total_ttc }}">
         <input type="hidden" name="remise_amount" id="hiddenRemiseAmount" value="{{ $invoice->remise_amount ?? 0 }}">
 
-        <!-- Invoice Information Section -->
+        <!-- Invoice Information -->
         <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
             <h2 class="text-xl font-semibold text-gray-800">Informations de la Facture</h2>
         </div>
-
         <div class="p-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Invoice Number -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">N° Facture <span class="text-red-500">*</span></label>
                     <input type="text" name="invoice_number" value="{{ old('invoice_number', $invoice->invoice_number) }}" required
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono">
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono">
                     <p class="text-xs text-gray-500 mt-1">Format: YY/XXX (ex: 26/001)</p>
                 </div>
-
-                <!-- Invoice Date -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Date <span class="text-red-500">*</span></label>
                     <input type="date" name="invoice_date" value="{{ old('invoice_date', $invoice->invoice_date->format('Y-m-d')) }}" required
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                 </div>
-
-                <!-- Payment Mode -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Mode de Paiement <span class="text-red-500">*</span></label>
-                    <select name="payment_mode" required
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <select name="payment_mode" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                         <option value="CH"  {{ old('payment_mode', $invoice->payment_mode) == 'CH'  ? 'selected' : '' }}>Chèque (CH)</option>
                         <option value="ESP" {{ old('payment_mode', $invoice->payment_mode) == 'ESP' ? 'selected' : '' }}>Espèces (ESP)</option>
                         <option value="LCN" {{ old('payment_mode', $invoice->payment_mode) == 'LCN' ? 'selected' : '' }}>(LCN)</option>
                     </select>
                 </div>
-
-                <!-- Invoice Type (Read-only) -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Type de Facture</label>
                     <input type="text" value="{{ $invoice->type === 'manual' ? 'Manuelle' : 'Automatique' }}" readonly
@@ -92,47 +75,97 @@
             </div>
         </div>
 
-        <!-- Client Information Section -->
-        @if($invoice->type === 'manual' && $invoice->client_name && $invoice->client_name !== 'divers')
+        <!-- ════════════════════════════════════════════════════════
+             CLIENT SECTION
+        ════════════════════════════════════════════════════════ -->
         <div class="bg-gray-50 px-6 py-4 border-t border-b border-gray-200">
             <h2 class="text-xl font-semibold text-gray-800">Informations Client</h2>
         </div>
-
         <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Nom du Client</label>
-                    <input type="text" name="client_name" value="{{ old('client_name', $invoice->client_name) }}"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <div class="flex gap-3 mb-6">
+                <button type="button" id="btnClientExistant" onclick="switchClientMode('existant')"
+                        class="flex-1 py-2.5 rounded-xl text-sm font-semibold border-2 border-blue-600 bg-blue-600 text-white transition-all">
+                    👥 Client Existant
+                </button>
+                <button type="button" id="btnClientNouveau" onclick="switchClientMode('nouveau')"
+                        class="flex-1 py-2.5 rounded-xl text-sm font-semibold border-2 border-gray-200 bg-white text-gray-600 hover:border-gray-300 transition-all">
+                    ➕ Nouveau Client
+                </button>
+            </div>
+
+            {{-- MODE 1: Client Existant --}}
+            <div id="modeExistant">
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Sélectionner un client</label>
+                    <select id="clientSelect" name="client_id"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500">
+                        <option value="">-- Choisir un client --</option>
+                        @foreach(\App\Models\Client::orderBy('nom')->get() as $c)
+                            <option value="{{ $c->id }}"
+                                    data-nom="{{ $c->nom }}"
+                                    data-ice="{{ $c->ice }}"
+                                    data-telephone="{{ $c->telephone }}"
+                                    data-adresse="{{ $c->adresse }}"
+                                    {{ old('client_id', $invoice->client_id) == $c->id ? 'selected' : '' }}>
+                                {{ $c->nom }}{{ $c->ice ? ' — '.$c->ice : '' }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Téléphone</label>
-                    <input type="tel" name="client_phone" value="{{ old('client_phone', $invoice->client_phone) }}"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <div id="clientPreview" class="hidden bg-blue-50 border border-blue-100 rounded-xl p-4">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                        <div><p class="text-xs text-gray-400 mb-0.5">Nom</p><p id="previewNom" class="font-semibold text-gray-700"></p></div>
+                        <div><p class="text-xs text-gray-400 mb-0.5">ICE</p><p id="previewIce" class="font-semibold text-gray-700"></p></div>
+                        <div><p class="text-xs text-gray-400 mb-0.5">Téléphone</p><p id="previewTel" class="font-semibold text-gray-700"></p></div>
+                        <div><p class="text-xs text-gray-400 mb-0.5">Adresse</p><p id="previewAdresse" class="font-semibold text-gray-700 truncate"></p></div>
+                    </div>
+                    <input type="hidden" name="client_name"    id="hiddenClientNom"     value="{{ $invoice->client_name }}">
+                    <input type="hidden" name="client_ice"     id="hiddenClientIce"     value="{{ $invoice->client_ice }}">
+                    <input type="hidden" name="client_phone"   id="hiddenClientTel"     value="{{ $invoice->client_phone }}">
+                    <input type="hidden" name="client_address" id="hiddenClientAdresse" value="{{ $invoice->client_address }}">
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">ICE</label>
-                    <input type="text" name="client_ice" value="{{ old('client_ice', $invoice->client_ice) }}"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                           pattern="[0-9]{15}" maxlength="15">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Adresse</label>
-                    <input type="text" name="client_address" value="{{ old('client_address', $invoice->client_address) }}"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <p class="text-xs text-gray-400 mt-3">
+                    Client introuvable?
+                    <a href="{{ route('clients.create') }}" target="_blank" class="text-blue-500 hover:underline font-medium">Créer un nouveau client ↗</a>
+                </p>
+            </div>
+
+            {{-- MODE 2: Nouveau Client --}}
+            <div id="modeNouveau" class="hidden">
+                <input type="hidden" id="hiddenClientIdReset" name="client_id" value="">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nom du Client</label>
+                        <input type="text" name="client_name" value="{{ old('client_name', $invoice->client_name) }}"
+                               class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Téléphone</label>
+                        <input type="tel" name="client_phone" value="{{ old('client_phone', $invoice->client_phone) }}"
+                               class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">ICE</label>
+                        <input type="text" name="client_ice" value="{{ old('client_ice', $invoice->client_ice) }}"
+                               maxlength="15"
+                               class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Adresse</label>
+                        <input type="text" name="client_address" value="{{ old('client_address', $invoice->client_address) }}"
+                               class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500">
+                    </div>
                 </div>
             </div>
         </div>
-        @endif
+        <!-- ════════════════════════════════════════════════════════ -->
 
         <!-- Products Section -->
         <div class="bg-gray-50 px-6 py-4 border-t border-b border-gray-200">
             <div class="flex items-center justify-between">
                 <div>
                     <h2 class="text-xl font-semibold text-gray-800">Articles de la Facture</h2>
-                    <p class="text-xs text-blue-600 mt-1 font-medium">
-                        ℹ️ Les prix unitaires sont en <strong>TTC</strong> — la TVA 20% sera extraite automatiquement
-                    </p>
+                    <p class="text-xs text-blue-600 mt-1 font-medium">ℹ️ Les prix unitaires sont en <strong>TTC</strong> — TVA 20% sera extraite automatiquement</p>
                 </div>
                 <button type="button" id="addItemBtn"
                         class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition">
@@ -145,20 +178,15 @@
         </div>
 
         <div class="p-6">
-            <!-- Items Table -->
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200" id="itemsTable">
+                <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produit</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Prix Unit. <span class="text-blue-500 font-bold">(TTC)</span>
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Total <span class="text-blue-500 font-bold">(TTC)</span>
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produit</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantité</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Prix Unit. <span class="text-blue-500">(TTC)</span></th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total <span class="text-blue-500">(TTC)</span></th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
                         </tr>
                     </thead>
                     <tbody id="itemsBody" class="bg-white divide-y divide-gray-200">
@@ -168,9 +196,7 @@
                                 <select name="items[{{ $index }}][product_id]" required class="product-select w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                                     <option value="">Sélectionner un produit</option>
                                     @foreach($products as $product)
-                                        <option value="{{ $product->id }}"
-                                                data-price="{{ $product->prix_ttc }}"
-                                                data-name="{{ $product->name }}"
+                                        <option value="{{ $product->id }}" data-price="{{ $product->prix_ttc }}"
                                                 {{ $item->product_id == $product->id ? 'selected' : '' }}>
                                             {{ $product->name }}
                                         </option>
@@ -189,7 +215,7 @@
                                 <span class="item-total font-mono font-semibold text-gray-900">{{ number_format($item->total, 2, '.', '') }}</span>
                             </td>
                             <td class="px-6 py-4">
-                                <button type="button" class="remove-item text-red-600 hover:text-red-800 transition">
+                                <button type="button" class="remove-item text-red-600 hover:text-red-800">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                     </svg>
@@ -201,26 +227,16 @@
                 </table>
             </div>
 
-            <!-- No items message -->
-            <div id="noItemsMessage" class="text-center py-8 text-gray-500" style="display: none;">
-                <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
-                </svg>
+            <div id="noItemsMessage" class="text-center py-8 text-gray-500" style="display:none;">
                 <p class="text-lg font-medium">Aucun article</p>
-                <p class="text-sm mt-1">Cliquez sur "Ajouter un Article" pour commencer</p>
             </div>
 
-            <!-- ✅ Totals — même logique que create (TTC → HT) -->
             <div class="mt-8 flex justify-end">
                 <div class="w-full md:w-96 bg-gray-50 rounded-lg p-6 space-y-3">
-
-                    {{-- Total TTC brut --}}
                     <div class="flex justify-between text-sm">
                         <span class="font-medium text-gray-500">Total TTC brut:</span>
                         <span id="totalBrut" class="font-mono font-semibold text-gray-500">0.00 MAD</span>
                     </div>
-
-                    {{-- Remise --}}
                     <div class="flex justify-between items-center text-sm border-t border-gray-300 pt-3">
                         <span class="font-medium text-gray-700">Remise (%):</span>
                         <div class="flex items-center">
@@ -235,29 +251,17 @@
                         <span class="font-medium text-gray-700">Montant Remise:</span>
                         <span id="montantRemise" class="font-mono font-semibold text-red-600">- 0.00 MAD</span>
                     </div>
-
-                    {{-- TTC net --}}
                     <div class="flex justify-between text-sm border-t border-gray-300 pt-3">
                         <span class="font-bold text-gray-800">Montant TTC:</span>
                         <span id="totalTTC" class="font-mono font-bold text-blue-600">0.00 MAD</span>
                     </div>
-
-                    {{-- TVA extraite --}}
                     <div class="flex justify-between text-sm bg-yellow-50 rounded px-2 py-1">
-                        <span class="font-medium text-gray-700">
-                            dont TVA 20%
-                            <span class="text-xs text-gray-400">(TTC ÷ 1.20 × 0.20)</span>:
-                        </span>
+                        <span class="font-medium text-gray-700">dont TVA 20%:</span>
                         <span id="tvaAmount" class="font-mono font-semibold text-orange-600">0.00 MAD</span>
                     </div>
-
-                    {{-- ✅ Montant HT = TTC ÷ 1.20 --}}
                     <div class="border-t-2 border-gray-800 pt-3">
                         <div class="flex justify-between text-lg">
-                            <span class="font-bold text-gray-900">
-                                MONTANT HT:
-                                <span class="text-xs font-normal text-gray-400">(TTC ÷ 1.20)</span>
-                            </span>
+                            <span class="font-bold text-gray-900">MONTANT HT:</span>
                             <span id="montantHT" class="font-mono font-bold text-green-600">0.00 MAD</span>
                         </div>
                     </div>
@@ -265,7 +269,6 @@
             </div>
         </div>
 
-        <!-- Submit Button -->
         <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
             <div class="flex justify-end space-x-3">
                 <a href="{{ route('invoices.index') }}"
@@ -284,16 +287,13 @@
     </form>
 </div>
 
-<!-- Item Row Template -->
 <template id="itemRowTemplate">
     <tr class="item-row">
         <td class="px-6 py-4">
             <select name="items[INDEX][product_id]" required class="product-select w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                 <option value="">Sélectionner un produit</option>
                 @foreach($products as $product)
-                    <option value="{{ $product->id }}" data-price="{{ $product->prix_ttc }}" data-name="{{ $product->name }}">
-                        {{ $product->name }}
-                    </option>
+                    <option value="{{ $product->id }}" data-price="{{ $product->prix_ttc }}">{{ $product->name }}</option>
                 @endforeach
             </select>
         </td>
@@ -303,14 +303,11 @@
         </td>
         <td class="px-6 py-4">
             <input type="number" name="items[INDEX][unit_price]" step="0.01" min="0" required
-                   class="price-input w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-right font-mono"
-                   placeholder="Prix TTC">
+                   class="price-input w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-right font-mono">
         </td>
+        <td class="px-6 py-4"><span class="item-total font-mono font-semibold text-gray-900">0.00</span></td>
         <td class="px-6 py-4">
-            <span class="item-total font-mono font-semibold text-gray-900">0.00</span>
-        </td>
-        <td class="px-6 py-4">
-            <button type="button" class="remove-item text-red-600 hover:text-red-800 transition">
+            <button type="button" class="remove-item text-red-600 hover:text-red-800">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                 </svg>
@@ -323,67 +320,111 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    const TVA_RATE = 0.20;
-
-    let itemIndex    = {{ $invoice->items->count() }};
-    const itemsBody  = document.getElementById('itemsBody');
-    const noItemsMsg = document.getElementById('noItemsMessage');
-    const addItemBtn = document.getElementById('addItemBtn');
-    const submitBtn  = document.getElementById('submitBtn');
+    const TVA_RATE    = 0.20;
+    let itemIndex     = {{ $invoice->items->count() }};
+    const itemsBody   = document.getElementById('itemsBody');
+    const noItemsMsg  = document.getElementById('noItemsMessage');
+    const addItemBtn  = document.getElementById('addItemBtn');
+    const submitBtn   = document.getElementById('submitBtn');
     const remiseInput = document.getElementById('remiseInput');
 
-    // ─── Init ────────────────────────────────────────────────────────────────
     document.querySelectorAll('.item-row').forEach(row => attachRowEventListeners(row));
-    calculateGrandTotal();   // ✅ calcul immédiat au chargement
+    calculateGrandTotal();
     updateSubmitButton();
-
     addItemBtn.addEventListener('click', addItem);
     remiseInput.addEventListener('input', calculateGrandTotal);
 
-    // ─── Ajouter une ligne ───────────────────────────────────────────────────
+    // ── CLIENT MODE ──────────────────────────────────────────────────────────
+    window.switchClientMode = function(mode) {
+    const modeExistant = document.getElementById('modeExistant');
+    const modeNouveau  = document.getElementById('modeNouveau');
+    const btnExistant  = document.getElementById('btnClientExistant');
+    const btnNouveau   = document.getElementById('btnClientNouveau');
+    const hiddenReset  = document.getElementById('hiddenClientIdReset');
+
+    if (mode === 'existant') {
+        modeExistant.classList.remove('hidden');
+        modeNouveau.classList.add('hidden');
+        // ✅ Désactiver le hidden input pour qu'il ne soit pas soumis
+        hiddenReset.disabled = true;
+        btnExistant.classList.add('border-blue-600','bg-blue-600','text-white');
+        btnExistant.classList.remove('border-gray-200','bg-white','text-gray-600');
+        btnNouveau.classList.remove('border-blue-600','bg-blue-600','text-white');
+        btnNouveau.classList.add('border-gray-200','bg-white','text-gray-600');
+    } else {
+        modeNouveau.classList.remove('hidden');
+        modeExistant.classList.add('hidden');
+        // ✅ Réactiver le hidden input + vider le select
+        hiddenReset.disabled = false;
+        document.getElementById('clientSelect').value = '';
+        document.getElementById('clientPreview').classList.add('hidden');
+        btnNouveau.classList.add('border-blue-600','bg-blue-600','text-white');
+        btnNouveau.classList.remove('border-gray-200','bg-white','text-gray-600');
+        btnExistant.classList.remove('border-blue-600','bg-blue-600','text-white');
+        btnExistant.classList.add('border-gray-200','bg-white','text-gray-600');
+    }
+};
+
+    // Auto-fill si client_id déjà défini (page edit)
+    const clientSelect = document.getElementById('clientSelect');
+    if (clientSelect) {
+        clientSelect.addEventListener('change', function () {
+            const opt = this.options[this.selectedIndex];
+            const preview = document.getElementById('clientPreview');
+            if (!this.value) { preview.classList.add('hidden'); return; }
+            document.getElementById('previewNom').textContent     = opt.dataset.nom       || '—';
+            document.getElementById('previewIce').textContent     = opt.dataset.ice       || '—';
+            document.getElementById('previewTel').textContent     = opt.dataset.telephone || '—';
+            document.getElementById('previewAdresse').textContent = opt.dataset.adresse   || '—';
+            document.getElementById('hiddenClientNom').value      = opt.dataset.nom       || '';
+            document.getElementById('hiddenClientIce').value      = opt.dataset.ice       || '';
+            document.getElementById('hiddenClientTel').value      = opt.dataset.telephone || '';
+            document.getElementById('hiddenClientAdresse').value  = opt.dataset.adresse   || '';
+            preview.classList.remove('hidden');
+        });
+
+        // Trigger auto-fill si client déjà sélectionné
+        if (clientSelect.value) clientSelect.dispatchEvent(new Event('change'));
+    }
+
+    // Pré-sélectionner mode selon facture existante
+    @if($invoice->client_id)
+        switchClientMode('existant');
+    @elseif($invoice->client_name)
+        switchClientMode('nouveau');
+    @endif
+
+    // ── ITEMS ────────────────────────────────────────────────────────────────
     function addItem() {
         const template = document.getElementById('itemRowTemplate');
         const clone    = template.content.cloneNode(true);
-
-        const row = clone.querySelector('tr');
-        row.innerHTML = row.innerHTML.replaceAll('INDEX', itemIndex);
+        const row      = clone.querySelector('tr');
+        row.innerHTML  = row.innerHTML.replaceAll('INDEX', itemIndex);
         itemsBody.appendChild(clone);
         noItemsMsg.style.display = 'none';
-
-        const addedRow = itemsBody.lastElementChild;
-        attachRowEventListeners(addedRow);
-
+        attachRowEventListeners(itemsBody.lastElementChild);
         itemIndex++;
         updateSubmitButton();
     }
 
-    // ─── Listeners sur chaque ligne ──────────────────────────────────────────
     function attachRowEventListeners(row) {
         const productSelect = row.querySelector('.product-select');
         const quantityInput = row.querySelector('.quantity-input');
         const priceInput    = row.querySelector('.price-input');
         const removeBtn     = row.querySelector('.remove-item');
-
         productSelect.addEventListener('change', function () {
             const price = this.options[this.selectedIndex].getAttribute('data-price');
-            if (price && price !== '') {
-                priceInput.value = parseFloat(price).toFixed(2);
-                calculateRowTotal(row);
-            }
+            if (price) { priceInput.value = parseFloat(price).toFixed(2); calculateRowTotal(row); }
         });
-
         quantityInput.addEventListener('input', () => calculateRowTotal(row));
         priceInput.addEventListener('input',    () => calculateRowTotal(row));
-
         removeBtn.addEventListener('click', function () {
             row.remove();
             if (itemsBody.children.length === 0) noItemsMsg.style.display = 'block';
-            calculateGrandTotal();
-            updateSubmitButton();
+            calculateGrandTotal(); updateSubmitButton();
         });
     }
 
-    // ─── Total TTC d'une ligne ────────────────────────────────────────────────
     function calculateRowTotal(row) {
         const qty   = parseFloat(row.querySelector('.quantity-input').value) || 0;
         const price = parseFloat(row.querySelector('.price-input').value)    || 0;
@@ -391,38 +432,24 @@ document.addEventListener('DOMContentLoaded', function () {
         calculateGrandTotal();
     }
 
-    // ─── ✅ CALCUL PRINCIPAL : TTC → HT → TVA ────────────────────────────────
-    //   totalBrut  = Σ (qté × prix_ttc)
-    //   remise     = totalBrut × remise%
-    //   totalTTC   = totalBrut − remise
-    //   montantHT  = totalTTC ÷ 1.20
-    //   tva        = totalTTC − montantHT
-    // ─────────────────────────────────────────────────────────────────────────
     function calculateGrandTotal() {
-
         let totalBrut = 0;
-        document.querySelectorAll('.item-total').forEach(span => {
-            totalBrut += parseFloat(span.textContent) || 0;
-        });
-
+        document.querySelectorAll('.item-total').forEach(s => totalBrut += parseFloat(s.textContent) || 0);
         const remisePct    = parseFloat(remiseInput.value) || 0;
         const remiseAmount = totalBrut * (remisePct / 100);
         const totalTTC     = totalBrut - remiseAmount;
-        const montantHT    = totalTTC / (1 + TVA_RATE);   // ÷ 1.20
+        const montantHT    = totalTTC / (1 + TVA_RATE);
         const tva          = totalTTC - montantHT;
 
-        // ─ Affichage ─
         document.getElementById('totalBrut').textContent     = totalBrut.toFixed(2)    + ' MAD';
         document.getElementById('montantRemise').textContent = '- ' + remiseAmount.toFixed(2) + ' MAD';
         document.getElementById('totalTTC').textContent      = totalTTC.toFixed(2)     + ' MAD';
         document.getElementById('tvaAmount').textContent     = tva.toFixed(2)          + ' MAD';
         document.getElementById('montantHT').textContent     = montantHT.toFixed(2)    + ' MAD';
-
-        // ─ Hidden inputs pour le serveur ─
-        document.getElementById('hiddenMontantHT').value    = montantHT.toFixed(2);
-        document.getElementById('hiddenTva').value          = tva.toFixed(2);
-        document.getElementById('hiddenTotalTTC').value     = totalTTC.toFixed(2);
-        document.getElementById('hiddenRemiseAmount').value = remiseAmount.toFixed(2);
+        document.getElementById('hiddenMontantHT').value     = montantHT.toFixed(2);
+        document.getElementById('hiddenTva').value           = tva.toFixed(2);
+        document.getElementById('hiddenTotalTTC').value      = totalTTC.toFixed(2);
+        document.getElementById('hiddenRemiseAmount').value  = remiseAmount.toFixed(2);
     }
 
     function updateSubmitButton() {
