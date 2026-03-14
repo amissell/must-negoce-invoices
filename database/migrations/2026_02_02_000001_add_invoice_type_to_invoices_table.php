@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('client_phone')->nullable()->after('client_address');
             $table->string('client_email')->nullable()->after('client_phone');
         });
+        
     }
 
     /**

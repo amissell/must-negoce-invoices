@@ -354,6 +354,35 @@
         </div>
     </div>
 
+    {{-- Objectifs Vendeurs Section --}}
+<div class="bg-white rounded-lg shadow p-6 mt-6">
+    <h3 class="text-lg font-bold mb-4">🎯 Objectifs Mensuels</h3>
+    <div class="space-y-4">
+        @foreach($objectifsVendeurs as $nom => $obj)
+        <div class="border rounded-lg p-4">
+            <div class="flex justify-between items-center mb-2">
+                <span class="font-semibold">{{ $nom }}</span>
+                <span class="text-sm {{ $obj['atteindra'] ? 'text-green-600' : 'text-red-600' }}">
+                    Prédiction: {{ number_format($obj['prediction']) }} MAD
+                    {!! $obj['atteindra'] ? '✅' : '⚠️' !!}
+                </span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-4">
+                <div class="h-4 rounded-full {{ $obj['progression'] >= 80 ? 'bg-green-500' : ($obj['progression'] >= 50 ? 'bg-yellow-500' : 'bg-red-500') }}"
+                     style="width: {{ $obj['progression'] }}%">
+                </div>
+            </div>
+            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                <span>{{ number_format($obj['ca_actuel']) }} MAD</span>
+                <span>{{ $obj['progression'] }}%</span>
+                <span>Objectif: {{ number_format($obj['objectif']) }} MAD</span>
+            </div>
+        </div>
+        @endforeach
+    </div>
+</div>
+
+
     {{-- ══ VENDOR CARDS ══ --}}
     @php
         $vColors = [

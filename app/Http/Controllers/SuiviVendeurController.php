@@ -141,6 +141,30 @@ class SuiviVendeurController extends Controller
                           
                           $inactiviteParVendeur = collect($inactiviteParVendeur)
                           ->sortByDesc('jours_au_dela');
+                          // Add to the index method, before return view(...)
+$objectifsVendeurs = [];
+$OBJECTIF_MENSUEL = 150000; // MAD - à configurer par vendeur
+
+foreach ($suiviParVendeur as $nom => $data) {
+    $joursActifs = $inactiviteParVendeur[$nom]['jours_actifs'] ?? 0;
+    $joursRestants = $inactiviteParVendeur[$nom]['jours_restants'] ?? 0;
+    $caActuel = $data['ca_total'];
+    $moyenneJour = $joursActifs > 0 ? $caActuel / $joursActifs : 0;
+    $prediction = $caActuel + ($moyenneJour * $joursRestants);
+    $progression = $OBJECTIF_MENSUEL > 0 ? round(($caActuel / $OBJECTIF_MENSUEL) * 100, 1) : 0;
+
+    $objectifsVendeurs[$nom] = [
+        'objectif' => $OBJECTIF_MENSUEL,
+        'ca_actuel' => $caActuel,
+        'progression' => min($progression, 100),
+        'prediction' => $prediction,
+        'atteindra' => $prediction >= $OBJECTIF_MENSUEL,
+        'moyenne_jour' => $moyenneJour,
+    ];
+}
+
+// Add 'objectifsVendeurs' to compact(...)
+
 
                           return view('suivi_vendeurs.index', compact(
                             'lignes', 'suiviParVendeur', 'statsGlobales',
@@ -184,7 +208,6 @@ class SuiviVendeurController extends Controller
         $validated['created_by'] = Auth::id();
         $suiviVendeur = SuiviVendeur::create($validated);
 
-        // ── Enregistrer les catégories ──────────────────────────────────
         if ($request->has('categories')) {
             foreach ($request->categories as $cat) {
                 if (!empty($cat['categorie'])) {
@@ -233,7 +256,6 @@ class SuiviVendeurController extends Controller
 
         $suiviVendeur->update($validated);
 
-        // ── Supprimer les anciennes catégories et les remplacer ──────────
         $suiviVendeur->categories()->delete();
 
         if ($request->has('categories')) {
@@ -303,19 +325,55 @@ class SuiviVendeurController extends Controller
     }
 
 
+
+    public function comparaison(Request $request)
+{
+    $mois1 = $request->get('mois1', Carbon::now()->month);
+    $annee1 = $request->get('annee1', Carbon::now()->year);
+    $mois2 = $request->get('mois2', Carbon::now()->subMonth()->month);
+    $annee2 = $request->get('annee2', Carbon::now()->subMonth()->year);
+
+    $getData = function ($annee, $mois) {
+        $lignes = SuiviVendeur::parMois($annee, $mois)->where('jour_repos', 0)->get();
+        return [
+            'ca' => $lignes->sum('chiffre'),
+            'encaisse' => $lignes->sum('total_paye'),
+            'reste' => $lignes->sum('chiffre') - $lignes->sum('total_paye'),
+            'bl' => $lignes->sum('bl'),
+            'drops' => $lignes->sum('bl') > 0 ? round($lignes->sum('chiffre') / $lignes->sum('bl'), 2) : 0,
+            'par_vendeur' => $lignes->groupBy('vendeur_nom')->map(fn($e) => [
+                'ca' => $e->sum('chiffre'),
+                'encaisse' => $e->sum('total_paye'),
+                'bl' => $e->sum('bl'),
+            ]),
+        ];
+    };
+
+    $periode1 = $getData($annee1, $mois1);
+    $periode2 = $getData($annee2, $mois2);
+
+    $evolution = [
+        'ca' => $periode2['ca'] > 0 ? round((($periode1['ca'] - $periode2['ca']) / $periode2['ca']) * 100, 1) : 0,
+        'encaisse' => $periode2['encaisse'] > 0 ? round((($periode1['encaisse'] - $periode2['encaisse']) / $periode2['encaisse']) * 100, 1) : 0,
+        'drops' => $periode2['drops'] > 0 ? round((($periode1['drops'] - $periode2['drops']) / $periode2['drops']) * 100, 1) : 0,
+    ];
+
+    return view('suivi_vendeurs.comparaison', compact('periode1', 'periode2', 'evolution', 'mois1', 'annee1', 'mois2', 'annee2'));
+}
+
+
+
     public function dailyStatsPage(Request $request)
 {
     $dateDebut = $request->get('date_debut', now()->startOfMonth()->toDateString());
     $dateFin   = $request->get('date_fin', now()->toDateString());
 
-    // Kol jours f had range
     $jours = SuiviVendeur::whereBetween('date', [$dateDebut, $dateFin])
         ->where('jour_repos', 0)
         ->distinct()
         ->orderBy('date')
         ->pluck('date');
 
-    // Kol categories kaynin
     $categories = SuiviCategorie::whereHas('suiviVendeur', function($q) use ($dateDebut, $dateFin) {
             $q->whereBetween('date', [$dateDebut, $dateFin])->where('jour_repos', 0);
         })
@@ -324,7 +382,6 @@ class SuiviVendeurController extends Controller
         ->sort()
         ->values();
 
-    // Data dyal kol categorie par jour
     $dataParCategorie = [];
     foreach ($categories as $cat) {
         $dataParCategorie[$cat] = [];
@@ -338,7 +395,6 @@ class SuiviVendeurController extends Controller
         }
     }
 
-    // Stats globales par categorie
     $categoriesStats = SuiviCategorie::whereHas('suiviVendeur', function($q) use ($dateDebut, $dateFin) {
             $q->whereBetween('date', [$dateDebut, $dateFin])->where('jour_repos', 0);
         })
@@ -347,7 +403,6 @@ class SuiviVendeurController extends Controller
         ->orderByDesc('total_ca')
         ->get();
 
-    // Table: row = jour, col = categorie
     $tableData = [];
     foreach ($jours as $jour) {
         $row = ['date' => $jour, 'categories' => []];

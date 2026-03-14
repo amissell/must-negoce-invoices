@@ -18,7 +18,6 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 
-// ── ADMIN + ADV ────────────────────────────────────────
 Route::middleware(['auth', 'admin_or_adv'])->group (function () {
     Route::get('/', [InvoiceController::class, 'index'])->name('invoices.index');
     Route::post('/invoices/generate',         [InvoiceController::class, 'generate'])->name('invoices.generate');
@@ -39,7 +38,6 @@ Route::middleware(['auth', 'admin_or_adv'])->group (function () {
     });
 });
 
-// ── ADMIN ONLY ────────────────────────────────────────
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/users',                    [UserController::class, 'index'])->name('admin.users');
     Route::put('/admin/users/{user}/role',         [UserController::class, 'updateRole'])->name('admin.users.role');
@@ -56,7 +54,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/statistics/daily', [SuiviVendeurController::class, 'dailyStatsPage'])->name('statistics.daily');
 });
 
-// ── AUTH (tous) ────────────────────────────────────────
 Route::middleware(['auth'])->group(function () {
     Route::get('/suivi-vendeurs', [SuiviVendeurController::class, 'index'])->name('suivi-vendeurs.index');
     Route::post('/admin/users/{user}/approve', [UserController::class, 'approve'])->name('admin.users.approve');

@@ -4,7 +4,6 @@
 
 @section('content')
 <div class="space-y-6">
-    {{-- Header --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-gray-900">📦 Produits de Nettoyage</h1>
@@ -19,7 +18,6 @@
         </button>
     </div>
 
-    {{-- Search --}}
     <div class="bg-white rounded-2xl card-shadow p-4">
         <form method="GET" action="{{ route('products.index') }}" class="flex gap-3">
             <div class="flex-1 relative">
@@ -86,13 +84,11 @@
         @endforelse
     </div>
 
-    {{-- Pagination --}}
     <div class="mt-6">
         {{ $products->links() }}
     </div>
 </div>
 
-{{-- Add Product Modal --}}
 <div id="addProductModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl">
         <div class="flex items-center justify-between p-6 border-b">

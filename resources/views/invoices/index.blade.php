@@ -165,13 +165,8 @@
                 </div>
             </form>
         </div>
-
-        {{-- ══════════════════════════════════════════════════════════
-             INVOICES TABLE avec Search + Filtre Type
-        ══════════════════════════════════════════════════════════ --}}
         <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 animate-slide-up" style="animation-delay: 0.2s">
 
-            {{-- Header + Search Bar --}}
             <div class="p-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
                 <div class="flex flex-col gap-4">
 
@@ -204,7 +199,6 @@
                                    class="w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
                         </div>
 
-                        {{-- ✅ Filtre Type — Auto / Manuel / Tous --}}
                         <div class="flex gap-2">
                             <a href="{{ route('invoices.index', array_merge(request()->except('type'), [])) }}"
                                class="px-4 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all
@@ -243,13 +237,11 @@
                 </div>
             </div>
 
-            {{-- Table --}}
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">N° Facture</th>
-                            {{-- ✅ Colonne Type --}}
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Type</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Client</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Date</th>

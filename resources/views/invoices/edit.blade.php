@@ -345,7 +345,6 @@ document.addEventListener('DOMContentLoaded', function () {
     if (mode === 'existant') {
         modeExistant.classList.remove('hidden');
         modeNouveau.classList.add('hidden');
-        // ✅ Désactiver le hidden input pour qu'il ne soit pas soumis
         hiddenReset.disabled = true;
         btnExistant.classList.add('border-blue-600','bg-blue-600','text-white');
         btnExistant.classList.remove('border-gray-200','bg-white','text-gray-600');
@@ -354,7 +353,6 @@ document.addEventListener('DOMContentLoaded', function () {
     } else {
         modeNouveau.classList.remove('hidden');
         modeExistant.classList.add('hidden');
-        // ✅ Réactiver le hidden input + vider le select
         hiddenReset.disabled = false;
         document.getElementById('clientSelect').value = '';
         document.getElementById('clientPreview').classList.add('hidden');
@@ -387,7 +385,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (clientSelect.value) clientSelect.dispatchEvent(new Event('change'));
     }
 
-    // Pré-sélectionner mode selon facture existante
     @if($invoice->client_id)
         switchClientMode('existant');
     @elseif($invoice->client_name)

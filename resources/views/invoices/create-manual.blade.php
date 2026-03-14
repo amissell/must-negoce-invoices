@@ -321,7 +321,6 @@ document.addEventListener('DOMContentLoaded', function () {
     if (mode === 'existant') {
         modeExistant.classList.remove('hidden');
         modeNouveau.classList.add('hidden');
-        // ✅ Désactiver le hidden input pour qu'il ne soit pas soumis
         hiddenReset.disabled = true;
         btnExistant.classList.add('border-blue-600','bg-blue-600','text-white');
         btnExistant.classList.remove('border-gray-200','bg-white','text-gray-600');
@@ -344,7 +343,7 @@ document.addEventListener('DOMContentLoaded', function () {
 document.getElementById('hiddenClientIdReset').disabled = true;
     // ── CLIENT SELECT AUTO-FILL ──────────────────────────────────────────────
     const clientSelect = document.getElementById('clientSelect');
-    if (clientSelect) {
+    if (clientSelect) { 
         clientSelect.addEventListener('change', function () {
             const opt     = this.options[this.selectedIndex];
             const preview = document.getElementById('clientPreview');
