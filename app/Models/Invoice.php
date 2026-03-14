@@ -96,4 +96,10 @@ class Invoice extends Model
     {
         return $this->updater ? $this->updater->name : null;
     }
+
+    public function client()
+    {
+        return $this->belongsTo(\App\Models\Client::class);
+    }
+
 }

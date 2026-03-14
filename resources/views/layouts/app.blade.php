@@ -42,10 +42,9 @@
             {{-- Navigation Links --}}
             <div class="hidden md:flex items-center gap-1">
 
-                {{-- ADMIN ONLY links --}}
+                {{-- ADMIN & ADV links --}}
                 @if(auth()->user()->isAdmin() || auth()->user()->isAdv())
                 <a href="{{ route('invoices.index') }}"
-
                    class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('invoices.index') ? 'bg-white/20' : 'hover:bg-white/10' }}">
                     📊 Tableau de Bord
                 </a>
@@ -54,43 +53,51 @@
                     📦 Produits
                 </a>
                 <a href="{{ route('clients.index') }}"
-                class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('clients.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                👥 Clients
-            </a>
+                   class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('clients.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                    👥 Clients
+                </a>
                 <a href="{{ route('invoices.manual.create') }}"
                    class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('invoices.manual.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
                     ✏️ Facture Manuelle
                 </a>
                 @endif
-                
+
                 @if(!auth()->user()->isAdv())
                 <a href="{{ route('suivi-vendeurs.index') }}"
-                class="relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
-                {{ request()->routeIs('suivi-vendeurs.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-                Suivi Vendeurs
-                @if(isset($sidebarStats) && $sidebarStats->total_reste > 5000)
-                <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold
-                rounded-full flex items-center justify-center animate-pulse">!</span>
+                   class="relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
+                   {{ request()->routeIs('suivi-vendeurs.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    Suivi Vendeurs
+                    @if(isset($sidebarStats) && $sidebarStats->total_reste > 5000)
+                    <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold
+                    rounded-full flex items-center justify-center animate-pulse">!</span>
+                    @endif
+                </a>
                 @endif
-            </a>
-            @endif
-            
-            @if(auth()->user()->isAdmin())
-                <a href="{{ route('statistics.daily') }}"
-                class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('statistics.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                📈 Statistiques
-            </a>
-            @endif
 
-                {{-- ADMIN ONLY: Users management --}}
                 @if(auth()->user()->isAdmin())
+                <a href="{{ route('statistics.daily') }}"
+                   class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('statistics.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                    📈 Statistiques
+                </a>
+                <a href="{{ route('creances.index') }}"
+                   class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('creances.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                    💰 Créances
+                </a>
+                <a href="{{ route('alertes.index') }}"
+                   class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('alertes.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                    🔔 Alertes
+                </a>
+                <a href="{{ route('suivi-vendeurs.comparaison') }}"
+                   class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('suivi-vendeurs.comparaison') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                    📊 Comparaison
+                </a>
                 <a href="{{ route('admin.users') }}"
                    class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('admin.users*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    👥 Utilisateurs
+                    👤 Utilisateurs
                 </a>
                 @endif
 
@@ -146,15 +153,21 @@
             <a href="{{ route('invoices.manual.create') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">✏️ Facture Manuelle</a>
             @endif
 
+            @if(!auth()->user()->isAdv())
             <a href="{{ route('suivi-vendeurs.index') }}" class="flex items-center justify-between px-4 py-2 rounded-lg hover:bg-white/10">
                 <span>👥 Suivi Vendeurs</span>
                 @if(isset($sidebarStats) && $sidebarStats->total_reste > 5000)
                 <span class="w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">!</span>
                 @endif
             </a>
+            @endif
 
             @if(auth()->user()->isAdmin())
-            <a href="{{ route('admin.users') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">👥 Utilisateurs</a>
+            <a href="{{ route('statistics.daily') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">📈 Statistiques</a>
+            <a href="{{ route('creances.index') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">💰 Créances</a>
+            <a href="{{ route('alertes.index') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">🔔 Alertes</a>
+            <a href="{{ route('suivi-vendeurs.comparaison') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">📊 Comparaison</a>
+            <a href="{{ route('admin.users') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">👤 Utilisateurs</a>
             @endif
 
             <div class="border-t border-white/10 pt-3 mt-3">
@@ -204,6 +217,7 @@
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     @yield('content')
 </main>
+
 {{-- Statistics Modal --}}
 <div id="statsModal" class="fixed inset-0 z-50 hidden">
     <div class="absolute inset-0 bg-black/50" onclick="closeStatsModal()"></div>

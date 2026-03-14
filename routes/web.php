@@ -8,6 +8,9 @@ use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SuiviVendeurController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\CreanceController;
+use App\Http\Controllers\AlerteController;
+
 
 Route::middleware('guest')->group(function () {
     Route::get('/login',    [LoginController::class, 'showLoginForm'])->name('login');
@@ -36,6 +39,12 @@ Route::middleware(['auth', 'admin_or_adv'])->group (function () {
         Route::get('/create',  [ManualInvoiceController::class, 'create'])->name('create');
         Route::post('/store',  [ManualInvoiceController::class, 'store'])->name('store');
     });
+    Route::get('/creances', [CreanceController::class, 'index'])->name('creances.index');
+    Route::get('/creances/export/excel', [CreanceController::class, 'exportExcel'])->name('creances.export.excel');
+    Route::get('/creances/export/pdf', [CreanceController::class, 'exportPdf'])->name('creances.export.pdf');
+    Route::get('/alertes', [AlerteController::class, 'index'])->name('alertes.index');
+    Route::get('/suivi-vendeurs/comparaison', [SuiviVendeurController::class, 'comparaison'])->name('suivi-vendeurs.comparaison');
+
 });
 
 Route::middleware(['auth', 'admin'])->group(function () {

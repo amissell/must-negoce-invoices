@@ -171,7 +171,7 @@ foreach ($suiviParVendeur as $nom => $data) {
                             'vendeurs', 'mois', 'annee',
                             'chartDates', 'chartDataCA', 'toutesLignes',
                             'inactiviteParVendeur', 'totalJoursOuvres',
-                            'joursAttendus', 'CIBLE_JOURS'
+                            'joursAttendus', 'CIBLE_JOURS', 'objectifsVendeurs'
                             ));
     }
 
@@ -323,46 +323,6 @@ foreach ($suiviParVendeur as $nom => $data) {
             'categoriesStats'
         ));
     }
-
-
-
-    public function comparaison(Request $request)
-{
-    $mois1 = $request->get('mois1', Carbon::now()->month);
-    $annee1 = $request->get('annee1', Carbon::now()->year);
-    $mois2 = $request->get('mois2', Carbon::now()->subMonth()->month);
-    $annee2 = $request->get('annee2', Carbon::now()->subMonth()->year);
-
-    $getData = function ($annee, $mois) {
-        $lignes = SuiviVendeur::parMois($annee, $mois)->where('jour_repos', 0)->get();
-        return [
-            'ca' => $lignes->sum('chiffre'),
-            'encaisse' => $lignes->sum('total_paye'),
-            'reste' => $lignes->sum('chiffre') - $lignes->sum('total_paye'),
-            'bl' => $lignes->sum('bl'),
-            'drops' => $lignes->sum('bl') > 0 ? round($lignes->sum('chiffre') / $lignes->sum('bl'), 2) : 0,
-            'par_vendeur' => $lignes->groupBy('vendeur_nom')->map(fn($e) => [
-                'ca' => $e->sum('chiffre'),
-                'encaisse' => $e->sum('total_paye'),
-                'bl' => $e->sum('bl'),
-            ]),
-        ];
-    };
-
-    $periode1 = $getData($annee1, $mois1);
-    $periode2 = $getData($annee2, $mois2);
-
-    $evolution = [
-        'ca' => $periode2['ca'] > 0 ? round((($periode1['ca'] - $periode2['ca']) / $periode2['ca']) * 100, 1) : 0,
-        'encaisse' => $periode2['encaisse'] > 0 ? round((($periode1['encaisse'] - $periode2['encaisse']) / $periode2['encaisse']) * 100, 1) : 0,
-        'drops' => $periode2['drops'] > 0 ? round((($periode1['drops'] - $periode2['drops']) / $periode2['drops']) * 100, 1) : 0,
-    ];
-
-    return view('suivi_vendeurs.comparaison', compact('periode1', 'periode2', 'evolution', 'mois1', 'annee1', 'mois2', 'annee2'));
-}
-
-
-
     public function dailyStatsPage(Request $request)
 {
     $dateDebut = $request->get('date_debut', now()->startOfMonth()->toDateString());
@@ -424,4 +384,41 @@ foreach ($suiviParVendeur as $nom => $data) {
         'categoriesStats', 'tableData', 'chartDates'
     ));
 }
+
+
+public function comparaison(Request $request)
+{
+    $mois1 = $request->get('mois1', Carbon::now()->month);
+    $annee1 = $request->get('annee1', Carbon::now()->year);
+    $mois2 = $request->get('mois2', Carbon::now()->subMonth()->month);
+    $annee2 = $request->get('annee2', Carbon::now()->subMonth()->year);
+
+    $getData = function ($annee, $mois) {
+        $lignes = SuiviVendeur::parMois($annee, $mois)->where('jour_repos', 0)->get();
+        return [
+            'ca' => $lignes->sum('chiffre'),
+            'encaisse' => $lignes->sum('total_paye'),
+            'reste' => $lignes->sum('chiffre') - $lignes->sum('total_paye'),
+            'bl' => $lignes->sum('bl'),
+            'drops' => $lignes->sum('bl') > 0 ? round($lignes->sum('chiffre') / $lignes->sum('bl'), 2) : 0,
+            'par_vendeur' => $lignes->groupBy('vendeur_nom')->map(fn($e) => [
+                'ca' => $e->sum('chiffre'),
+                'encaisse' => $e->sum('total_paye'),
+                'bl' => $e->sum('bl'),
+            ]),
+        ];
+    };
+
+    $periode1 = $getData($annee1, $mois1);
+    $periode2 = $getData($annee2, $mois2);
+
+    $evolution = [
+        'ca' => $periode2['ca'] > 0 ? round((($periode1['ca'] - $periode2['ca']) / $periode2['ca']) * 100, 1) : 0,
+        'encaisse' => $periode2['encaisse'] > 0 ? round((($periode1['encaisse'] - $periode2['encaisse']) / $periode2['encaisse']) * 100, 1) : 0,
+        'drops' => $periode2['drops'] > 0 ? round((($periode1['drops'] - $periode2['drops']) / $periode2['drops']) * 100, 1) : 0,
+    ];
+
+    return view('suivi_vendeurs.comparaison', compact('periode1', 'periode2', 'evolution', 'mois1', 'annee1', 'mois2', 'annee2'));
+}
+
 }

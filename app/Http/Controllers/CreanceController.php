@@ -1,14 +1,17 @@
 <?php
+
 namespace App\Http\Controllers;
 
-use App\Models\Invoice;
 use App\Models\Client;
+use App\Exports\CreancesExport;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class CreanceController extends Controller
 {
-    public function index(Request $request)
+    private function getCreancesData()
     {
         $now = Carbon::now();
 
@@ -16,9 +19,16 @@ class CreanceController extends Controller
             $q->where('statut_paiement', '!=', 'payée');
         }])->get()->map(function ($client) use ($now) {
             $invoices = $client->invoices;
-            $j30 = $invoices->filter(fn($i) => $now->diffInDays($i->date) <= 30)->sum(fn($i) => $i->total_ttc - $i->montant_paye);
-            $j60 = $invoices->filter(fn($i) => $now->diffInDays($i->date) > 30 && $now->diffInDays($i->date) <= 60)->sum(fn($i) => $i->total_ttc - $i->montant_paye);
-            $j90 = $invoices->filter(fn($i) => $now->diffInDays($i->date) > 60)->sum(fn($i) => $i->total_ttc - $i->montant_paye);
+
+            $j30 = $invoices->filter(fn($i) => $now->diffInDays(Carbon::parse($i->invoice_date)) <= 30)
+                ->sum(fn($i) => $i->total_ttc - $i->montant_paye);
+
+            $j60 = $invoices->filter(fn($i) => $now->diffInDays(Carbon::parse($i->invoice_date)) > 30 && $now->diffInDays(Carbon::parse($i->invoice_date)) <= 60)
+                ->sum(fn($i) => $i->total_ttc - $i->montant_paye);
+
+            $j90 = $invoices->filter(fn($i) => $now->diffInDays(Carbon::parse($i->invoice_date)) > 60)
+                ->sum(fn($i) => $i->total_ttc - $i->montant_paye);
+
             $total = $j30 + $j60 + $j90;
 
             return [
@@ -37,12 +47,25 @@ class CreanceController extends Controller
         $total60 = $clients->sum('j60');
         $total90 = $clients->sum('j90_plus');
 
-        return view('creances.index', compact('clients', 'totalCreances', 'total30', 'total60', 'total90'));
+        return compact('clients', 'totalCreances', 'total30', 'total60', 'total90');
     }
 
+    public function index()
+    {
+        $data = $this->getCreancesData();
+        return view('creances.index', $data);
+    }
 
-    public function exportExcel() {
-    // ... same logic as index to build $clients
-    return \Excel::download(new CreancesExport($clients), 'creances_' . now()->format('Y-m-d') . '.xlsx');
-}
+    public function exportExcel()
+    {
+        $data = $this->getCreancesData();
+        return Excel::download(new CreancesExport($data['clients']), 'creances_' . now()->format('Y-m-d') . '.xlsx');
+    }
+
+    public function exportPdf()
+    {
+        $data = $this->getCreancesData();
+        $pdf = Pdf::loadView('creances.pdf', $data);
+        return $pdf->download('creances_' . now()->format('Y-m-d') . '.pdf');
+    }
 }
