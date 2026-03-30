@@ -100,6 +100,34 @@
     .vendor-card:hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(0,0,0,0.12); }
     .vendor-badge { width: 52px; height: 52px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; color: white; margin-bottom: 12px; }
 
+    /* ── Toggle button ── */
+    .vendor-toggle-btn {
+        width: 100%; display: flex; align-items: center; justify-content: space-between;
+        background: none; border: none; cursor: pointer; padding: 0 0 8px 0;
+        font-size: 11px; font-weight: 700; color: #94A3B8;
+        transition: color 0.2s; font-family: 'Plus Jakarta Sans', sans-serif;
+        border-bottom: 1px solid #F1F5F9; margin-bottom: 10px;
+    }
+    .vendor-toggle-btn:hover { color: #475569; }
+    .vendor-toggle-btn .toggle-icon {
+        width: 16px; height: 16px;
+        transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    .vendor-toggle-btn.collapsed .toggle-icon { transform: rotate(180deg); }
+    .vendor-toggle-btn.collapsed { color: #CBD5E1; border-bottom-color: transparent; margin-bottom: 0; }
+
+    /* ── Collapsible body ── */
+    .vendor-card-body {
+        max-height: 600px;
+        opacity: 1;
+        overflow: hidden;
+        transition: max-height 0.38s cubic-bezier(0.4,0,0.2,1), opacity 0.28s ease;
+    }
+    .vendor-card-body.collapsed {
+        max-height: 0;
+        opacity: 0;
+    }
+
     .drops-mini {
         margin-top: 12px; background: linear-gradient(135deg, #FFF7ED 0%, #FFFBEB 100%);
         border: 1.5px solid #FED7AA; border-radius: 12px; padding: 10px 14px;
@@ -355,33 +383,32 @@
     </div>
 
     {{-- Objectifs Vendeurs Section --}}
-<div class="bg-white rounded-lg shadow p-6 mt-6">
-    <h3 class="text-lg font-bold mb-4">🎯 Objectifs Mensuels</h3>
-    <div class="space-y-4">
-        @foreach($objectifsVendeurs as $nom => $obj)
-        <div class="border rounded-lg p-4">
-            <div class="flex justify-between items-center mb-2">
-                <span class="font-semibold">{{ $nom }}</span>
-                <span class="text-sm {{ $obj['atteindra'] ? 'text-green-600' : 'text-red-600' }}">
-                    Prédiction: {{ number_format($obj['prediction']) }} MAD
-                    {!! $obj['atteindra'] ? '✅' : '⚠️' !!}
-                </span>
-            </div>
-            <div class="w-full bg-gray-200 rounded-full h-4">
-                <div class="h-4 rounded-full {{ $obj['progression'] >= 80 ? 'bg-green-500' : ($obj['progression'] >= 50 ? 'bg-yellow-500' : 'bg-red-500') }}"
-                     style="width: {{ $obj['progression'] }}%">
+    <div class="bg-white rounded-lg shadow p-6 mt-6">
+        <h3 class="text-lg font-bold mb-4">🎯 Objectifs Mensuels</h3>
+        <div class="space-y-4">
+            @foreach($objectifsVendeurs as $nom => $obj)
+            <div class="border rounded-lg p-4">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="font-semibold">{{ $nom }}</span>
+                    <span class="text-sm {{ $obj['atteindra'] ? 'text-green-600' : 'text-red-600' }}">
+                        Prédiction: {{ number_format($obj['prediction']) }} MAD
+                        {!! $obj['atteindra'] ? '✅' : '⚠️' !!}
+                    </span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-4">
+                    <div class="h-4 rounded-full {{ $obj['progression'] >= 80 ? 'bg-green-500' : ($obj['progression'] >= 50 ? 'bg-yellow-500' : 'bg-red-500') }}"
+                         style="width: {{ $obj['progression'] }}%">
+                    </div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>{{ number_format($obj['ca_actuel']) }} MAD</span>
+                    <span>{{ $obj['progression'] }}%</span>
+                    <span>Objectif: {{ number_format($obj['objectif']) }} MAD</span>
                 </div>
             </div>
-            <div class="flex justify-between text-xs text-gray-500 mt-1">
-                <span>{{ number_format($obj['ca_actuel']) }} MAD</span>
-                <span>{{ $obj['progression'] }}%</span>
-                <span>Objectif: {{ number_format($obj['objectif']) }} MAD</span>
-            </div>
+            @endforeach
         </div>
-        @endforeach
     </div>
-</div>
-
 
     {{-- ══ VENDOR CARDS ══ --}}
     @php
@@ -404,58 +431,75 @@
         @endphp
         <div class="vendor-card {{ $c['class'] }} fade-in-up {{ $isSelected ? 'ring-2 ring-indigo-400 ring-offset-2' : '' }}"
              style="animation-delay: {{ 0.2 + $i * 0.06 }}s">
-            {{-- Badge cliquable pour filtrer --}}
-            <div style="cursor:pointer" onclick="filterByVendeur('{{ $nom }}')">
-                <div class="vendor-badge {{ $c['gradient'] }}">{{ strtoupper(substr($nom, 0, 2)) }}</div>
-                <h3 class="font-bold text-gray-900 text-base mb-1">{{ $nom }}</h3>
-                <p class="text-xs text-gray-500 font-semibold mb-1">{{ $stats['bl'] ?? 0 }} BL</p>
-                @if($inf)
-                    @if($inf['jours_au_dela'] > 0)
-                        <span class="badge-{{ $inf['statut'] }} text-xs mb-3 inline-block">+{{ $inf['jours_au_dela'] }}j inactif</span>
-                    @else
-                        <span class="badge-ok text-xs mb-3 inline-block">✓ Actif</span>
+
+            {{-- ── Toggle button ── --}}
+            <button class="vendor-toggle-btn" onclick="toggleVendorCard(this)" title="Masquer / Afficher">
+                <span class="toggle-label flex items-center gap-1">
+                    <svg class="toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/>
+                    </svg>
+                    <span class="toggle-text">Masquer</span>
+                </span>
+                <span class="font-extrabold {{ $c['text'] }} text-sm">{{ $taux }}%</span>
+            </button>
+
+            {{-- ── Collapsible body ── --}}
+            <div class="vendor-card-body">
+
+                {{-- Badge cliquable pour filtrer --}}
+                <div style="cursor:pointer" onclick="filterByVendeur('{{ $nom }}')">
+                    <div class="vendor-badge {{ $c['gradient'] }}">{{ strtoupper(substr($nom, 0, 2)) }}</div>
+                    <h3 class="font-bold text-gray-900 text-base mb-1">{{ $nom }}</h3>
+                    <p class="text-xs text-gray-500 font-semibold mb-1">{{ $stats['bl'] ?? 0 }} BL</p>
+                    @if($inf)
+                        @if($inf['jours_au_dela'] > 0)
+                            <span class="badge-{{ $inf['statut'] }} text-xs mb-3 inline-block">+{{ $inf['jours_au_dela'] }}j inactif</span>
+                        @else
+                            <span class="badge-ok text-xs mb-3 inline-block">✓ Actif</span>
+                        @endif
                     @endif
-                @endif
-                <div class="space-y-2 text-sm mt-2">
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-600 font-medium">CA Total</span>
-                        <span class="font-bold {{ $c['text'] }}">{{ number_format($stats['ca_total'] ?? 0, 0, ',', ' ') }}</span>
+                    <div class="space-y-2 text-sm mt-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600 font-medium">CA Total</span>
+                            <span class="font-bold {{ $c['text'] }}">{{ number_format($stats['ca_total'] ?? 0, 0, ',', ' ') }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600 font-medium">Encaissé</span>
+                            <span class="font-bold text-emerald-600">{{ number_format($stats['encaisse'] ?? 0, 0, ',', ' ') }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600 font-medium">Reste</span>
+                            <span class="font-bold {{ ($stats['reste'] ?? 0) > 5000 ? 'text-red-600' : 'text-gray-600' }}">
+                                {{ number_format($stats['reste'] ?? 0, 0, ',', ' ') }}
+                            </span>
+                        </div>
                     </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-600 font-medium">Encaissé</span>
-                        <span class="font-bold text-emerald-600">{{ number_format($stats['encaisse'] ?? 0, 0, ',', ' ') }}</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-600 font-medium">Reste</span>
-                        <span class="font-bold {{ ($stats['reste'] ?? 0) > 5000 ? 'text-red-600' : 'text-gray-600' }}">
-                            {{ number_format($stats['reste'] ?? 0, 0, ',', ' ') }}
+                    <div class="drops-mini">
+                        <span class="drops-mini-label">📉 Drops</span>
+                        <span class="drops-mini-value">
+                            {{ ($stats['bl'] ?? 0) > 0 ? number_format($stats['drops'] ?? 0, 0, ',', ' ') . ' DH/BL' : '—' }}
                         </span>
                     </div>
+                    <div class="progress-ring">
+                        <div class="progress-fill bg-gradient-to-r {{ $c['fill'] }}" style="width: {{ min($taux, 100) }}%"></div>
+                    </div>
+                    <div class="text-center mt-2">
+                        <span class="font-extrabold {{ $c['text'] }} text-lg">{{ $taux }}%</span>
+                    </div>
+                    @if(isset($stats['meilleur_jour']) && $stats['meilleur_jour'])
+                    <div class="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
+                        🏆 Meilleur: {{ \Carbon\Carbon::parse($stats['meilleur_jour']->date)->format('d/m') }}
+                        — <span class="font-bold">{{ number_format($stats['meilleur_jour']->chiffre, 0, ',', ' ') }}</span>
+                    </div>
+                    @endif
                 </div>
-                <div class="drops-mini">
-                    <span class="drops-mini-label">📉 Drops</span>
-                    <span class="drops-mini-value">
-                        {{ ($stats['bl'] ?? 0) > 0 ? number_format($stats['drops'] ?? 0, 0, ',', ' ') . ' DH/BL' : '—' }}
-                    </span>
-                </div>
-                <div class="progress-ring">
-                    <div class="progress-fill bg-gradient-to-r {{ $c['fill'] }}" style="width: {{ min($taux, 100) }}%"></div>
-                </div>
-                <div class="text-center mt-2">
-                    <span class="font-extrabold {{ $c['text'] }} text-lg">{{ $taux }}%</span>
-                </div>
-                @if(isset($stats['meilleur_jour']) && $stats['meilleur_jour'])
-                <div class="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
-                    🏆 Meilleur: {{ \Carbon\Carbon::parse($stats['meilleur_jour']->date)->format('d/m') }}
-                    — <span class="font-bold">{{ number_format($stats['meilleur_jour']->chiffre, 0, ',', ' ') }}</span>
-                </div>
-                @endif
-            </div>
 
-            {{-- ✅ BOUTON VOIR DÉTAILS --}}
-            <a href="{{ route('suivi-vendeurs.show', ['nom' => $nom]) }}" class="btn-voir-details">
-                📊 Voir détails
-            </a>
+                {{-- ✅ BOUTON VOIR DÉTAILS --}}
+                <a href="{{ route('suivi-vendeurs.show', ['nom' => $nom]) }}" class="btn-voir-details">
+                    📊 Voir détails
+                </a>
+
+            </div>{{-- end .vendor-card-body --}}
 
         </div>
         @endforeach
@@ -478,7 +522,6 @@
                         <th class="text-center">TAUX %</th>
                         <th class="text-center">📉 DROPS</th>
                         <th class="text-center">RANK</th>
-                        {{-- ✅ COLONNE DÉTAILS --}}
                         <th class="text-center">DÉTAILS</th>
                     </tr>
                 </thead>
@@ -528,7 +571,6 @@
                             @php $rankClass = $rank == 1 ? 'rank-1' : ($rank == 2 ? 'rank-2' : ($rank == 3 ? 'rank-3' : 'rank-other')); @endphp
                             <span class="badge-rank {{ $rankClass }}">{{ $rank++ }}</span>
                         </td>
-                        {{-- ✅ BOUTON VOIR DÉTAILS --}}
                         <td class="text-center">
                             <a href="{{ route('suivi-vendeurs.show', ['nom' => $nom]) }}"
                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-all">
@@ -706,6 +748,24 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+// ── Vendor card toggle ──────────────────────────────────────────────
+function toggleVendorCard(btn) {
+    const body = btn.closest('.vendor-card').querySelector('.vendor-card-body');
+    const text = btn.querySelector('.toggle-text');
+    const isCollapsed = body.classList.contains('collapsed');
+
+    if (isCollapsed) {
+        body.classList.remove('collapsed');
+        btn.classList.remove('collapsed');
+        text.textContent = 'Masquer';
+    } else {
+        body.classList.add('collapsed');
+        btn.classList.add('collapsed');
+        text.textContent = 'Afficher';
+    }
+}
+
+// ── Filters ─────────────────────────────────────────────────────────
 function filterByVendeur(nom) {
     const url = new URL(window.location.href);
     if (url.searchParams.get('vendeur') === nom) {
@@ -722,6 +782,7 @@ function removeFilter(key) {
     window.location = url.toString();
 }
 
+// ── Live search ──────────────────────────────────────────────────────
 document.getElementById('liveSearch').addEventListener('input', function() {
     const q = this.value.toLowerCase().trim();
     document.querySelectorAll('.searchable-row').forEach(row => {
@@ -731,6 +792,7 @@ document.getElementById('liveSearch').addEventListener('input', function() {
     });
 });
 
+// ── Table sort ───────────────────────────────────────────────────────
 let sortDir = {};
 function sortTable(colIndex) {
     const body = document.getElementById('saisiesBody');
@@ -748,6 +810,7 @@ function sortTable(colIndex) {
     rows.forEach(r => body.appendChild(r));
 }
 
+// ── Charts ───────────────────────────────────────────────────────────
 const COLORS = ['#4F46E5', '#F97316', '#10B981', '#EF4444', '#8B5CF6'];
 
 const vendeurLabels = @json(($suiviParVendeur ?? collect())->keys());
@@ -771,7 +834,10 @@ new Chart(document.getElementById('barChart'), {
     options: {
         responsive: true,
         onClick: (e, elements) => { if (elements.length) filterByVendeur(vendeurLabels[elements[0].index]); },
-        plugins: { legend: { position: 'bottom', labels: { font: { size: 11, weight: 600 }, boxWidth: 12, padding: 12 } }, tooltip: { callbacks: { footer: () => 'Cliquez pour filtrer ↓' } } },
+        plugins: {
+            legend: { position: 'bottom', labels: { font: { size: 11, weight: 600 }, boxWidth: 12, padding: 12 } },
+            tooltip: { callbacks: { footer: () => 'Cliquez pour filtrer ↓' } }
+        },
         scales: {
             y: { beginAtZero: true, ticks: { callback: v => (v/1000).toFixed(0)+'k DH', font: { size: 11 } }, grid: { color: '#F1F5F9' } },
             x: { ticks: { font: { size: 11, weight: 600 } }, grid: { display: false } }
@@ -798,7 +864,10 @@ new Chart(document.getElementById('dropsChart'), {
     options: {
         responsive: true, indexAxis: 'y',
         onClick: (e, elements) => { if (elements.length) filterByVendeur(vendeurLabels[elements[0].index]); },
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x.toLocaleString('fr-MA')} DH par BL`, footer: () => 'Cliquez pour filtrer ↓' } } },
+        plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x.toLocaleString('fr-MA')} DH par BL`, footer: () => 'Cliquez pour filtrer ↓' } }
+        },
         scales: {
             x: { beginAtZero: true, ticks: { callback: v => v.toLocaleString('fr-MA') + ' DH', font: { size: 11 } }, grid: { color: '#F1F5F9' } },
             y: { ticks: { font: { size: 12, weight: 700 } }, grid: { display: false } }
