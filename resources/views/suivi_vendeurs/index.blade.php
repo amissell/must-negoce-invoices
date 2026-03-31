@@ -398,7 +398,7 @@
             </div>
 
             {{-- Barre de progression --}}
-            <div class="w-full bg-gray-200 rounded-full h-3 mb-2">
+            <div class="w-full bg-gray-200 rounded-full h-3 mb-2  shadow-inner style="width: {{ min($obj['progression'], 100) }}%; transition: width 1s ease;">
                 <div class="h-3 rounded-full transition-all duration-500
                     {{ $obj['progression'] >= 80 ? 'bg-green-500' : ($obj['progression'] >= 50 ? 'bg-yellow-500' : 'bg-red-500') }}"
                      style="width: {{ min($obj['progression'], 100) }}%">
@@ -408,7 +408,7 @@
             <div class="flex justify-between text-xs text-gray-500 mb-3">
                 <span>{{ number_format($obj['ca_actuel'], 0, ',', ' ') }} MAD</span>
                 <span class="font-bold">{{ $obj['progression'] }}%</span>
-                <span>{{ number_format($obj['objectif'], 0, ',', ' ') }} MAD</span>
+                <span>{{ number_format($obj['objectif_total'], 0, ',', ' ') }} MAD</span>
             </div>
 
             {{-- Détail par catégorie --}}

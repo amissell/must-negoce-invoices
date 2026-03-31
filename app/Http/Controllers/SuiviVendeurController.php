@@ -155,7 +155,7 @@ foreach (($suiviParVendeur ?? collect()) as $nom => $stats) {
     $obj = $objectifsDb[$nom] ?? null;
     $objectifSpark = (float) ($obj->objectif_spark ?? 0);
     $objectifEco = (float) ($obj->objectif_ecosolutions ?? 0);
-    $objectif = (float) ($obj->objectif_total ?? 0);
+    $objectifTotal = (float) ($obj->objectif_total ?? 0);
     $prime = (float) ($obj->prime ?? 0);
     $caActuel = (float) ($stats['ca_total'] ?? 0);
 
@@ -166,17 +166,17 @@ foreach (($suiviParVendeur ?? collect()) as $nom => $stats) {
     }
 
     $prediction = ($caActuel / $joursEcoules) * $totalJoursOuvres;
-    $progression = $objectif > 0 ? round(($caActuel / $objectif) * 100, 1) : 0;
+    $progression = $objectifTotal > 0 ? round(($caActuel / $objectifTotal) * 100, 1) : 0;
     
     $objectifsVendeurs[$nom] = [
         'objectif_spark'       => $objectifSpark,
         'objectif_ecosolutions'=> $objectifEco,
-        'objectif'             => $objectif,
+        'objectif_total'      =>  $objectifTotal,
         'prime'                => $prime,
         'ca_actuel'            => $caActuel,
         'prediction'           => round($prediction, 0),
         'progression'          => $progression,
-        'atteindra'            => $objectif > 0 ? $prediction >= $objectif : false,
+        'atteindra'            => $objectifTotal > 0 ? $prediction >= $objectifTotal : false,
         ];
         }
 
