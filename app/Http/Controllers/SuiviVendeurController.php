@@ -7,6 +7,7 @@ use App\Models\SuiviCategorie;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use App\Models\ObjectifVendeur;
 
 
 class SuiviVendeurController extends Controller
@@ -142,24 +143,33 @@ class SuiviVendeurController extends Controller
                           $inactiviteParVendeur = collect($inactiviteParVendeur)
                           ->sortByDesc('jours_au_dela');
                           // Add to the index method, before return view(...)
-$objectifsVendeurs = [];
-$OBJECTIF_MENSUEL = 150000; // MAD - à configurer par vendeur
 
-foreach ($suiviParVendeur as $nom => $data) {
-    $joursActifs = $inactiviteParVendeur[$nom]['jours_actifs'] ?? 0;
-    $joursRestants = $inactiviteParVendeur[$nom]['jours_restants'] ?? 0;
-    $caActuel = $data['ca_total'];
-    $moyenneJour = $joursActifs > 0 ? $caActuel / $joursActifs : 0;
-    $prediction = $caActuel + ($moyenneJour * $joursRestants);
-    $progression = $OBJECTIF_MENSUEL > 0 ? round(($caActuel / $OBJECTIF_MENSUEL) * 100, 1) : 0;
+                          $objectifsDb = ObjectifVendeur::where('mois', $mois)
+    ->where('annee', $annee)
+    ->get()
+    ->keyBy('vendeur_nom');
+
+$objectifsVendeurs = [];
+
+foreach (($suiviParVendeur ?? collect()) as $nom => $stats) {
+    $objectif = (float) ($objectifsDb[$nom]->objectif ?? 0);
+    $caActuel = (float) ($stats['ca_total'] ?? 0);
+
+    if ((int)$mois === (int)now()->month && (int)$annee === (int)now()->year) {
+        $joursEcoules = max(1, now()->day);
+    } else {
+        $joursEcoules = max(1, $totalJoursOuvres);
+    }
+
+    $prediction = ($caActuel / $joursEcoules) * $totalJoursOuvres;
+    $progression = $objectif > 0 ? round(($caActuel / $objectif) * 100, 1) : 0;
 
     $objectifsVendeurs[$nom] = [
-        'objectif' => $OBJECTIF_MENSUEL,
-        'ca_actuel' => $caActuel,
-        'progression' => min($progression, 100),
-        'prediction' => $prediction,
-        'atteindra' => $prediction >= $OBJECTIF_MENSUEL,
-        'moyenne_jour' => $moyenneJour,
+        'objectif'    => $objectif,
+        'ca_actuel'   => $caActuel,
+        'prediction'  => round($prediction, 0),
+        'progression' => $progression,
+        'atteindra'   => $objectif > 0 ? $prediction >= $objectif : false,
     ];
 }
 
