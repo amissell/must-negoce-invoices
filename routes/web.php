@@ -70,9 +70,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/admin/users/{user}/reject',  [UserController::class, 'reject'])->name('admin.users.reject');
 });
 
+
 Route::middleware(['auth', 'admin'])->prefix('objectifs')->name('objectifs.')->group(function () {
+    Route::get('/', [ObjectifVendeurController::class, 'index'])->name('index');
     Route::get('/create', [ObjectifVendeurController::class, 'create'])->name('create');
     Route::post('/', [ObjectifVendeurController::class, 'store'])->name('store');
     Route::get('/{id}/edit', [ObjectifVendeurController::class, 'edit'])->name('edit');
     Route::put('/{id}', [ObjectifVendeurController::class, 'update'])->name('update');
+    Route::delete('/{id}', [ObjectifVendeurController::class, 'destroy'])->name('destroy');
 });

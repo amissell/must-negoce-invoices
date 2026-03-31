@@ -95,8 +95,7 @@
                    class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('suivi-vendeurs.comparaison') ? 'bg-white/20' : 'hover:bg-white/10' }}">
                     📊 Comparaison
                 </a>
-
-                <a href="{{ route('objectifs.create') }}"class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('objectifs.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                <a href="{{ route('objectifs.index') }}" class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('objectifs.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
                     🎯 Objectifs
                 </a>
 
@@ -172,7 +171,7 @@
             <a href="{{ route('creances.index') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">💰 Créances</a>
             <a href="{{ route('alertes.index') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">🔔 Alertes</a>
             <a href="{{ route('suivi-vendeurs.comparaison') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">📊 Comparaison</a>
-            <a href="{{ route('objectifs.create') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">🎯 Objectifs</a> 
+            <a href="{{ route('objectifs.index') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">🎯 Objectifs</a>
             <a href="{{ route('admin.users') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">👤 Utilisateurs</a>
             @endif
 

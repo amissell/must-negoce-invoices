@@ -152,7 +152,11 @@ class SuiviVendeurController extends Controller
 $objectifsVendeurs = [];
 
 foreach (($suiviParVendeur ?? collect()) as $nom => $stats) {
-    $objectif = (float) ($objectifsDb[$nom]->objectif ?? 0);
+    $obj = $objectifsDb[$nom] ?? null;
+    $objectifSpark = (float) ($obj->objectif_spark ?? 0);
+    $objectifEco = (float) ($obj->objectif_ecosolutions ?? 0);
+    $objectif = (float) ($obj->objectif_total ?? 0);
+    $prime = (float) ($obj->prime ?? 0);
     $caActuel = (float) ($stats['ca_total'] ?? 0);
 
     if ((int)$mois === (int)now()->month && (int)$annee === (int)now()->year) {
@@ -163,15 +167,18 @@ foreach (($suiviParVendeur ?? collect()) as $nom => $stats) {
 
     $prediction = ($caActuel / $joursEcoules) * $totalJoursOuvres;
     $progression = $objectif > 0 ? round(($caActuel / $objectif) * 100, 1) : 0;
-
+    
     $objectifsVendeurs[$nom] = [
-        'objectif'    => $objectif,
-        'ca_actuel'   => $caActuel,
-        'prediction'  => round($prediction, 0),
-        'progression' => $progression,
-        'atteindra'   => $objectif > 0 ? $prediction >= $objectif : false,
-    ];
-}
+        'objectif_spark'       => $objectifSpark,
+        'objectif_ecosolutions'=> $objectifEco,
+        'objectif'             => $objectif,
+        'prime'                => $prime,
+        'ca_actuel'            => $caActuel,
+        'prediction'           => round($prediction, 0),
+        'progression'          => $progression,
+        'atteindra'            => $objectif > 0 ? $prediction >= $objectif : false,
+        ];
+        }
 
 // Add 'objectifsVendeurs' to compact(...)
 

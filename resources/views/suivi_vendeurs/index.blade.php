@@ -379,35 +379,69 @@
     </div>
 
     <div class="bg-white rounded-lg shadow p-6 mt-6">
-        <h3 class="text-lg font-bold mb-4">🎯 Objectifs Mensuels</h3>
-        <div class="space-y-4">
-            @forelse($objectifsVendeurs as $nom => $obj)
-            <div class="border rounded-lg p-4">
-                <div class="flex justify-between items-center mb-2">
-                    <span class="font-semibold">{{ $nom }}</span>
-                    <span class="text-sm {{ $obj['atteindra'] ? 'text-green-600' : 'text-red-600' }}">
-                        Prédiction: {{ number_format($obj['prediction']) }} MAD
-                        {!! $obj['atteindra'] ? '✅' : '⚠️' !!}
-                    </span>
-                </div>
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold">🎯 Objectifs Mensuels</h3>
+        @if(auth()->user()->isAdmin())
+        <a href="{{ route('objectifs.index', ['mois' => $mois, 'annee' => $annee]) }}"
+           class="text-indigo-600 text-sm hover:underline">Gérer les objectifs →</a>
+        @endif
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        @forelse($objectifsVendeurs as $nom => $obj)
+        <div class="border rounded-xl p-4 {{ $obj['atteindra'] ? 'border-green-200 bg-green-50/30' : 'border-red-200 bg-red-50/30' }}">
+            <div class="flex justify-between items-center mb-2">
+                <span class="font-bold text-gray-800">{{ $nom }}</span>
+                <span class="text-xs px-2 py-1 rounded-full font-semibold
+                    {{ $obj['atteindra'] ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                    {{ $obj['atteindra'] ? '✅ En bonne voie' : '⚠️ Attention' }}
+                </span>
+            </div>
 
-                <div class="w-full bg-gray-200 rounded-full h-4">
-                    <div class="h-4 rounded-full {{ $obj['progression'] >= 80 ? 'bg-green-500' : ($obj['progression'] >= 50 ? 'bg-yellow-500' : 'bg-red-500') }}"
-                         style="width: {{ min($obj['progression'], 100) }}%">
-                    </div>
-                </div>
-
-                <div class="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>{{ number_format($obj['ca_actuel']) }} MAD</span>
-                    <span>{{ $obj['progression'] }}%</span>
-                    <span>Objectif: {{ number_format($obj['objectif']) }} MAD</span>
+            {{-- Barre de progression --}}
+            <div class="w-full bg-gray-200 rounded-full h-3 mb-2">
+                <div class="h-3 rounded-full transition-all duration-500
+                    {{ $obj['progression'] >= 80 ? 'bg-green-500' : ($obj['progression'] >= 50 ? 'bg-yellow-500' : 'bg-red-500') }}"
+                     style="width: {{ min($obj['progression'], 100) }}%">
                 </div>
             </div>
-            @empty
-            <div class="text-sm text-gray-400">Aucun objectif défini pour ce mois.</div>
-            @endforelse
+
+            <div class="flex justify-between text-xs text-gray-500 mb-3">
+                <span>{{ number_format($obj['ca_actuel'], 0, ',', ' ') }} MAD</span>
+                <span class="font-bold">{{ $obj['progression'] }}%</span>
+                <span>{{ number_format($obj['objectif'], 0, ',', ' ') }} MAD</span>
+            </div>
+
+            {{-- Détail par catégorie --}}
+            <div class="text-xs space-y-1 border-t pt-2 text-gray-600">
+                <div class="flex justify-between">
+                    <span>🔥 Spark:</span>
+                    <span>{{ number_format($obj['objectif_spark'], 0, ',', ' ') }} MAD</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>🌿 Ecosolutions:</span>
+                    <span>{{ number_format($obj['objectif_ecosolutions'], 0, ',', ' ') }} MAD</span>
+                </div>
+                <div class="flex justify-between font-semibold">
+                    <span>💰 Prime:</span>
+                    <span class="text-green-600">{{ number_format($obj['prime'], 0, ',', ' ') }} MAD</span>
+                </div>
+            </div>
+
+            {{-- Prédiction --}}
+            <div class="mt-2 text-xs {{ $obj['atteindra'] ? 'text-green-600' : 'text-red-600' }} font-semibold">
+                📈 Prédiction fin de mois: {{ number_format($obj['prediction'], 0, ',', ' ') }} MAD
+            </div>
         </div>
+        @empty
+        <div class="col-span-full text-center text-gray-400 py-6">
+            Aucun objectif défini pour ce mois.
+            @if(auth()->user()->isAdmin())
+            <a href="{{ route('objectifs.create') }}" class="text-indigo-600 hover:underline ml-1">Créer un objectif</a>
+            @endif
+        </div>
+        @endforelse
     </div>
+</div>
 
     @php
         $vColors = [
