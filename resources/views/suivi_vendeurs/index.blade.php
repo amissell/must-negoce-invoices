@@ -354,36 +354,7 @@
         </div>
     </div>
 
-    {{-- Objectifs Vendeurs Section --}}
-<div class="bg-white rounded-lg shadow p-6 mt-6">
-    <h3 class="text-lg font-bold mb-4">🎯 Objectifs Mensuels</h3>
-    <div class="space-y-4">
-        @foreach($objectifsVendeurs as $nom => $obj)
-        <div class="border rounded-lg p-4">
-            <div class="flex justify-between items-center mb-2">
-                <span class="font-semibold">{{ $nom }}</span>
-                <span class="text-sm {{ $obj['atteindra'] ? 'text-green-600' : 'text-red-600' }}">
-                    Prédiction: {{ number_format($obj['prediction']) }} MAD
-                    {!! $obj['atteindra'] ? '✅' : '⚠️' !!}
-                </span>
-            </div>
-            <div class="w-full bg-gray-200 rounded-full h-4">
-                <div class="h-4 rounded-full {{ $obj['progression'] >= 80 ? 'bg-green-500' : ($obj['progression'] >= 50 ? 'bg-yellow-500' : 'bg-red-500') }}"
-                     style="width: {{ $obj['progression'] }}%">
-                </div>
-            </div>
-            <div class="flex justify-between text-xs text-gray-500 mt-1">
-                <span>{{ number_format($obj['ca_actuel']) }} MAD</span>
-                <span>{{ $obj['progression'] }}%</span>
-                <span>Objectif: {{ number_format($obj['objectif']) }} MAD</span>
-            </div>
-        </div>
-        @endforeach
-    </div>
-</div>
-
-
-    {{-- ══ VENDOR CARDS ══ --}}
+    {{-- ✅ $vColors défini ici une seule fois, disponible pour toute la page --}}
     @php
         $vColors = [
             ['class' => 'blue',   'gradient' => 'gradient-blue',   'bg' => 'bg-indigo-50',  'text' => 'text-indigo-600',  'fill' => 'from-indigo-500 to-indigo-400'],
@@ -393,6 +364,74 @@
             ['class' => 'purple', 'gradient' => 'gradient-purple', 'bg' => 'bg-purple-50',  'text' => 'text-purple-600',  'fill' => 'from-purple-500 to-purple-400'],
         ];
     @endphp
+
+    {{-- ══ OBJECTIFS MENSUELS ══ --}}
+    <div class="table-card fade-in-up" style="animation-delay: 0.15s">
+        <div class="table-header flex items-center justify-between flex-wrap gap-2">
+            <h2 class="text-lg font-extrabold flex items-center gap-2">🎯 OBJECTIFS MENSUELS</h2>
+            <span class="text-sm bg-white/20 rounded-lg px-3 py-1 font-semibold">
+                {{ \Carbon\Carbon::create($annee ?? now()->year, $mois ?? now()->month)->translatedFormat('F Y') }}
+            </span>
+        </div>
+
+        <div class="p-6 space-y-5">
+            @foreach($objectifsVendeurs as $nom => $obj)
+            @php
+                $pct       = min($obj['progression'], 100);
+                $atteindra = $obj['atteindra'];
+                $barColor  = $pct >= 80 ? '#10B981' : ($pct >= 50 ? '#F59E0B' : '#EF4444');
+                $i         = $loop->index;
+                $c         = $vColors[$i % 5];
+            @endphp
+
+            <div class="rounded-2xl border border-gray-100 p-5 hover:shadow-md transition-all duration-200 bg-gray-50/50">
+
+                {{-- Top row: name + prediction --}}
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 {{ $c['gradient'] }} rounded-xl flex items-center justify-center text-white font-extrabold text-sm">
+                            {{ strtoupper(substr($nom, 0, 2)) }}
+                        </div>
+                        <span class="font-bold text-gray-900 text-base">{{ $nom }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold {{ $atteindra ? 'text-emerald-600' : 'text-red-500' }}">
+                            Prédiction : {{ number_format($obj['prediction'], 0, ',', ' ') }} MAD
+                        </span>
+                        @if($atteindra)
+                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 text-xs font-bold">✓</span>
+                        @else
+                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-100 text-red-500 text-xs font-bold">!</span>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- Progress bar --}}
+                <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                    <div class="h-3 rounded-full transition-all duration-1000"
+                         style="width: {{ $pct }}%; background: {{ $barColor }};">
+                    </div>
+                </div>
+
+                {{-- Bottom row: CA actuel / % / objectif --}}
+                <div class="flex justify-between items-center mt-2">
+                    <span class="text-sm font-bold text-gray-700">
+                        {{ number_format($obj['ca_actuel'], 0, ',', ' ') }} MAD
+                    </span>
+                    <span class="text-sm font-extrabold" style="color: {{ $barColor }}">
+                        {{ $pct }}%
+                    </span>
+                    <span class="text-sm text-gray-500 font-medium">
+                        Objectif : {{ number_format($obj['objectif'], 0, ',', ' ') }} MAD
+                    </span>
+                </div>
+
+            </div>
+            @endforeach
+        </div>
+    </div>
+
+    {{-- ══ VENDOR CARDS ══ --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         @foreach(($suiviParVendeur ?? collect()) as $nom => $stats)
         @php
@@ -404,7 +443,6 @@
         @endphp
         <div class="vendor-card {{ $c['class'] }} fade-in-up {{ $isSelected ? 'ring-2 ring-indigo-400 ring-offset-2' : '' }}"
              style="animation-delay: {{ 0.2 + $i * 0.06 }}s">
-            {{-- Badge cliquable pour filtrer --}}
             <div style="cursor:pointer" onclick="filterByVendeur('{{ $nom }}')">
                 <div class="vendor-badge {{ $c['gradient'] }}">{{ strtoupper(substr($nom, 0, 2)) }}</div>
                 <h3 class="font-bold text-gray-900 text-base mb-1">{{ $nom }}</h3>
@@ -452,7 +490,6 @@
                 @endif
             </div>
 
-            {{-- ✅ BOUTON VOIR DÉTAILS --}}
             <a href="{{ route('suivi-vendeurs.show', ['nom' => $nom]) }}" class="btn-voir-details">
                 📊 Voir détails
             </a>
@@ -478,7 +515,6 @@
                         <th class="text-center">TAUX %</th>
                         <th class="text-center">📉 DROPS</th>
                         <th class="text-center">RANK</th>
-                        {{-- ✅ COLONNE DÉTAILS --}}
                         <th class="text-center">DÉTAILS</th>
                     </tr>
                 </thead>
@@ -528,7 +564,6 @@
                             @php $rankClass = $rank == 1 ? 'rank-1' : ($rank == 2 ? 'rank-2' : ($rank == 3 ? 'rank-3' : 'rank-other')); @endphp
                             <span class="badge-rank {{ $rankClass }}">{{ $rank++ }}</span>
                         </td>
-                        {{-- ✅ BOUTON VOIR DÉTAILS --}}
                         <td class="text-center">
                             <a href="{{ route('suivi-vendeurs.show', ['nom' => $nom]) }}"
                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-all">
@@ -568,7 +603,7 @@
 
     <div class="table-card fade-in-up" style="animation-delay: 0.7s">
         <div class="p-6">
-            <h3 class="font-bold text-gray-900 mb-4">📈 Évolution CA par Jour & Vendeur</h3>
+            <h3 class="font-bold text-gray-900 mb-4">📈 Évolution CA par Jour & Vendeur</h3>                          
             <canvas id="lineChart" height="280"></canvas>
         </div>
     </div>
@@ -830,4 +865,4 @@ if (datesLabels.length > 0) {
     });
 }
 </script>
-@endpush
+@endpush 

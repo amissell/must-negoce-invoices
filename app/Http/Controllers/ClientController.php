@@ -54,7 +54,7 @@ class ClientController extends Controller
     public function show(Client $client)
     {
         $invoices       = $client->invoices()->latest()->get();
-        $manualInvoices = $client->manualInvoices()->latest()->get();
+        $manualInvoices = collect();
         $totalFacture   = $client->totalFacture();
         $nombreFactures = $client->nombreFactures();
 

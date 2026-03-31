@@ -20,7 +20,7 @@ return new class extends Migration
         $table->decimal('reste_a_payer', 10, 2)->virtualAs('chiffre - total_paye');
         $table->time('heure_debut')->nullable();
         $table->time('heure_fin')->nullable();
-        $table->integer('bl')->default(0); // Bons de livraison
+        $table->integer('bl')->default(0); 
         $table->text('notes')->nullable();
         $table->foreignId('created_by')->nullable()->constrained('users');
         $table->timestamps();
