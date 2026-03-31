@@ -27,7 +27,7 @@
     }
     @keyframes float {
         0%, 100% { transform: translate(0,0) rotate(0deg); }
-        50%       { transform: translate(-30px,30px) rotate(180deg); }
+        50% { transform: translate(-30px,30px) rotate(180deg); }
     }
 
     .filter-bar {
@@ -75,7 +75,7 @@
         position: relative; overflow: hidden; border: 1px solid rgba(0,0,0,0.05);
     }
     .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
-    .kpi-card:hover   { transform: translateY(-6px); box-shadow: 0 12px 32px rgba(0,0,0,0.12); }
+    .kpi-card:hover { transform: translateY(-6px); box-shadow: 0 12px 32px rgba(0,0,0,0.12); }
     .kpi-card.blue::before   { background: linear-gradient(90deg, #4F46E5, #6366F1); }
     .kpi-card.green::before  { background: linear-gradient(90deg, #10B981, #34D399); }
     .kpi-card.red::before    { background: linear-gradient(90deg, #EF4444, #F87171); }
@@ -100,7 +100,6 @@
     .vendor-card:hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(0,0,0,0.12); }
     .vendor-badge { width: 52px; height: 52px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; color: white; margin-bottom: 12px; }
 
-    /* ── Toggle button ── */
     .vendor-toggle-btn {
         width: 100%; display: flex; align-items: center; justify-content: space-between;
         background: none; border: none; cursor: pointer; padding: 0 0 8px 0;
@@ -116,7 +115,6 @@
     .vendor-toggle-btn.collapsed .toggle-icon { transform: rotate(180deg); }
     .vendor-toggle-btn.collapsed { color: #CBD5E1; border-bottom-color: transparent; margin-bottom: 0; }
 
-    /* ── Collapsible body ── */
     .vendor-card-body {
         max-height: 600px;
         opacity: 1;
@@ -180,7 +178,6 @@
 <div class="min-h-screen" style="background: linear-gradient(to bottom, #F8FAFC 0%, #EFF6FF 100%);">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-    {{-- ══ HERO ══ --}}
     <div class="page-hero p-8 fade-in-up">
         <div class="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
@@ -214,7 +211,6 @@
         </div>
     </div>
 
-    {{-- ══ FILTER BAR ══ --}}
     <div class="filter-bar fade-in-up" style="animation-delay:0.05s">
         <form method="GET" id="filterForm" class="flex flex-wrap items-end gap-3 w-full">
 
@@ -252,8 +248,8 @@
                 <div class="filter-label">📊 Statut</div>
                 <select name="statut" class="filter-select" onchange="document.getElementById('filterForm').submit()">
                     <option value="">— Tous —</option>
-                    <option value="actif"  @selected(request('statut') == 'actif')>✅ Actif seulement</option>
-                    <option value="repos"  @selected(request('statut') == 'repos')>🏖 Repos seulement</option>
+                    <option value="actif" @selected(request('statut') == 'actif')>✅ Actif seulement</option>
+                    <option value="repos" @selected(request('statut') == 'repos')>🏖 Repos seulement</option>
                 </select>
             </div>
 
@@ -290,16 +286,15 @@
         @endif
     </div>
 
-    {{-- ══ KPI CARDS ══ --}}
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         @php
             $kpis = [
-                ['icon' => '💰', 'label' => 'CA Total',      'value' => number_format($statsGlobales['ca_total']     ?? 0, 0, ',', ' ') . ' DH',    'color' => 'blue',   'bg' => 'bg-indigo-50',  'text' => 'text-indigo-600'],
-                ['icon' => '✅', 'label' => 'Encaissé',      'value' => number_format($statsGlobales['encaisse']     ?? 0, 0, ',', ' ') . ' DH',    'color' => 'green',  'bg' => 'bg-emerald-50', 'text' => 'text-emerald-600'],
-                ['icon' => '⚠️','label' => 'Reste à Payer', 'value' => number_format($statsGlobales['reste']        ?? 0, 0, ',', ' ') . ' DH',    'color' => 'red',    'bg' => 'bg-red-50',     'text' => 'text-red-600'],
-                ['icon' => '📦', 'label' => 'BL Total',      'value' => number_format($statsGlobales['bl_total']    ?? 0, 0, ',', ' '),              'color' => 'purple', 'bg' => 'bg-purple-50',  'text' => 'text-purple-600'],
-                ['icon' => '📈', 'label' => 'Taux Global',   'value' => ($statsGlobales['taux_global']  ?? 0) . '%',                                 'color' => 'yellow', 'bg' => 'bg-amber-50',   'text' => 'text-amber-600'],
-                ['icon' => '📉', 'label' => 'Drops Global',  'value' => number_format($statsGlobales['drops_global'] ?? 0, 0, ',', ' ') . ' DH/BL', 'color' => 'teal',   'bg' => 'bg-teal-50',    'text' => 'text-teal-600'],
+                ['icon' => '💰', 'label' => 'CA Total',      'value' => number_format($statsGlobales['ca_total'] ?? 0, 0, ',', ' ') . ' DH',    'color' => 'blue',   'bg' => 'bg-indigo-50',  'text' => 'text-indigo-600'],
+                ['icon' => '✅', 'label' => 'Encaissé',      'value' => number_format($statsGlobales['encaisse'] ?? 0, 0, ',', ' ') . ' DH',    'color' => 'green',  'bg' => 'bg-emerald-50', 'text' => 'text-emerald-600'],
+                ['icon' => '⚠️', 'label' => 'Reste à Payer', 'value' => number_format($statsGlobales['reste'] ?? 0, 0, ',', ' ') . ' DH',       'color' => 'red',    'bg' => 'bg-red-50',     'text' => 'text-red-600'],
+                ['icon' => '📦', 'label' => 'BL Total',      'value' => number_format($statsGlobales['bl_total'] ?? 0, 0, ',', ' '),             'color' => 'purple', 'bg' => 'bg-purple-50',  'text' => 'text-purple-600'],
+                ['icon' => '📈', 'label' => 'Taux Global',   'value' => ($statsGlobales['taux_global'] ?? 0) . '%',                                'color' => 'yellow', 'bg' => 'bg-amber-50',   'text' => 'text-amber-600'],
+                ['icon' => '📉', 'label' => 'Drops Global',  'value' => number_format($statsGlobales['drops_global'] ?? 0, 0, ',', ' ') . ' DH/BL', 'color' => 'teal', 'bg' => 'bg-teal-50', 'text' => 'text-teal-600'],
             ];
         @endphp
         @foreach($kpis as $i => $kpi)
@@ -311,7 +306,6 @@
         @endforeach
     </div>
 
-    {{-- ══ INACTIVITÉ ══ --}}
     <div class="table-card fade-in-up" style="animation-delay: 0.18s">
         <div class="table-header flex items-center justify-between flex-wrap gap-2">
             <h2 class="text-lg font-extrabold flex items-center gap-2">⏱️ INACTIVITÉ PAR VENDEUR — limite 26 jours</h2>
@@ -319,6 +313,7 @@
                 🎯 Objectif: {{ $joursAttendus }}j &nbsp;·&nbsp; Disponibles: {{ $totalJoursOuvres }}j
             </span>
         </div>
+
         @php $nbCritiques = $inactiviteParVendeur->where('statut','critique')->count(); @endphp
         @if($nbCritiques > 0)
         <div class="mx-6 mt-4 flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
@@ -333,6 +328,7 @@
             </p>
         </div>
         @endif
+
         <div class="overflow-x-auto">
             <table class="min-w-full dashboard-table">
                 <thead>
@@ -340,7 +336,6 @@
                         <th class="text-left">#</th>
                         <th class="text-left">VENDEUR</th>
                         <th class="text-center">Jours actifs</th>
-                        <th class="text-center">Repos</th>
                         <th class="text-center">Absences</th>
                         <th class="text-center">Au-delà 26j</th>
                         <th class="text-center">Statut</th>
@@ -358,8 +353,9 @@
                             </button>
                         </td>
                         <td class="text-center font-semibold text-indigo-600">{{ $inf['jours_actifs'] }}</td>
-                        <td class="text-center text-gray-500">{{ $inf['jours_repos'] }}</td>
-                        <td class="text-center font-semibold {{ $inf['jours_absents'] > 3 ? 'text-red-600' : 'text-gray-600' }}">{{ $inf['jours_absents'] }}</td>
+                        <td class="text-center font-semibold {{ $inf['jours_absents'] > 3 ? 'text-red-600' : 'text-gray-600' }}">
+                            {{ $inf['jours_absents'] }}
+                        </td>
                         <td class="text-center">
                             @if($inf['jours_au_dela'] > 0)
                                 <span class="badge-{{ $statut }}">+{{ $inf['jours_au_dela'] }} j</span>
@@ -375,18 +371,17 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="7" class="text-center py-8 text-gray-400">Aucune donnée pour ce mois</td></tr>
+                    <tr><td colspan="6" class="text-center py-8 text-gray-400">Aucune donnée pour ce mois</td></tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
     </div>
 
-    {{-- Objectifs Vendeurs Section --}}
     <div class="bg-white rounded-lg shadow p-6 mt-6">
         <h3 class="text-lg font-bold mb-4">🎯 Objectifs Mensuels</h3>
         <div class="space-y-4">
-            @foreach($objectifsVendeurs as $nom => $obj)
+            @forelse($objectifsVendeurs as $nom => $obj)
             <div class="border rounded-lg p-4">
                 <div class="flex justify-between items-center mb-2">
                     <span class="font-semibold">{{ $nom }}</span>
@@ -395,22 +390,25 @@
                         {!! $obj['atteindra'] ? '✅' : '⚠️' !!}
                     </span>
                 </div>
+
                 <div class="w-full bg-gray-200 rounded-full h-4">
                     <div class="h-4 rounded-full {{ $obj['progression'] >= 80 ? 'bg-green-500' : ($obj['progression'] >= 50 ? 'bg-yellow-500' : 'bg-red-500') }}"
-                         style="width: {{ $obj['progression'] }}%">
+                         style="width: {{ min($obj['progression'], 100) }}%">
                     </div>
                 </div>
+
                 <div class="flex justify-between text-xs text-gray-500 mt-1">
                     <span>{{ number_format($obj['ca_actuel']) }} MAD</span>
                     <span>{{ $obj['progression'] }}%</span>
                     <span>Objectif: {{ number_format($obj['objectif']) }} MAD</span>
                 </div>
             </div>
-            @endforeach
+            @empty
+            <div class="text-sm text-gray-400">Aucun objectif défini pour ce mois.</div>
+            @endforelse
         </div>
     </div>
 
-    {{-- ══ VENDOR CARDS ══ --}}
     @php
         $vColors = [
             ['class' => 'blue',   'gradient' => 'gradient-blue',   'bg' => 'bg-indigo-50',  'text' => 'text-indigo-600',  'fill' => 'from-indigo-500 to-indigo-400'],
@@ -420,19 +418,19 @@
             ['class' => 'purple', 'gradient' => 'gradient-purple', 'bg' => 'bg-purple-50',  'text' => 'text-purple-600',  'fill' => 'from-purple-500 to-purple-400'],
         ];
     @endphp
+
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         @foreach(($suiviParVendeur ?? collect()) as $nom => $stats)
         @php
-            $i    = $loop->index;
-            $c    = $vColors[$i % 5];
+            $i = $loop->index;
+            $c = $vColors[$i % 5];
             $taux = $stats['taux'] ?? 0;
-            $inf  = $inactiviteParVendeur[$nom] ?? null;
+            $inf = $inactiviteParVendeur[$nom] ?? null;
             $isSelected = request('vendeur') == $nom;
         @endphp
         <div class="vendor-card {{ $c['class'] }} fade-in-up {{ $isSelected ? 'ring-2 ring-indigo-400 ring-offset-2' : '' }}"
              style="animation-delay: {{ 0.2 + $i * 0.06 }}s">
 
-            {{-- ── Toggle button ── --}}
             <button class="vendor-toggle-btn" onclick="toggleVendorCard(this)" title="Masquer / Afficher">
                 <span class="toggle-label flex items-center gap-1">
                     <svg class="toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -443,14 +441,12 @@
                 <span class="font-extrabold {{ $c['text'] }} text-sm">{{ $taux }}%</span>
             </button>
 
-            {{-- ── Collapsible body ── --}}
             <div class="vendor-card-body">
-
-                {{-- Badge cliquable pour filtrer --}}
                 <div style="cursor:pointer" onclick="filterByVendeur('{{ $nom }}')">
                     <div class="vendor-badge {{ $c['gradient'] }}">{{ strtoupper(substr($nom, 0, 2)) }}</div>
                     <h3 class="font-bold text-gray-900 text-base mb-1">{{ $nom }}</h3>
                     <p class="text-xs text-gray-500 font-semibold mb-1">{{ $stats['bl'] ?? 0 }} BL</p>
+
                     @if($inf)
                         @if($inf['jours_au_dela'] > 0)
                             <span class="badge-{{ $inf['statut'] }} text-xs mb-3 inline-block">+{{ $inf['jours_au_dela'] }}j inactif</span>
@@ -458,6 +454,7 @@
                             <span class="badge-ok text-xs mb-3 inline-block">✓ Actif</span>
                         @endif
                     @endif
+
                     <div class="space-y-2 text-sm mt-2">
                         <div class="flex justify-between items-center">
                             <span class="text-gray-600 font-medium">CA Total</span>
@@ -474,18 +471,22 @@
                             </span>
                         </div>
                     </div>
+
                     <div class="drops-mini">
                         <span class="drops-mini-label">📉 Drops</span>
                         <span class="drops-mini-value">
                             {{ ($stats['bl'] ?? 0) > 0 ? number_format($stats['drops'] ?? 0, 0, ',', ' ') . ' DH/BL' : '—' }}
                         </span>
                     </div>
+
                     <div class="progress-ring">
                         <div class="progress-fill bg-gradient-to-r {{ $c['fill'] }}" style="width: {{ min($taux, 100) }}%"></div>
                     </div>
+
                     <div class="text-center mt-2">
                         <span class="font-extrabold {{ $c['text'] }} text-lg">{{ $taux }}%</span>
                     </div>
+
                     @if(isset($stats['meilleur_jour']) && $stats['meilleur_jour'])
                     <div class="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
                         🏆 Meilleur: {{ \Carbon\Carbon::parse($stats['meilleur_jour']->date)->format('d/m') }}
@@ -494,18 +495,14 @@
                     @endif
                 </div>
 
-                {{-- ✅ BOUTON VOIR DÉTAILS --}}
                 <a href="{{ route('suivi-vendeurs.show', ['nom' => $nom]) }}" class="btn-voir-details">
                     📊 Voir détails
                 </a>
-
-            </div>{{-- end .vendor-card-body --}}
-
+            </div>
         </div>
         @endforeach
     </div>
 
-    {{-- ══ MEILLEUR & PIRE JOUR ══ --}}
     <div class="table-card fade-in-up" style="animation-delay: 0.5s">
         <div class="table-header">
             <h2 class="text-lg font-extrabold flex items-center gap-2">🏆 MEILLEUR & PIRE JOUR PAR VENDEUR</h2>
@@ -555,7 +552,7 @@
                         </td>
                         <td class="text-center">
                             @php
-                                $t  = $stats['taux'] ?? 0;
+                                $t = $stats['taux'] ?? 0;
                                 $bc = $t >= 80 ? 'bg-emerald-100 text-emerald-700' : ($t >= 50 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700');
                             @endphp
                             <span class="inline-block px-3 py-1 rounded-full text-xs font-extrabold {{ $bc }}">{{ $t }}%</span>
@@ -584,7 +581,6 @@
         </div>
     </div>
 
-    {{-- ══ CHARTS ══ --}}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 fade-in-up" style="animation-delay: 0.6s">
         <div class="table-card">
             <div class="p-6">
@@ -615,7 +611,6 @@
         </div>
     </div>
 
-    {{-- ══ DERNIÈRES SAISIES ══ --}}
     <div class="table-card fade-in-up" style="animation-delay: 0.8s">
         <div class="table-header flex items-center justify-between flex-wrap gap-3">
             <h2 class="text-lg font-extrabold flex items-center gap-2">📋 Saisies
@@ -651,10 +646,10 @@
                 <tbody id="saisiesBody">
                     @forelse(($lignes ?? collect()) as $ligne)
                     @php
-                        $reste      = $ligne->chiffre - $ligne->total_paye;
+                        $reste = $ligne->chiffre - $ligne->total_paye;
                         $dropsLigne = $ligne->bl > 0 ? round($ligne->chiffre / $ligne->bl, 0) : 0;
                         $vIdx = array_search($ligne->vendeur_nom, ($suiviParVendeur ?? collect())->keys()->toArray());
-                        $c    = $vColors[($vIdx !== false ? $vIdx : 0) % 5] ?? $vColors[0];
+                        $c = $vColors[($vIdx !== false ? $vIdx : 0) % 5] ?? $vColors[0];
                         $showRow = true;
                         if (request('statut') === 'actif' && $ligne->jour_repos)  $showRow = false;
                         if (request('statut') === 'repos' && !$ligne->jour_repos) $showRow = false;
@@ -748,7 +743,6 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// ── Vendor card toggle ──────────────────────────────────────────────
 function toggleVendorCard(btn) {
     const body = btn.closest('.vendor-card').querySelector('.vendor-card-body');
     const text = btn.querySelector('.toggle-text');
@@ -765,7 +759,6 @@ function toggleVendorCard(btn) {
     }
 }
 
-// ── Filters ─────────────────────────────────────────────────────────
 function filterByVendeur(nom) {
     const url = new URL(window.location.href);
     if (url.searchParams.get('vendeur') === nom) {
@@ -782,17 +775,15 @@ function removeFilter(key) {
     window.location = url.toString();
 }
 
-// ── Live search ──────────────────────────────────────────────────────
 document.getElementById('liveSearch').addEventListener('input', function() {
     const q = this.value.toLowerCase().trim();
     document.querySelectorAll('.searchable-row').forEach(row => {
         const vendeur = row.dataset.vendeur || '';
-        const date    = row.dataset.date    || '';
+        const date = row.dataset.date || '';
         row.style.display = (!q || vendeur.includes(q) || date.includes(q)) ? '' : 'none';
     });
 });
 
-// ── Table sort ───────────────────────────────────────────────────────
 let sortDir = {};
 function sortTable(colIndex) {
     const body = document.getElementById('saisiesBody');
@@ -801,8 +792,8 @@ function sortTable(colIndex) {
     rows.sort((a, b) => {
         const aText = a.cells[colIndex]?.innerText.trim().replace(/[^\d.-]/g, '') || '';
         const bText = b.cells[colIndex]?.innerText.trim().replace(/[^\d.-]/g, '') || '';
-        const aVal  = isNaN(aText) ? a.cells[colIndex]?.innerText.trim() : parseFloat(aText);
-        const bVal  = isNaN(bText) ? b.cells[colIndex]?.innerText.trim() : parseFloat(bText);
+        const aVal = isNaN(aText) ? a.cells[colIndex]?.innerText.trim() : parseFloat(aText);
+        const bVal = isNaN(bText) ? b.cells[colIndex]?.innerText.trim() : parseFloat(bText);
         if (aVal < bVal) return sortDir[colIndex] ? -1 : 1;
         if (aVal > bVal) return sortDir[colIndex] ? 1 : -1;
         return 0;
@@ -810,25 +801,24 @@ function sortTable(colIndex) {
     rows.forEach(r => body.appendChild(r));
 }
 
-// ── Charts ───────────────────────────────────────────────────────────
 const COLORS = ['#4F46E5', '#F97316', '#10B981', '#EF4444', '#8B5CF6'];
 
 const vendeurLabels = @json(($suiviParVendeur ?? collect())->keys());
-const caData        = @json(($suiviParVendeur ?? collect())->pluck('ca_total')->values());
-const encaisseData  = @json(($suiviParVendeur ?? collect())->pluck('encaisse')->values());
-const resteData     = @json(($suiviParVendeur ?? collect())->pluck('reste')->values());
-const dropsData     = @json(($suiviParVendeur ?? collect())->pluck('drops')->values());
-const datesLabels   = @json($chartDates ?? []);
-const dailyCAData   = @json($chartDataCA ?? []);
+const caData = @json(($suiviParVendeur ?? collect())->pluck('ca_total')->values());
+const encaisseData = @json(($suiviParVendeur ?? collect())->pluck('encaisse')->values());
+const resteData = @json(($suiviParVendeur ?? collect())->pluck('reste')->values());
+const dropsData = @json(($suiviParVendeur ?? collect())->pluck('drops')->values());
+const datesLabels = @json($chartDates ?? []);
+const dailyCAData = @json($chartDataCA ?? []);
 
 new Chart(document.getElementById('barChart'), {
     type: 'bar',
     data: {
         labels: vendeurLabels,
         datasets: [
-            { label: 'CA Total', data: caData,       backgroundColor: '#4F46E5', borderRadius: 8 },
+            { label: 'CA Total', data: caData, backgroundColor: '#4F46E5', borderRadius: 8 },
             { label: 'Encaissé', data: encaisseData, backgroundColor: '#10B981', borderRadius: 8 },
-            { label: 'Reste',    data: resteData,    backgroundColor: '#EF4444', borderRadius: 8 },
+            { label: 'Reste', data: resteData, backgroundColor: '#EF4444', borderRadius: 8 },
         ]
     },
     options: {
@@ -877,18 +867,32 @@ new Chart(document.getElementById('dropsChart'), {
 
 if (datesLabels.length > 0) {
     const lineDatasets = Object.keys(dailyCAData).map((vendeur, index) => ({
-        label: vendeur, data: dailyCAData[vendeur],
-        borderColor: COLORS[index % COLORS.length], backgroundColor: COLORS[index % COLORS.length] + '20',
-        borderWidth: 2.5, tension: 0.4, pointRadius: 4, pointHoverRadius: 6,
-        pointBackgroundColor: COLORS[index % COLORS.length], pointBorderColor: '#fff', pointBorderWidth: 2, fill: false,
+        label: vendeur,
+        data: dailyCAData[vendeur],
+        borderColor: COLORS[index % COLORS.length],
+        backgroundColor: COLORS[index % COLORS.length] + '20',
+        borderWidth: 2.5,
+        tension: 0.4,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointBackgroundColor: COLORS[index % COLORS.length],
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        fill: false,
     }));
+
     new Chart(document.getElementById('lineChart'), {
         type: 'line',
         data: { labels: datesLabels, datasets: lineDatasets },
         options: {
-            responsive: true, interaction: { mode: 'index', intersect: false },
+            responsive: true,
+            interaction: { mode: 'index', intersect: false },
             plugins: {
-                legend: { position: 'bottom', labels: { font: { size: 11, weight: 600 }, boxWidth: 12, padding: 14 }, onClick: (e, legendItem) => filterByVendeur(legendItem.text) },
+                legend: {
+                    position: 'bottom',
+                    labels: { font: { size: 11, weight: 600 }, boxWidth: 12, padding: 14 },
+                    onClick: (e, legendItem) => filterByVendeur(legendItem.text)
+                },
                 tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString('fr-MA')} DH` } }
             },
             scales: {
