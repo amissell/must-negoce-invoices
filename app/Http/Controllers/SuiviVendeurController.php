@@ -12,185 +12,130 @@ use App\Models\ObjectifVendeur;
 
 class SuiviVendeurController extends Controller
 {
-    public function index(Request $request)
-    {
-        $mois  = $request->get('mois',  Carbon::now()->month);
-        $annee = $request->get('annee', Carbon::now()->year);
-        $vendeurFiltre = $request->get('vendeur');
 
-        $debut = Carbon::create($annee, $mois, 1)->startOfMonth()->toDateString();
-        $fin   = Carbon::create($annee, $mois, 1)->endOfMonth()->toDateString();
 
-        $query = SuiviVendeur::parMois($annee, $mois);
-        if ($vendeurFiltre) {
-            $query->vendeur($vendeurFiltre);
+public function index(Request $request)
+{
+    $mois = (int) $request->get('mois', now()->month);
+    $annee = (int) $request->get('annee', now()->year);
+
+    $vendeurs = [
+        'NOUREDINE',
+        'ABDILILAH',
+        'HASSAN',
+        'ABDELLAH',
+        'SOUFAINE',
+    ];
+
+    $suivis = SuiviVendeur::whereMonth('date', $mois)
+        ->whereYear('date', $annee)
+        ->orderByDesc('date')
+        ->get();
+
+    $objectifs = ObjectifVendeur::where('mois', $mois)
+        ->where('annee', $annee)
+        ->get()
+        ->keyBy('vendeur_nom');
+
+    $suivisParVendeur = $suivis->groupBy('vendeur_nom');
+
+    $joursDansMois = Carbon::create($annee, $mois, 1)->daysInMonth;
+    $jourActuel = ($mois == now()->month && $annee == now()->year) ? now()->day : $joursDansMois;
+
+    $totalJoursOuvres = 0;
+    for ($day = 1; $day <= $joursDansMois; $day++) {
+        $date = Carbon::create($annee, $mois, $day);
+        if (!$date->isWeekend()) {
+            $totalJoursOuvres++;
         }
-
-        // Exclude repos days from all stats
-        $toutesLignes = SuiviVendeur::parMois($annee, $mois)
-            ->where('jour_repos', 0)
-            ->get();
-
-        $blGlobal = $toutesLignes->sum('bl');
-        $caGlobal = $toutesLignes->sum('chiffre');
-
-        $statsGlobales = [
-            'ca_total'     => $caGlobal,
-            'encaisse'     => $toutesLignes->sum('total_paye'),
-            'reste'        => $caGlobal - $toutesLignes->sum('total_paye'),
-            'bl_total'     => $blGlobal,
-            'taux_global'  => $caGlobal > 0
-                ? round(($toutesLignes->sum('total_paye') / $caGlobal) * 100, 1)
-                : 0,
-            'drops_global' => $blGlobal > 0
-                ? round($caGlobal / $blGlobal, 2)
-                : 0,
-        ];
-
-        $suiviParVendeur = $toutesLignes
-            ->groupBy('vendeur_nom')
-            ->map(function ($entries) {
-                $caTotal  = $entries->sum('chiffre');
-                $encaisse = $entries->sum('total_paye');
-                $blTotal  = $entries->sum('bl');
-                $sorted   = $entries->sortByDesc('chiffre');
-
-                return [
-                    'ca_total'      => $caTotal,
-                    'encaisse'      => $encaisse,
-                    'reste'         => $caTotal - $encaisse,
-                    'bl'            => $blTotal,
-                    'taux'          => $caTotal > 0 ? round(($encaisse / $caTotal) * 100, 1) : 0,
-                    'drops'         => $blTotal > 0 ? round($caTotal / $blTotal, 2) : 0,
-                    'meilleur_jour' => $sorted->first(),
-                    'pire_jour'     => $sorted->last(),
-                    'jours'         => $entries->sortBy('date'),
-                ];
-            });
-
-        $allDates = SuiviVendeur::whereBetween('date', [$debut, $fin])
-            ->where('jour_repos', 0)
-            ->distinct()
-            ->orderBy('date')
-            ->pluck('date');
-
-        $chartDates = $allDates->map(fn($d) => Carbon::parse($d)->format('d/m'))->values();
-
-        $chartDataCA = [];
-        foreach ($suiviParVendeur->keys() as $vendeur) {
-            $rows = SuiviVendeur::whereBetween('date', [$debut, $fin])
-                ->where('vendeur_nom', $vendeur)
-                ->where('jour_repos', 0)
-                ->orderBy('date')
-                ->pluck('chiffre', 'date')
-                ->mapWithKeys(fn($val, $key) => [(string) $key => $val]);
-
-            $chartDataCA[$vendeur] = $allDates
-                ->map(fn($d) => $rows->get((string) $d, 0))
-                ->values()
-                ->toArray();
-        }
-
-        $vendeurs = SuiviVendeur::distinct()->orderBy('vendeur_nom')->pluck('vendeur_nom');
-
-        $lignes = $query->orderBy('date', 'desc')->paginate(30);
-        $CIBLE_JOURS = 26;
-        
-        $isCurrentMonth = (Carbon::now()->year == $annee && Carbon::now()->month == $mois);
-        $finCalcul      = $isCurrentMonth
-        ? Carbon::now()
-        : Carbon::create($annee, $mois, 1)->endOfMonth();
-        $joursTravaillables = collect();
-        $cursor = Carbon::create($annee, $mois, 1)->startOfMonth();
-        while ($cursor->lte($finCalcul)) {
-            if ($cursor->dayOfWeek !== Carbon::SUNDAY) {
-                $joursTravaillables->push($cursor->toDateString());
-                }
-                $cursor->addDay();
-                }
-                $totalJoursOuvres = $joursTravaillables->count();
-                $joursAttendus    = min($totalJoursOuvres, $CIBLE_JOURS);
-                
-                $inactiviteParVendeur = [];
-                $tousVendeurs = SuiviVendeur::whereBetween('date', [$debut, $fin])
-                ->distinct()
-                ->orderBy('vendeur_nom')
-                ->pluck('vendeur_nom');
-                
-                foreach ($tousVendeurs as $nom) {
-                    $entrees = SuiviVendeur::whereBetween('date', [$debut, $fin])
-                    ->where('vendeur_nom', $nom)
-                    ->get();
-                    
-                    $joursActifs    = $entrees->where('jour_repos', false)->count();
-                    $joursRepos     = $entrees->where('jour_repos', true)->count();
-                    $joursPresences = $joursActifs + $joursRepos;
-                    $joursAbsents   = max(0, $joursAttendus - $joursPresences);
-                    $joursAuDela    = max(0, $joursAttendus - $joursActifs);
-                    $joursRestants  = max(0, $CIBLE_JOURS - $joursActifs);
-                    
-                    $inactiviteParVendeur[$nom] = [
-                        'jours_actifs'   => $joursActifs,
-                        'jours_repos'    => $joursRepos,
-                        'jours_absents'  => $joursAbsents,
-                        'jours_au_dela'  => $joursAuDela,
-                        'jours_restants' => $joursRestants,
-                        'statut'         => $joursAuDela >= 10 ? 'critique'
-                          : ($joursAuDela >= 4  ? 'attention' : 'ok'),
-                          ];
-                          }
-                          
-                          $inactiviteParVendeur = collect($inactiviteParVendeur)
-                          ->sortByDesc('jours_au_dela');
-                          // Add to the index method, before return view(...)
-
-                          $objectifsDb = ObjectifVendeur::where('mois', $mois)
-    ->where('annee', $annee)
-    ->get()
-    ->keyBy('vendeur_nom');
-
-$objectifsVendeurs = [];
-
-foreach (($suiviParVendeur ?? collect()) as $nom => $stats) {
-    $obj = $objectifsDb[$nom] ?? null;
-    $objectifSpark = (float) ($obj->objectif_spark ?? 0);
-    $objectifEco = (float) ($obj->objectif_ecosolutions ?? 0);
-    $objectifTotal = (float) ($obj->objectif_total ?? 0);
-    $prime = (float) ($obj->prime ?? 0);
-    $caActuel = (float) ($stats['ca_total'] ?? 0);
-
-    if ((int)$mois === (int)now()->month && (int)$annee === (int)now()->year) {
-        $joursEcoules = max(1, now()->day);
-    } else {
-        $joursEcoules = max(1, $totalJoursOuvres);
     }
 
-    $prediction = ($caActuel / $joursEcoules) * $totalJoursOuvres;
-    $progression = $objectifTotal > 0 ? round(($caActuel / $objectifTotal) * 100, 1) : 0;
-    
-    $objectifsVendeurs[$nom] = [
-        'objectif_spark'       => $objectifSpark,
-        'objectif_ecosolutions'=> $objectifEco,
-        'objectif_total'      =>  $objectifTotal,
-        'prime'                => $prime,
-        'ca_actuel'            => $caActuel,
-        'prediction'           => round($prediction, 0),
-        'progression'          => $progression,
-        'atteindra'            => $objectifTotal > 0 ? $prediction >= $objectifTotal : false,
-        ];
+    $joursAttendus = 26;
+
+    $inactiviteParVendeur = collect();
+
+    foreach ($vendeurs as $nom) {
+        $suiviVendeur = $suivisParVendeur->get($nom, collect());
+
+        $joursActifs = $suiviVendeur
+            ->pluck('date')
+            ->filter()
+            ->map(function ($date) {
+                return Carbon::parse($date)->format('Y-m-d');
+            })
+            ->unique()
+            ->count();
+
+        $joursAbsents = max($totalJoursOuvres - $joursActifs, 0);
+        $joursAuDela = max($joursAbsents - $joursAttendus, 0);
+
+        if ($joursAuDela > 0) {
+            $statut = 'critique';
+        } elseif ($joursAbsents > 3) {
+            $statut = 'attention';
+        } else {
+            $statut = 'normal';
         }
 
-// Add 'objectifsVendeurs' to compact(...)
-
-
-                          return view('suivi_vendeurs.index', compact(
-                            'lignes', 'suiviParVendeur', 'statsGlobales',
-                            'vendeurs', 'mois', 'annee',
-                            'chartDates', 'chartDataCA', 'toutesLignes',
-                            'inactiviteParVendeur', 'totalJoursOuvres',
-                            'joursAttendus', 'CIBLE_JOURS', 'objectifsVendeurs'
-                            ));
+        $inactiviteParVendeur->push([
+            'vendeur_nom'   => $nom,
+            'jours_actifs'  => $joursActifs,
+            'jours_absents' => $joursAbsents,
+            'jours_au_dela' => $joursAuDela,
+            'statut'        => $statut,
+        ]);
     }
+
+    $inactiviteParVendeur = $inactiviteParVendeur
+        ->sortByDesc('jours_absents')
+        ->values();
+
+    $objectifsVendeurs = [];
+
+    foreach ($vendeurs as $nom) {
+        $objectif = $objectifs->get($nom);
+        $suiviVendeur = $suivisParVendeur->get($nom, collect());
+
+        $caActuel = (float) $suiviVendeur->sum('chiffre');
+        $blActuel = (int) $suiviVendeur->sum('bl');
+
+        $objectifCa = (float) ($objectif->objectif_ca ?? 0);
+        $objectifBl = (int) ($objectif->objectif_bl ?? 0);
+        $prime = (float) ($objectif->prime ?? 0);
+
+        $progression = $objectifCa > 0
+            ? round(($caActuel / $objectifCa) * 100, 1)
+            : 0;
+
+        $prediction = $jourActuel > 0
+            ? round(($caActuel / $jourActuel) * $joursDansMois, 0)
+            : 0;
+
+        $atteindra = $objectifCa > 0 ? $prediction >= $objectifCa : false;
+
+        $objectifsVendeurs[$nom] = [
+            'ca_actuel'   => $caActuel,
+            'bl_actuel'   => $blActuel,
+            'objectif_ca' => $objectifCa,
+            'objectif_bl' => $objectifBl,
+            'prime'       => $prime,
+            'progression' => $progression,
+            'prediction'  => $prediction,
+            'atteindra'   => $atteindra,
+        ];
+    }
+
+    return view('suivi_vendeurs.index', compact(
+        'suivis',
+        'vendeurs',
+        'mois',
+        'annee',
+        'objectifsVendeurs',
+        'totalJoursOuvres',
+        'joursAttendus',
+        'inactiviteParVendeur'
+    ));
+}
 
     public function create()
     {
