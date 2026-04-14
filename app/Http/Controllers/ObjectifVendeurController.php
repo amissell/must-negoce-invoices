@@ -8,12 +8,12 @@ use App\Models\ObjectifVendeur;
 class ObjectifVendeurController extends Controller
 {
     /**
-     * Liste tous les objectifs (page index)
+     * Liste des objectifs par mois / année
      */
     public function index(Request $request)
     {
-        $mois = $request->get('mois', now()->month);
-        $annee = $request->get('annee', now()->year);
+        $mois = (int) $request->get('mois', now()->month);
+        $annee = (int) $request->get('annee', now()->year);
 
         $objectifs = ObjectifVendeur::where('mois', $mois)
             ->where('annee', $annee)
@@ -25,7 +25,7 @@ class ObjectifVendeurController extends Controller
             'ABDILILAH',
             'HASSAN',
             'ABDELLAH',
-            'SOUFAINE'
+            'SOUFAINE',
         ];
 
         return view('objectifs.index', compact('objectifs', 'vendeurs', 'mois', 'annee'));
@@ -41,17 +41,17 @@ class ObjectifVendeurController extends Controller
             'ABDILILAH',
             'HASSAN',
             'ABDELLAH',
-            'SOUFAINE'
+            'SOUFAINE',
         ];
 
         return view('objectifs.form', [
             'vendeurs' => $vendeurs,
-            'objectif' => null
+            'objectif' => null,
         ]);
     }
 
     /**
-     * Enregistrer (updateOrCreate)
+     * Enregistrer ou mettre à jour si même vendeur + mois + année
      */
     public function store(Request $request)
     {
@@ -59,9 +59,8 @@ class ObjectifVendeurController extends Controller
             'vendeur_nom' => 'required|string',
             'mois' => 'required|integer|min:1|max:12',
             'annee' => 'required|integer',
-            'objectif_spark' => 'required|numeric|min:0',
-            'objectif_ecosolutions' => 'required|numeric|min:0',
-            'objectif_total' => 'required|numeric|min:0',
+            'objectif_ca' => 'required|numeric|min:0',
+            'objectif_bl' => 'required|integer|min:0',
             'prime' => 'required|numeric|min:0',
         ]);
 
@@ -71,12 +70,11 @@ class ObjectifVendeurController extends Controller
                 'mois' => $request->mois,
                 'annee' => $request->annee,
             ],
-            $request->only([
-                'objectif_spark',
-                'objectif_ecosolutions',
-                'objectif_total',
-                'prime'
-            ])
+            [
+                'objectif_ca' => $request->objectif_ca,
+                'objectif_bl' => $request->objectif_bl,
+                'prime' => $request->prime,
+            ]
         );
 
         return redirect()->route('objectifs.index', [
@@ -97,47 +95,52 @@ class ObjectifVendeurController extends Controller
             'ABDILILAH',
             'HASSAN',
             'ABDELLAH',
-            'SOUFAINE'
+            'SOUFAINE',
         ];
 
         return view('objectifs.form', compact('objectif', 'vendeurs'));
     }
 
     /**
-     * Mettre à jour
+     * Mise à jour
      */
     public function update(Request $request, $id)
     {
         $objectif = ObjectifVendeur::findOrFail($id);
 
         $request->validate([
-            'objectif_spark' => 'required|numeric|min:0',
-            'objectif_ecosolutions' => 'required|numeric|min:0',
-            'objectif_total' => 'required|numeric|min:0',
+            'vendeur_nom' => 'required|string',
+            'mois' => 'required|integer|min:1|max:12',
+            'annee' => 'required|integer',
+            'objectif_ca' => 'required|numeric|min:0',
+            'objectif_bl' => 'required|integer|min:0',
             'prime' => 'required|numeric|min:0',
         ]);
 
-        $objectif->update($request->only([
-            'objectif_spark',
-            'objectif_ecosolutions',
-            'objectif_total',
-            'prime',
-        ]));
+        $objectif->update([
+            'vendeur_nom' => $request->vendeur_nom,
+            'mois' => $request->mois,
+            'annee' => $request->annee,
+            'objectif_ca' => $request->objectif_ca,
+            'objectif_bl' => $request->objectif_bl,
+            'prime' => $request->prime,
+        ]);
 
         return redirect()->route('objectifs.index', [
-            'mois' => $objectif->mois,
-            'annee' => $objectif->annee,
+            'mois' => $request->mois,
+            'annee' => $request->annee,
         ])->with('success', 'Objectif mis à jour ✔️');
     }
 
     /**
-     * Supprimer un objectif
+     * Supprimer
      */
     public function destroy($id)
     {
         $objectif = ObjectifVendeur::findOrFail($id);
         $mois = $objectif->mois;
         $annee = $objectif->annee;
+
         $objectif->delete();
 
         return redirect()->route('objectifs.index', [

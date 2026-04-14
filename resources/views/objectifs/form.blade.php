@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-3xl mx-auto py-6">
+<div class="max-w-3xl mx-auto py-6 px-4">
 
     <div class="bg-white rounded-xl shadow p-6">
         <h2 class="text-xl font-bold mb-4">
@@ -14,26 +14,36 @@
             </div>
         @endif
 
+        @if($errors->any())
+            <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                <ul class="list-disc pl-5 text-sm">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <form method="POST"
               action="{{ $objectif ? route('objectifs.update', $objectif->id) : route('objectifs.store') }}">
 
             @csrf
-            @if($objectif) @method('PUT') @endif
+            @if($objectif)
+                @method('PUT')
+            @endif
 
-            {{-- VENDEUR --}}
             <div class="mb-4">
                 <label class="block font-semibold mb-1">Vendeur</label>
                 <select name="vendeur_nom" class="w-full border rounded p-2">
                     @foreach($vendeurs as $v)
                         <option value="{{ $v }}"
-                            {{ ($objectif->vendeur_nom ?? '') == $v ? 'selected' : '' }}>
+                            {{ old('vendeur_nom', $objectif->vendeur_nom ?? '') == $v ? 'selected' : '' }}>
                             {{ $v }}
                         </option>
                     @endforeach
                 </select>
             </div>
 
-            {{-- MOIS --}}
             <div class="mb-4">
                 <label class="block font-semibold mb-1">Mois</label>
                 <input type="number" name="mois" min="1" max="12"
@@ -41,7 +51,6 @@
                        class="w-full border rounded p-2">
             </div>
 
-            {{-- ANNEE --}}
             <div class="mb-4">
                 <label class="block font-semibold mb-1">Année</label>
                 <input type="number" name="annee"
@@ -49,42 +58,30 @@
                        class="w-full border rounded p-2">
             </div>
 
-            {{-- SPARK --}}
             <div class="mb-4">
-                <label class="block font-semibold mb-1">Objectif Spark</label>
-                <input type="number" name="objectif_spark"
-                       value="{{ old('objectif_spark', $objectif->objectif_spark ?? 0) }}"
+                <label class="block font-semibold mb-1">Objectif Chiffre d'affaire</label>
+                <input type="number" step="0.01" name="objectif_ca"
+                       value="{{ old('objectif_ca', $objectif->objectif_ca ?? 0) }}"
                        class="w-full border rounded p-2">
             </div>
 
-            {{-- ECOSOLUTIONS --}}
             <div class="mb-4">
-                <label class="block font-semibold mb-1">Objectif Ecosolutions</label>
-                <input type="number" name="objectif_ecosolutions"
-                       value="{{ old('objectif_ecosolutions', $objectif->objectif_ecosolutions ?? 0) }}"
+                <label class="block font-semibold mb-1">Objectif BL</label>
+                <input type="number" name="objectif_bl"
+                       value="{{ old('objectif_bl', $objectif->objectif_bl ?? 0) }}"
                        class="w-full border rounded p-2">
             </div>
 
-            {{-- TOTAL --}}
-            <div class="mb-4">
-                <label class="block font-semibold mb-1">Objectif Total</label>
-                <input type="number" name="objectif_total"
-                       value="{{ old('objectif_total', $objectif->objectif_total ?? 0) }}"
-                       class="w-full border rounded p-2">
-            </div>
-
-            {{-- PRIME --}}
             <div class="mb-4">
                 <label class="block font-semibold mb-1">Prime</label>
-                <input type="number" name="prime"
-                       value="{{ old('prime', $objectif->prime ?? 0) }}"
+                <input type="number" step="0.01" name="prime"
+                       value="{{ old('prime', $objectif->prime ?? 300) }}"
                        class="w-full border rounded p-2">
             </div>
 
             <button class="bg-indigo-600 text-white px-4 py-2 rounded font-bold">
                 💾 Enregistrer
             </button>
-
         </form>
     </div>
 

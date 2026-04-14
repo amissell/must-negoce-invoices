@@ -6,20 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
-{
-    Schema::table('suivi_vendeurs', function (Blueprint $table) {
-        $table->boolean('jour_repos')->default(0)->after('date');
-    });
-}
+    {
+        Schema::table('suivi_vendeurs', function (Blueprint $table) {
+            if (!Schema::hasColumn('suivi_vendeurs', 'jour_repos')) {
+                $table->boolean('jour_repos')->default(0)->after('date');
+            }
+        });
+    }
 
-public function down(): void
-{
-    Schema::table('suivi_vendeurs', function (Blueprint $table) {
-        $table->dropColumn('jour_repos');
-    });
-}
+    public function down(): void
+    {
+        Schema::table('suivi_vendeurs', function (Blueprint $table) {
+            if (Schema::hasColumn('suivi_vendeurs', 'jour_repos')) {
+                $table->dropColumn('jour_repos');
+            }
+        });
+    }
 };
