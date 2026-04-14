@@ -382,7 +382,7 @@
         </div>
     </div>
 
-    <div class="bg-white rounded-lg shadow p-6 mt-6">
+<div class="bg-white rounded-lg shadow p-6 mt-6">
     <div class="flex justify-between items-center mb-4">
         <h3 class="text-lg font-bold">🎯 Objectifs Mensuels</h3>
 
@@ -402,50 +402,68 @@
 
                     <span class="text-xs px-2 py-1 rounded-full font-semibold
                         {{ $obj['atteindra'] ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
-                        {{ $obj['atteindra'] ? '✅ En bonne voie' : '⚠️ Attention' }}
+                        {{ $obj['atteindra'] ? '✅ Prime gagnée' : '⚠️ Objectif non atteint' }}
                     </span>
                 </div>
 
-                {{-- Barre de progression --}}
+                {{-- Barre générale CA + BL --}}
                 <div class="w-full bg-gray-200 rounded-full h-3 mb-2 shadow-inner">
                     <div class="h-3 rounded-full transition-all duration-500
-                        {{ $obj['progression'] >= 80 ? 'bg-green-500' : ($obj['progression'] >= 50 ? 'bg-yellow-500' : 'bg-red-500') }}"
+                        {{ $obj['progression'] >= 100 ? 'bg-green-500' : ($obj['progression'] >= 70 ? 'bg-yellow-500' : 'bg-red-500') }}"
                         style="width: {{ min($obj['progression'], 100) }}%; transition: width 1s ease;">
                     </div>
                 </div>
 
                 <div class="flex justify-between text-xs text-gray-500 mb-3">
-                    <span>{{ number_format($obj['ca_actuel'], 0, ',', ' ') }} MAD</span>
+                    <span class="font-semibold">Progression globale</span>
                     <span class="font-bold">{{ $obj['progression'] }}%</span>
-                    <span>{{ number_format($obj['objectif_ca'], 0, ',', ' ') }} MAD</span>
                 </div>
 
-                {{-- Détail --}}
-                <div class="text-xs space-y-1 border-t pt-2 text-gray-600">
+                <div class="text-xs space-y-2 border-t pt-2 text-gray-600">
                     <div class="flex justify-between">
-                        <span>🎯 Objectif CA:</span>
-                        <span>{{ number_format($obj['objectif_ca'], 0, ',', ' ') }} MAD</span>
+                        <span>🎯 CA:</span>
+                        <span>
+                            {{ number_format($obj['ca_actuel'], 0, ',', ' ') }}
+                            /
+                            {{ number_format($obj['objectif_ca'], 0, ',', ' ') }} MAD
+                            ({{ $obj['progression_ca'] }}%)
+                        </span>
                     </div>
 
                     <div class="flex justify-between">
-                        <span>📦 Objectif BL:</span>
-                        <span>{{ number_format($obj['objectif_bl'], 0, ',', ' ') }}</span>
-                    </div>
-
-                    <div class="flex justify-between">
-                        <span>📦 BL actuel:</span>
-                        <span>{{ number_format($obj['bl_actuel'], 0, ',', ' ') }}</span>
+                        <span>📦 BL:</span>
+                        <span>
+                            {{ number_format($obj['bl_actuel'], 0, ',', ' ') }}
+                            /
+                            {{ number_format($obj['objectif_bl'], 0, ',', ' ') }}
+                            ({{ $obj['progression_bl'] }}%)
+                        </span>
                     </div>
 
                     <div class="flex justify-between font-semibold">
                         <span>💰 Prime:</span>
-                        <span class="text-green-600">{{ number_format($obj['prime'], 0, ',', ' ') }} MAD</span>
+                        <span class="{{ $obj['atteindra'] ? 'text-green-600' : 'text-gray-500' }}">
+                            {{ number_format($obj['prime'], 0, ',', ' ') }} MAD
+                        </span>
+                    </div>
+
+                    <div class="flex justify-between">
+                        <span>🏁 Statut CA:</span>
+                        <span class="{{ $obj['atteint_ca'] ? 'text-green-600 font-semibold' : 'text-red-500' }}">
+                            {{ $obj['atteint_ca'] ? 'Atteint' : 'Pas encore' }}
+                        </span>
+                    </div>
+
+                    <div class="flex justify-between">
+                        <span>🏁 Statut BL:</span>
+                        <span class="{{ $obj['atteint_bl'] ? 'text-green-600 font-semibold' : 'text-red-500' }}">
+                            {{ $obj['atteint_bl'] ? 'Atteint' : 'Pas encore' }}
+                        </span>
                     </div>
                 </div>
 
-                {{-- Prédiction --}}
-                <div class="mt-2 text-xs {{ $obj['atteindra'] ? 'text-green-600' : 'text-red-600' }} font-semibold">
-                    📈 Prédiction fin de mois: {{ number_format($obj['prediction'], 0, ',', ' ') }} MAD
+                <div class="mt-3 pt-2 border-t text-xs font-semibold {{ $obj['atteindra'] ? 'text-green-600' : 'text-amber-600' }}">
+                    {{ $obj['atteindra'] ? '🎉 Ce vendeur gagne la prime de ' . number_format($obj['prime_gagnee'], 0, ',', ' ') . ' MAD' : '⌛ Prime non gagnée pour le moment' }}
                 </div>
             </div>
         @empty
@@ -461,7 +479,6 @@
         @endforelse
     </div>
 </div>
-
     @php
         $vColors = [
             ['class' => 'blue',   'gradient' => 'gradient-blue',   'bg' => 'bg-indigo-50',  'text' => 'text-indigo-600',  'fill' => 'from-indigo-500 to-indigo-400'],
