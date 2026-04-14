@@ -17,11 +17,6 @@ class SuiviVendeurController extends Controller
     $mois  = (int) $request->get('mois', now()->month);
     $annee = (int) $request->get('annee', now()->year);
 
-    /*
-    |---------------------------------------------------------
-    | Normalisation أسماء البائعين
-    |---------------------------------------------------------
-    */
     $aliasMap = [
         'SOUFAINE' => 'SOUFIANE',
         'SOUFIANE' => 'SOUFIANE',
