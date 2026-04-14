@@ -18,10 +18,12 @@ class SuiviVendeurController extends Controller
     $annee = (int) $request->get('annee', now()->year);
 
     $aliasMap = [
-        'SOUFAINE' => 'SOUFIANE',
-        'SOUFIANE' => 'SOUFIANE',
+        'SOUFAINE'  => 'SOUFIANE',
+        'SOUFIANE'  => 'SOUFIANE',
+        'ABDEILLAH' => 'ABDILILAH',
         'ABDELILAH' => 'ABDILILAH',
         'ABDILILAH' => 'ABDILILAH',
+        'ABDELLAH'  => 'ABDELLAH',
     ];
 
     $normalizeName = function ($nom) use ($aliasMap) {
