@@ -42,6 +42,11 @@ public function index(Request $request)
     $joursDansMois = Carbon::create($annee, $mois, 1)->daysInMonth;
     $jourActuel = ($mois == now()->month && $annee == now()->year) ? now()->day : $joursDansMois;
 
+    /*
+    |---------------------------------------------------------
+    | Affichage informatif seulement
+    |---------------------------------------------------------
+    */
     $totalJoursOuvres = 0;
     for ($day = 1; $day <= $joursDansMois; $day++) {
         $date = Carbon::create($annee, $mois, $day);
@@ -50,14 +55,25 @@ public function index(Request $request)
         }
     }
 
+    /*
+    |---------------------------------------------------------
+    | Société = base fixe de 26 jours / mois
+    |---------------------------------------------------------
+    */
     $joursAttendus = 26;
 
+    /*
+    |---------------------------------------------------------
+    | Inactivité par vendeur
+    |---------------------------------------------------------
+    */
     $inactiviteParVendeur = collect();
 
     foreach ($vendeurs as $nom) {
         $suiviVendeur = $suivisParVendeur->get($nom, collect());
 
         $joursActifs = $suiviVendeur
+            ->where('jour_repos', 0)
             ->pluck('date')
             ->filter()
             ->map(function ($date) {
@@ -66,10 +82,13 @@ public function index(Request $request)
             ->unique()
             ->count();
 
-        $joursAbsents = max($totalJoursOuvres - $joursActifs, 0);
-        $joursAuDela = max($joursAbsents - $joursAttendus, 0);
+        // Absences sur base fixe de 26 jours
+        $joursAbsents = max($joursAttendus - $joursActifs, 0);
 
-        if ($joursAuDela > 0) {
+        // Retard au-delà d'une tolérance de 3 jours
+        $joursAuDela = max($joursAbsents - 3, 0);
+
+        if ($joursAbsents > 6) {
             $statut = 'critique';
         } elseif ($joursAbsents > 3) {
             $statut = 'attention';
@@ -90,6 +109,11 @@ public function index(Request $request)
         ->sortByDesc('jours_absents')
         ->values();
 
+    /*
+    |---------------------------------------------------------
+    | Objectifs mensuels
+    |---------------------------------------------------------
+    */
     $objectifsVendeurs = [];
 
     foreach ($vendeurs as $nom) {

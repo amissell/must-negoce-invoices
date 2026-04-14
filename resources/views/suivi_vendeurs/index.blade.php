@@ -341,39 +341,43 @@
                         <th class="text-center">Statut</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @forelse($inactiviteParVendeur as $nom => $inf)
-                    @php $statut = $inf['statut']; @endphp
-                    <tr class="{{ request('vendeur') == $nom ? 'row-highlight' : '' }}">
-                        <td class="text-gray-400 font-bold text-sm">{{ $loop->iteration }}</td>
-                        <td>
-                            <button onclick="filterByVendeur('{{ $nom }}')"
-                                    class="font-bold text-gray-900 hover:text-indigo-600 transition-colors bg-transparent border-0 cursor-pointer p-0 text-left">
-                                {{ $nom }}
-                            </button>
-                        </td>
-                        <td class="text-center font-semibold text-indigo-600">{{ $inf['jours_actifs'] }}</td>
-                        <td class="text-center font-semibold {{ $inf['jours_absents'] > 3 ? 'text-red-600' : 'text-gray-600' }}">
-                            {{ $inf['jours_absents'] }}
-                        </td>
-                        <td class="text-center">
-                            @if($inf['jours_au_dela'] > 0)
-                                <span class="badge-{{ $statut }}">+{{ $inf['jours_au_dela'] }} j</span>
-                            @else
-                                <span class="badge-ok">✓ OK</span>
-                            @endif
-                        </td>
-                        <td class="text-center text-xl">
-                            @if($statut === 'critique') 🔴
-                            @elseif($statut === 'attention') 🟡
-                            @else 🟢
-                            @endif
-                        </td>
-                    </tr>
-                    @empty
-                    <tr><td colspan="6" class="text-center py-8 text-gray-400">Aucune donnée pour ce mois</td></tr>
-                    @endforelse
-                </tbody>
+               <tbody>
+    @forelse($inactiviteParVendeur as $inf)
+    @php $statut = $inf['statut']; @endphp
+    <tr class="{{ request('vendeur') == $inf['vendeur_nom'] ? 'row-highlight' : '' }}">
+        <td class="text-gray-400 font-bold text-sm">{{ $loop->iteration }}</td>
+        <td>
+            <button onclick="filterByVendeur('{{ $inf['vendeur_nom'] }}')"
+                    class="font-bold text-gray-900 hover:text-indigo-600 transition-colors bg-transparent border-0 cursor-pointer p-0 text-left">
+                {{ $inf['vendeur_nom'] }}
+            </button>
+        </td>
+        <td class="text-center font-semibold text-indigo-600">{{ $inf['jours_actifs'] }}</td>
+        <td class="text-center font-semibold {{ $inf['jours_absents'] > 3 ? 'text-red-600' : 'text-gray-600' }}">
+            {{ $inf['jours_absents'] }}
+        </td>
+        <td class="text-center">
+            @if($inf['jours_au_dela'] > 0)
+                <span class="badge-{{ $statut }}">+{{ $inf['jours_au_dela'] }} j</span>
+            @else
+                <span class="badge-ok">✓ OK</span>
+            @endif
+        </td>
+        <td class="text-center text-xl">
+            @if($statut === 'critique') 🔴
+            @elseif($statut === 'attention') 🟡
+            @else 🟢
+            @endif
+        </td>
+    </tr>
+    @empty
+    <tr>
+        <td colspan="6" class="text-center text-gray-400 py-6">
+            Aucune donnée d'inactivité pour cette période.
+        </td>
+    </tr>
+    @endforelse
+</tbody>
             </table>
         </div>
     </div>
