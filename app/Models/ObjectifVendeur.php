@@ -12,9 +12,8 @@ class ObjectifVendeur extends Model
         'vendeur_nom',
         'mois',
         'annee',
-        'objectif_spark',
-        'objectif_ecosolutions',
-        'objectif_total',
+        'objectif_ca',
+        'objectif_bl',
         'prime',
     ];
 }

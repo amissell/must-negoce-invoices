@@ -10,6 +10,7 @@ use App\Http\Controllers\SuiviVendeurController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CreanceController;
 use App\Http\Controllers\AlerteController;
+use App\Http\Controllers\ObjectifVendeurController;
 
 
 Route::middleware('guest')->group(function () {
@@ -67,4 +68,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/suivi-vendeurs', [SuiviVendeurController::class, 'index'])->name('suivi-vendeurs.index');
     Route::post('/admin/users/{user}/approve', [UserController::class, 'approve'])->name('admin.users.approve');
     Route::post('/admin/users/{user}/reject',  [UserController::class, 'reject'])->name('admin.users.reject');
+});
+
+
+Route::middleware(['auth', 'admin'])->prefix('objectifs')->name('objectifs.')->group(function () {
+    Route::get('/', [ObjectifVendeurController::class, 'index'])->name('index');
+    Route::get('/create', [ObjectifVendeurController::class, 'create'])->name('create');
+    Route::post('/', [ObjectifVendeurController::class, 'store'])->name('store');
+    Route::get('/{id}/edit', [ObjectifVendeurController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [ObjectifVendeurController::class, 'update'])->name('update');
+    Route::delete('/{id}', [ObjectifVendeurController::class, 'destroy'])->name('destroy');
 });
