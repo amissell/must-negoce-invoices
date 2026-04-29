@@ -21,196 +21,212 @@ class ManualInvoiceController extends Controller
         return view('invoices.create-manual', compact('products', 'nextInvoiceNumber'));
     }
 
+
     public function store(Request $request)
-    {
-        $validated = $request->validate([
-            // ── Client (l'un ou l'autre obligatoire) ──
-            'client_id'          => 'nullable|exists:clients,id',
-            'client_name'        => 'nullable|string|max:255',
-            'client_address'     => 'nullable|string|max:500',
-            'client_phone'       => 'nullable|string|max:50',
-            'client_ice'         => 'nullable|string|max:15',
-            'save_as_client'     => 'nullable|in:0,1,true,false,on',
-            // ── Facture ──
-            'invoice_date'       => 'required|date',
-            'payment_mode'       => 'required|in:CH,ESP,LCN',
-            'remise_percentage'  => 'nullable|numeric|min:0|max:100',
-            'montant_ht'         => 'required|numeric|min:0',
-            'tva_amount'         => 'required|numeric|min:0',
-            'total_ttc'          => 'required|numeric|min:0',
-            'remise_amount'      => 'nullable|numeric|min:0',
+{
+    $validated = $request->validate([
+        'client_id'          => 'nullable|exists:clients,id',
+        'client_name'        => 'nullable|string|max:255',
+        'client_address'     => 'nullable|string|max:500',
+        'client_phone'       => 'nullable|string|max:50',
+        'client_ice'         => 'nullable|string|max:15',
+        'save_as_client'     => 'nullable|in:0,1,true,false,on',
 
-            // ── Articles ──
-            'items'              => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity'   => 'required|integer|min:1',
-            'items.*.unit_price' => 'required|numeric|min:0',
+        'invoice_date'       => 'required|date',
+        'payment_mode'       => 'required|in:CH,ESP,LCN',
+        'remise_percentage'  => 'nullable|numeric|min:0|max:100',
+
+        'items'              => 'required|array|min:1',
+        'items.*.product_id' => 'required|exists:products,id',
+        'items.*.quantity'   => 'required|integer|min:1',
+        'items.*.unit_price' => 'required|numeric|min:0',
+    ]);
+
+    DB::beginTransaction();
+
+    try {
+        $clientId   = $validated['client_id'] ?? null;
+        $clientName = $validated['client_name'] ?? null;
+        $clientIce  = $validated['client_ice'] ?? null;
+
+        if ($clientId) {
+            $client = Client::findOrFail($clientId);
+            $clientName = $client->nom;
+            $clientIce  = $client->ice;
+            $validated['client_phone']   = $client->telephone;
+            $validated['client_address'] = $client->adresse;
+        }
+
+        if (!$clientId && $request->boolean('save_as_client') && $clientName) {
+            $newClient = Client::firstOrCreate(
+                ['ice' => $clientIce ?? null],
+                [
+                    'nom'       => $clientName,
+                    'telephone' => $validated['client_phone'] ?? null,
+                    'adresse'   => $validated['client_address'] ?? null,
+                ]
+            );
+            $clientId = $newClient->id;
+        }
+
+        // ===== CALCULS =====
+        $montant_ht = 0;
+
+        foreach ($validated['items'] as $item) {
+            $montant_ht += $item['quantity'] * $item['unit_price'];
+        }
+
+        $remisePercentage = (float) ($validated['remise_percentage'] ?? 0);
+        $remiseAmount     = round($montant_ht * $remisePercentage / 100, 2);
+        $ht_net           = round($montant_ht - $remiseAmount, 2);
+        $tva              = round($ht_net * 0.20, 2);
+        $total_ttc        = round($ht_net + $tva, 2);
+
+        $invoice = Invoice::create([
+            'invoice_number'    => $this->generateNextInvoiceNumber(),
+            'type'              => 'manual',
+            'client_id'         => $clientId,
+            'client_name'       => $clientName,
+            'client_address'    => $validated['client_address'] ?? null,
+            'client_phone'      => $validated['client_phone'] ?? null,
+            'client_ice'        => $clientIce,
+            'invoice_date'      => $validated['invoice_date'],
+            'payment_mode'      => $validated['payment_mode'],
+
+            'montant_ht'        => $montant_ht,
+            'remise_percentage' => $remisePercentage,
+            'remise_amount'     => $remiseAmount,
+            'tva_rate'          => 20,
+            'tva'               => $tva,
+            'total_ttc'         => $total_ttc,
+
+            'amount_in_words'   => $this->numberToWords($total_ttc),
+            'created_by'        => Auth::id(),
         ]);
 
-        DB::beginTransaction();
+        foreach ($validated['items'] as $item) {
+            $product = Product::find($item['product_id']);
 
-        try {
-            $clientId   = $validated['client_id'] ?? null;
-            $clientName = $validated['client_name'] ?? null;
-            $clientIce  = $validated['client_ice']  ?? null;
-
-            // ── Si client existant sélectionné → récupérer ses infos ──
-            if ($clientId) {
-                $client     = Client::findOrFail($clientId);
-                $clientName = $client->nom;
-                $clientIce  = $client->ice;
-                $validated['client_phone']   = $client->telephone;
-                $validated['client_address'] = $client->adresse;
-            }
-
-            // ── Si "Sauvegarder comme nouveau client" coché ──
-            if (!$clientId && $request->boolean('save_as_client') && $clientName) {
-                $newClient = Client::firstOrCreate(
-                    ['ice' => $clientIce ?? null],
-                    [
-                        'nom'       => $clientName,
-                        'telephone' => $validated['client_phone']   ?? null,
-                        'adresse'   => $validated['client_address'] ?? null,
-                    ]
-                );
-                $clientId = $newClient->id;
-            }
-
-            $invoiceNumber    = $this->generateNextInvoiceNumber();
-            $remisePercentage = $validated['remise_percentage'] ?? 0;
-            $remiseAmount     = $validated['remise_amount']     ?? 0;
-
-            $invoice = Invoice::create([
-                'invoice_number'    => $invoiceNumber,
-                'type'              => 'manual',
-                'client_id'         => $clientId,
-                'client_name'       => $clientName,
-                'client_address'    => $validated['client_address'] ?? null,
-                'client_phone'      => $validated['client_phone']   ?? null,
-                'client_ice'        => $clientIce,
-                'invoice_date'      => $validated['invoice_date'],
-                'payment_mode'      => $validated['payment_mode'],
-                'total_ttc'         => $validated['total_ttc'],
-                'tva_rate'          => 20,
-                'tva'               => $validated['tva_amount'],
-                'montant_ht'        => $validated['montant_ht'],
-                'remise_percentage' => $remisePercentage,
-                'remise_amount'     => $remiseAmount,
-                'amount_in_words'   => $this->numberToWords($validated['total_ttc']),
-                'created_by'        => Auth::id(),
+            InvoiceItem::create([
+                'invoice_id'  => $invoice->id,
+                'product_id'  => $item['product_id'],
+                'description' => $product->name,
+                'quantity'    => $item['quantity'],
+                'unit_price'  => $item['unit_price'],
+                'total'       => $item['quantity'] * $item['unit_price'],
             ]);
-
-            foreach ($validated['items'] as $item) {
-                $product = Product::find($item['product_id']);
-                InvoiceItem::create([
-                    'invoice_id'  => $invoice->id,
-                    'product_id'  => $item['product_id'],
-                    'description' => $product->name,
-                    'quantity'    => $item['quantity'],
-                    'unit_price'  => $item['unit_price'],
-                    'total'       => $item['quantity'] * $item['unit_price'],
-                ]);
-            }
-
-            DB::commit();
-
-            return redirect()->route('invoices.index')
-                ->with('success', 'Facture manuelle créée avec succès!');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->withInput()->with('error', 'Erreur: ' . $e->getMessage());
         }
+
+        DB::commit();
+
+        return redirect()->route('invoices.index')
+            ->with('success', 'Facture créée');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return back()->withInput()->with('error', $e->getMessage());
     }
+}
 
-    public function update(Request $request, $id)
-    {
-        $invoice = Invoice::findOrFail($id);
 
-        $validated = $request->validate([
-            'invoice_number'     => 'required|string|max:50',
-            'invoice_date'       => 'required|date',
-            'payment_mode'       => 'required|in:CH,ESP,LCN',
+public function update(Request $request, $id)
+{
+    $invoice = Invoice::findOrFail($id);
 
-            // ── Client ──
-            'client_id'          => 'nullable|exists:clients,id',
-            'client_name'        => 'nullable|string|max:255',
-            'client_address'     => 'nullable|string|max:500',
-            'client_phone'       => 'nullable|string|max:50',
-            'client_ice'         => 'nullable|string|max:15',
+    $validated = $request->validate([
+        'invoice_number'     => 'required|string|max:50',
+        'invoice_date'       => 'required|date',
+        'payment_mode'       => 'required|in:CH,ESP,LCN',
 
-            // ── Montants ──
-            'remise_percentage'  => 'nullable|numeric|min:0|max:100',
-            'montant_ht'         => 'required|numeric|min:0',
-            'tva_amount'         => 'required|numeric|min:0',
-            'total_ttc'          => 'required|numeric|min:0',
-            'remise_amount'      => 'nullable|numeric|min:0',
+        'client_id'          => 'nullable|exists:clients,id',
+        'client_name'        => 'nullable|string|max:255',
+        'client_address'     => 'nullable|string|max:500',
+        'client_phone'       => 'nullable|string|max:50',
+        'client_ice'         => 'nullable|string|max:15',
 
-            // ── Articles ──
-            'items'              => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity'   => 'required|integer|min:1',
-            'items.*.unit_price' => 'required|numeric|min:0',
+        'remise_percentage'  => 'nullable|numeric|min:0|max:100',
+
+        'items'              => 'required|array|min:1',
+        'items.*.product_id' => 'required|exists:products,id',
+        'items.*.quantity'   => 'required|integer|min:1',
+        'items.*.unit_price' => 'required|numeric|min:0',
+    ]);
+
+    DB::beginTransaction();
+
+    try {
+        $clientId   = $validated['client_id'] ?? null;
+        $clientName = $validated['client_name'] ?? null;
+        $clientIce  = $validated['client_ice'] ?? null;
+
+        if ($clientId) {
+            $client = Client::findOrFail($clientId);
+            $clientName = $client->nom;
+            $clientIce  = $client->ice;
+            $validated['client_phone']   = $client->telephone;
+            $validated['client_address'] = $client->adresse;
+        }
+
+        // ===== CALCULS =====
+        $montant_ht = 0;
+
+        foreach ($validated['items'] as $item) {
+            $montant_ht += $item['quantity'] * $item['unit_price'];
+        }
+
+        $remisePercentage = (float) ($validated['remise_percentage'] ?? 0);
+        $remiseAmount     = round($montant_ht * $remisePercentage / 100, 2);
+        $ht_net           = round($montant_ht - $remiseAmount, 2);
+        $tva              = round($ht_net * 0.20, 2);
+        $total_ttc        = round($ht_net + $tva, 2);
+
+        $invoice->update([
+            'invoice_number'    => $validated['invoice_number'],
+            'invoice_date'      => $validated['invoice_date'],
+            'payment_mode'      => $validated['payment_mode'],
+            'client_id'         => $clientId,
+            'client_name'       => $clientName,
+            'client_address'    => $validated['client_address'] ?? null,
+            'client_phone'      => $validated['client_phone'] ?? null,
+            'client_ice'        => $clientIce,
+
+            'montant_ht'        => $montant_ht,
+            'remise_percentage' => $remisePercentage,
+            'remise_amount'     => $remiseAmount,
+            'tva_rate'          => 20,
+            'tva'               => $tva,
+            'total_ttc'         => $total_ttc,
+
+            'amount_in_words'   => $this->numberToWords($total_ttc),
+            'updated_by'        => Auth::id(),
         ]);
 
-        DB::beginTransaction();
+        $invoice->items()->delete();
 
-        try {
-            $clientId   = $validated['client_id'] ?? null;
-            $clientName = $validated['client_name'] ?? null;
-            $clientIce  = $validated['client_ice']  ?? null;
+        foreach ($validated['items'] as $item) {
+            $product = Product::find($item['product_id']);
 
-            if ($clientId) {
-                $client     = Client::findOrFail($clientId);
-                $clientName = $client->nom;
-                $clientIce  = $client->ice;
-                $validated['client_phone']   = $client->telephone;
-                $validated['client_address'] = $client->adresse;
-            }
-
-            $invoice->update([
-                'invoice_number'    => $validated['invoice_number'],
-                'invoice_date'      => $validated['invoice_date'],
-                'payment_mode'      => $validated['payment_mode'],
-                'client_id'         => $clientId,
-                'client_name'       => $clientName,
-                'client_address'    => $validated['client_address'] ?? null,
-                'client_phone'      => $validated['client_phone']   ?? null,
-                'client_ice'        => $clientIce,
-                'total_ttc'         => $validated['total_ttc'],
-                'tva_rate'          => 20,
-                'tva'               => $validated['tva_amount'],
-                'montant_ht'        => $validated['montant_ht'],
-                'remise_percentage' => $validated['remise_percentage'] ?? 0,
-                'remise_amount'     => $validated['remise_amount']     ?? 0,
-                'amount_in_words'   => $this->numberToWords($validated['total_ttc']),
-                'updated_by'        => Auth::id(),
+            InvoiceItem::create([
+                'invoice_id'  => $invoice->id,
+                'product_id'  => $item['product_id'],
+                'description' => $product->name,
+                'quantity'    => $item['quantity'],
+                'unit_price'  => $item['unit_price'],
+                'total'       => $item['quantity'] * $item['unit_price'],
             ]);
-
-            $invoice->items()->delete();
-
-            foreach ($validated['items'] as $item) {
-                $product = Product::find($item['product_id']);
-                InvoiceItem::create([
-                    'invoice_id'  => $invoice->id,
-                    'product_id'  => $item['product_id'],
-                    'description' => $product->name,
-                    'quantity'    => $item['quantity'],
-                    'unit_price'  => $item['unit_price'],
-                    'total'       => $item['quantity'] * $item['unit_price'],
-                ]);
-            }
-
-            DB::commit();
-
-            return redirect()->route('invoices.index')
-                ->with('success', 'Facture modifiée avec succès!');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->withInput()->with('error', 'Erreur: ' . $e->getMessage());
         }
+
+        DB::commit();
+
+        return redirect()->route('invoices.index')
+            ->with('success', 'Facture modifiée');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return back()->withInput()->with('error', $e->getMessage());
     }
+}
+
 
     // ── Méthodes utilitaires ─────────────────────────────────────────────────
 
