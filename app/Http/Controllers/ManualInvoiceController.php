@@ -209,43 +209,52 @@ class ManualInvoiceController extends Controller
     }
 
     private function calculateInvoiceTotals(array $items, float $remisePercentage = 0): array
-    {
-        $totalTtcBrut = 0;
-        $itemsCalculated = [];
+{
+    $totalTtcBrut = 0;
+    $itemsCalculated = [];
 
-        foreach ($items as $item) {
-            $quantity = (int) $item['quantity'];
-            $unitPriceTtc = round((float) $item['unit_price'], 2);
-            $lineTotalTtc = round($quantity * $unitPriceTtc, 2);
+    foreach ($items as $item) {
+        $quantity = (int) $item['quantity'];
+        $unitPriceTtc = round((float) $item['unit_price'], 2);
+        $lineTotalTtc = round($quantity * $unitPriceTtc, 2);
 
-            $totalTtcBrut += $lineTotalTtc;
+        $totalTtcBrut += $lineTotalTtc;
 
-            $itemsCalculated[] = [
-                'product_id'      => $item['product_id'],
-                'quantity'        => $quantity,
-                'unit_price_ttc'  => $unitPriceTtc,
-                'total_ttc'       => $lineTotalTtc,
-            ];
-        }
-
-        $totalTtcBrut = round($totalTtcBrut, 2);
-        $remisePercentage = (float) $remisePercentage;
-
-        $remiseAmount = round($totalTtcBrut * $remisePercentage / 100, 2);
-        $totalTtc = round($totalTtcBrut - $remiseAmount, 2);
-
-        $montantHt = round($totalTtc / 1.20, 2);
-        $tva = round($totalTtc - $montantHt, 2);
-
-        return [
-            'items'              => $itemsCalculated,
-            'montant_ht'         => $montantHt,
-            'remise_percentage'  => $remisePercentage,
-            'remise_amount'      => $remiseAmount,
-            'tva'                => $tva,
-            'total_ttc'          => $totalTtc,
+        $itemsCalculated[] = [
+            'product_id'      => $item['product_id'],
+            'quantity'        => $quantity,
+            'unit_price_ttc'  => $unitPriceTtc,
+            'total_ttc'       => $lineTotalTtc,
         ];
     }
+
+    $totalTtcBrut = round($totalTtcBrut, 2);
+
+    // TTC -> HT brut
+    $montantHtBrut = round($totalTtcBrut / 1.20, 2);
+
+    // Remise sur HT
+    $remisePercentage = (float) $remisePercentage;
+    $remiseAmount = round($montantHtBrut * $remisePercentage / 100, 2);
+
+    // HT net après remise
+    $montantHtNet = round($montantHtBrut - $remiseAmount, 2);
+
+    // TVA sur HT net
+    $tva = round($montantHtNet * 0.20, 2);
+
+    // TTC final
+    $totalTtc = round($montantHtNet + $tva, 2);
+
+    return [
+        'items'              => $itemsCalculated,
+        'montant_ht'         => $montantHtNet,
+        'remise_percentage'  => $remisePercentage,
+        'remise_amount'      => $remiseAmount,
+        'tva'                => $tva,
+        'total_ttc'          => $totalTtc,
+    ];
+}
 
     private function generateNextInvoiceNumber(): string
     {
