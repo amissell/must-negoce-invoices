@@ -67,7 +67,10 @@ class ManualInvoiceController extends Controller
                 $clientId = $newClient->id;
             }
 
-            $calculation = $this->calculateInvoiceTotals($validated['items'], $validated['remise_percentage'] ?? 0);
+            $calculation = $this->calculateInvoiceTotals(
+                $validated['items'],
+                $validated['remise_percentage'] ?? 0
+            );
 
             $invoice = Invoice::create([
                 'invoice_number'    => $this->generateNextInvoiceNumber(),
@@ -99,8 +102,8 @@ class ManualInvoiceController extends Controller
                     'product_id'  => $item['product_id'],
                     'description' => $product->name,
                     'quantity'    => $item['quantity'],
-                    'unit_price'  => $item['unit_price_ht'],
-                    'total'       => $item['total_ht'],
+                    'unit_price'  => $item['unit_price_ttc'],
+                    'total'       => $item['total_ttc'],
                 ]);
             }
 
@@ -111,7 +114,6 @@ class ManualInvoiceController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-
             return back()->withInput()->with('error', $e->getMessage());
         }
     }
@@ -154,7 +156,10 @@ class ManualInvoiceController extends Controller
                 $validated['client_address'] = $client->adresse;
             }
 
-            $calculation = $this->calculateInvoiceTotals($validated['items'], $validated['remise_percentage'] ?? 0);
+            $calculation = $this->calculateInvoiceTotals(
+                $validated['items'],
+                $validated['remise_percentage'] ?? 0
+            );
 
             $invoice->update([
                 'invoice_number'    => $validated['invoice_number'],
@@ -187,8 +192,8 @@ class ManualInvoiceController extends Controller
                     'product_id'  => $item['product_id'],
                     'description' => $product->name,
                     'quantity'    => $item['quantity'],
-                    'unit_price'  => $item['unit_price_ht'],
-                    'total'       => $item['total_ht'],
+                    'unit_price'  => $item['unit_price_ttc'],
+                    'total'       => $item['total_ttc'],
                 ]);
             }
 
@@ -199,49 +204,44 @@ class ManualInvoiceController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-
             return back()->withInput()->with('error', $e->getMessage());
         }
     }
 
     private function calculateInvoiceTotals(array $items, float $remisePercentage = 0): array
     {
-        $montantHt = 0;
+        $totalTtcBrut = 0;
         $itemsCalculated = [];
 
         foreach ($items as $item) {
             $quantity = (int) $item['quantity'];
+            $unitPriceTtc = round((float) $item['unit_price'], 2);
+            $lineTotalTtc = round($quantity * $unitPriceTtc, 2);
 
-            // Prix reçu depuis le formulaire = TTC
-            $unitPriceTtc = (float) $item['unit_price'];
-
-            // Conversion TTC → HT
-            $unitPriceHt = round($unitPriceTtc / 1.20, 2);
-            $lineTotalHt = round($unitPriceHt * $quantity, 2);
-
-            $montantHt += $lineTotalHt;
+            $totalTtcBrut += $lineTotalTtc;
 
             $itemsCalculated[] = [
-                'product_id'    => $item['product_id'],
-                'quantity'      => $quantity,
-                'unit_price_ht' => $unitPriceHt,
-                'total_ht'      => $lineTotalHt,
+                'product_id'      => $item['product_id'],
+                'quantity'        => $quantity,
+                'unit_price_ttc'  => $unitPriceTtc,
+                'total_ttc'       => $lineTotalTtc,
             ];
         }
 
-        $montantHt = round($montantHt, 2);
+        $totalTtcBrut = round($totalTtcBrut, 2);
         $remisePercentage = (float) $remisePercentage;
-        $remiseAmount = round($montantHt * $remisePercentage / 100, 2);
-        $htNet = round($montantHt - $remiseAmount, 2);
-        $tva = round($htNet * 0.20, 2);
-        $totalTtc = round($htNet + $tva, 2);
+
+        $remiseAmount = round($totalTtcBrut * $remisePercentage / 100, 2);
+        $totalTtc = round($totalTtcBrut - $remiseAmount, 2);
+
+        $montantHt = round($totalTtc / 1.20, 2);
+        $tva = round($totalTtc - $montantHt, 2);
 
         return [
             'items'              => $itemsCalculated,
             'montant_ht'         => $montantHt,
             'remise_percentage'  => $remisePercentage,
             'remise_amount'      => $remiseAmount,
-            'ht_net'             => $htNet,
             'tva'                => $tva,
             'total_ttc'          => $totalTtc,
         ];

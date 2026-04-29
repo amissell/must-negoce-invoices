@@ -393,8 +393,8 @@
             <tr>
                 <th>Description</th>
                 <th>Qté</th>
-                <th>Prix unitaire HT</th>
-                <th>Total HT</th>
+                <th>Prix unitaire TTC</th>
+                <th>Total TTC</th>
             </tr>
         </thead>
         <tbody>
@@ -421,13 +421,6 @@
                     <tr class="remise-row">
                         <td class="label">Remise ({{ $invoice->remise_percentage }}%)</td>
                         <td class="amount">- {{ number_format($invoice->remise_amount, 2) }} MAD</td>
-                    </tr>
-
-                    <tr class="row-ht">
-                        <td class="label">MONTANT HT NET</td>
-                        <td class="amount">
-                            {{ number_format($invoice->montant_ht - $invoice->remise_amount, 2) }} MAD
-                        </td>
                     </tr>
                 @endif
 
