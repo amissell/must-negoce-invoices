@@ -415,16 +415,25 @@
     <div class="totals-table">
         <table>
             @php
-                $ttcBrut = $invoice->items->sum(function($item) {
-                    return $item->quantity * $item->unit_price;
-                });
+    $ttcBrut = $invoice->items->sum(function($item) {
+        return $item->quantity * $item->unit_price;
+    });
 
-                $ht = round($ttcBrut / 1.20, 2);
-                $tva = round($ht * 0.20, 2);
+    // ✅ HT Brut
+    $ht = round($ttcBrut / 1.20, 2);
 
-                $remise = round($invoice->remise_amount ?? 0, 2);
-                $ttcNet = round($ttcBrut - $remise, 2);
-            @endphp
+    // ✅ Remise من HT
+    $remise = round($invoice->remise_amount ?? 0, 2);
+
+    // ✅ HT NET
+    $htNet = round($ht - $remise, 2);
+
+    // ✅ TVA من HT NET
+    $tva = round($htNet * 0.20, 2);
+
+    // ✅ TTC NET النهائي
+    $ttcNet = round($htNet + $tva, 2);
+@endphp
 
             @if($remise > 0)
 

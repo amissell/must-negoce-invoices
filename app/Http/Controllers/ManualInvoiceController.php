@@ -230,21 +230,29 @@ class ManualInvoiceController extends Controller
 
     $totalTtcBrut = round($totalTtcBrut, 2);
 
-    $montantHt = round($totalTtcBrut / 1.20, 2);
-    $tva = round($montantHt * 0.20, 2);
+    // ✅ HT brut
+    $montantHtBrut = round($totalTtcBrut / 1.20, 2);
 
+    // ✅ remise mn HT
     $remisePercentage = (float) $remisePercentage;
-    $remiseAmount = round($totalTtcBrut * $remisePercentage / 100, 2);
+    $remiseAmount = round($montantHtBrut * $remisePercentage / 100, 2);
 
-    $totalTtcNet = round($totalTtcBrut - $remiseAmount, 2);
+    // ✅ HT NET
+    $montantHtNet = round($montantHtBrut - $remiseAmount, 2);
+
+    // ✅ TVA mn HT NET
+    $tva = round($montantHtNet * 0.20, 2);
+
+    // ✅ TTC NET
+    $totalTtc = round($montantHtNet + $tva, 2);
 
     return [
         'items'              => $itemsCalculated,
-        'montant_ht'         => $montantHt,
+        'montant_ht'         => $montantHtNet,
         'remise_percentage'  => $remisePercentage,
         'remise_amount'      => $remiseAmount,
         'tva'                => $tva,
-        'total_ttc'          => $totalTtcNet,
+        'total_ttc'          => $totalTtc,
     ];
 }
     private function generateNextInvoiceNumber(): string
