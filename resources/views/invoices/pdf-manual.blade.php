@@ -419,19 +419,14 @@
         return $item->quantity * $item->unit_price;
     });
 
-    // ✅ HT Brut
-    $ht = round($ttcBrut / 1.20, 2);
+    $htBrut = round($ttcBrut / 1.20, 2);
 
-    // ✅ Remise من HT
     $remise = round($invoice->remise_amount ?? 0, 2);
 
-    // ✅ HT NET
-    $htNet = round($ht - $remise, 2);
+    $htNet = round($htBrut - $remise, 2);
 
-    // ✅ TVA من HT NET
     $tva = round($htNet * 0.20, 2);
 
-    // ✅ TTC NET النهائي
     $ttcNet = round($htNet + $tva, 2);
 @endphp
 
@@ -444,7 +439,7 @@
 
                 <tr class="row-ht">
                     <td class="label">MONTANT HT</td>
-                    <td class="amount">{{ number_format($ht, 2) }} MAD</td>
+                    <td class="amount">{{ number_format($htBrut, 2) }} MAD</td>
                 </tr>
 
                 <tr class="remise-row">
@@ -466,7 +461,7 @@
 
                 <tr class="row-ht">
                     <td class="label">MONTANT HT</td>
-                    <td class="amount">{{ number_format($ht, 2) }} MAD</td>
+                    <td class="amount">{{ number_format($htBrut, 2) }} MAD</td>
                 </tr>
 
                 <tr class="row-tva">
