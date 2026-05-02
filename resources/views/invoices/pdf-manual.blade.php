@@ -419,11 +419,11 @@
                     return $item->quantity * $item->unit_price;
                 });
 
-                $ht = $ttcBrut / 1.20;
-                $tva = $ht * 0.20;
+                $ht = round($ttcBrut / 1.20, 2);
+                $tva = round($ht * 0.20, 2);
 
-                $remise = $invoice->remise_amount ?? 0;
-                $ttcNet = $ttcBrut - $remise;
+                $remise = round($invoice->remise_amount ?? 0, 2);
+                $ttcNet = round($ttcBrut - $remise, 2);
             @endphp
 
             @if($remise > 0)
@@ -439,7 +439,7 @@
                 </tr>
 
                 <tr class="remise-row">
-                    <td class="label">Remise ({{ $invoice->remise_percentage }}%)</td>
+                    <td class="label">Remise ({{ number_format($invoice->remise_percentage, 2) }}%)</td>
                     <td class="amount">- {{ number_format($remise, 2) }} MAD</td>
                 </tr>
 
@@ -464,7 +464,6 @@
                     <td class="label">TVA (20%)</td>
                     <td class="amount">{{ number_format($tva, 2) }} MAD</td>
                 </tr>
-
 
                 <tr class="total-ttc">
                     <td class="label">TOTAL TTC</td>

@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Client;
@@ -208,6 +207,7 @@ class ManualInvoiceController extends Controller
         }
     }
 
+
     private function calculateInvoiceTotals(array $items, float $remisePercentage = 0): array
 {
     $totalTtcBrut = 0;
@@ -230,32 +230,23 @@ class ManualInvoiceController extends Controller
 
     $totalTtcBrut = round($totalTtcBrut, 2);
 
-    // TTC -> HT brut
-    $montantHtBrut = round($totalTtcBrut / 1.20, 2);
+    $montantHt = round($totalTtcBrut / 1.20, 2);
+    $tva = round($montantHt * 0.20, 2);
 
-    // Remise sur HT
     $remisePercentage = (float) $remisePercentage;
-    $remiseAmount = round($montantHtBrut * $remisePercentage / 100, 2);
+    $remiseAmount = round($totalTtcBrut * $remisePercentage / 100, 2);
 
-    // HT net après remise
-    $montantHtNet = round($montantHtBrut - $remiseAmount, 2);
-
-    // TVA sur HT net
-    $tva = round($montantHtNet * 0.20, 2);
-
-    // TTC final
-    $totalTtc = round($montantHtNet + $tva, 2);
+    $totalTtcNet = round($totalTtcBrut - $remiseAmount, 2);
 
     return [
         'items'              => $itemsCalculated,
-        'montant_ht'         => $montantHtNet,
+        'montant_ht'         => $montantHt,
         'remise_percentage'  => $remisePercentage,
         'remise_amount'      => $remiseAmount,
         'tva'                => $tva,
-        'total_ttc'          => $totalTtc,
+        'total_ttc'          => $totalTtcNet,
     ];
 }
-
     private function generateNextInvoiceNumber(): string
     {
         $year = date('y');
