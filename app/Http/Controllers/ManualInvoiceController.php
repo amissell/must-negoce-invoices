@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Client;
@@ -208,6 +207,7 @@ class ManualInvoiceController extends Controller
         }
     }
 
+
     private function calculateInvoiceTotals(array $items, float $remisePercentage = 0): array
 {
     $totalTtcBrut = 0;
@@ -230,20 +230,20 @@ class ManualInvoiceController extends Controller
 
     $totalTtcBrut = round($totalTtcBrut, 2);
 
-    // TTC -> HT brut
+    // ✅ HT brut
     $montantHtBrut = round($totalTtcBrut / 1.20, 2);
 
-    // Remise sur HT
+    // ✅ remise mn HT
     $remisePercentage = (float) $remisePercentage;
     $remiseAmount = round($montantHtBrut * $remisePercentage / 100, 2);
 
-    // HT net après remise
+    // ✅ HT NET
     $montantHtNet = round($montantHtBrut - $remiseAmount, 2);
 
-    // TVA sur HT net
+    // ✅ TVA mn HT NET
     $tva = round($montantHtNet * 0.20, 2);
 
-    // TTC final
+    // ✅ TTC NET
     $totalTtc = round($montantHtNet + $tva, 2);
 
     return [
@@ -255,7 +255,6 @@ class ManualInvoiceController extends Controller
         'total_ttc'          => $totalTtc,
     ];
 }
-
     private function generateNextInvoiceNumber(): string
     {
         $year = date('y');

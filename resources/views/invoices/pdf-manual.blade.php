@@ -409,34 +409,76 @@
         </tbody>
     </table>
 
-    <div class="totals clearfix">
-        <div class="totals-table">
-            <table>
-                <tr class="row-ht">
-                    <td class="label">MONTANT HT</td>
-                    <td class="amount">{{ number_format($invoice->montant_ht, 2) }} MAD</td>
+
+    <!-- Totals -->
+<div class="totals clearfix">
+    <div class="totals-table">
+        <table>
+            @php
+    $ttcBrut = $invoice->items->sum(function($item) {
+        return $item->quantity * $item->unit_price;
+    });
+
+    $htBrut = round($ttcBrut / 1.20, 2);
+
+    $remise = round($invoice->remise_amount ?? 0, 2);
+
+    $htNet = round($htBrut - $remise, 2);
+
+    $tva = round($htNet * 0.20, 2);
+
+    $ttcNet = round($htNet + $tva, 2);
+@endphp
+
+            @if($remise > 0)
+
+                <tr class="total-ttc">
+                    <td class="label">TTC BRUT</td>
+                    <td class="amount">{{ number_format($ttcBrut, 2) }} MAD</td>
                 </tr>
 
-                @if(isset($invoice->remise_percentage) && $invoice->remise_percentage > 0)
-                    <tr class="remise-row">
-                        <td class="label">Remise ({{ $invoice->remise_percentage }}%)</td>
-                        <td class="amount">- {{ number_format($invoice->remise_amount, 2) }} MAD</td>
-                    </tr>
-                @endif
+                <tr class="row-ht">
+                    <td class="label">MONTANT HT</td>
+                    <td class="amount">{{ number_format($htBrut, 2) }} MAD</td>
+                </tr>
+
+                <tr class="remise-row">
+                    <td class="label">Remise ({{ number_format($invoice->remise_percentage, 2) }}%)</td>
+                    <td class="amount">- {{ number_format($remise, 2) }} MAD</td>
+                </tr>
 
                 <tr class="row-tva">
-                    <td class="label">TVA ({{ $invoice->tva_rate ?? 20 }}%)</td>
-                    <td class="amount">{{ number_format($invoice->tva, 2) }} MAD</td>
+                    <td class="label">TVA (20%)</td>
+                    <td class="amount">{{ number_format($tva, 2) }} MAD</td>
+                </tr>
+
+                <tr class="total-ttc">
+                    <td class="label">TTC NET</td>
+                    <td class="amount">{{ number_format($ttcNet, 2) }} MAD</td>
+                </tr>
+
+            @else
+
+                <tr class="row-ht">
+                    <td class="label">MONTANT HT</td>
+                    <td class="amount">{{ number_format($htBrut, 2) }} MAD</td>
+                </tr>
+
+                <tr class="row-tva">
+                    <td class="label">TVA (20%)</td>
+                    <td class="amount">{{ number_format($tva, 2) }} MAD</td>
                 </tr>
 
                 <tr class="total-ttc">
                     <td class="label">TOTAL TTC</td>
-                    <td class="amount">{{ number_format($invoice->total_ttc, 2) }} MAD</td>
+                    <td class="amount">{{ number_format($ttcBrut, 2) }} MAD</td>
                 </tr>
-            </table>
-        </div>
-    </div>
 
+            @endif
+        </table>
+    </div>
+</div>
+    <!-- Amount in Words -->
     <div class="amount-words">
         <strong>Arrêter la présente facture à la somme :</strong> {{ strtoupper($amountInWords) }}
     </div>
