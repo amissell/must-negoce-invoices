@@ -429,25 +429,30 @@ document.addEventListener('DOMContentLoaded', function () {
         calculateGrandTotal();
     }
 
-    function calculateGrandTotal() {
-        let totalBrut = 0;
-        document.querySelectorAll('.item-total').forEach(s => totalBrut += parseFloat(s.textContent) || 0);
-        const remisePct    = parseFloat(remiseInput.value) || 0;
-        const remiseAmount = totalBrut * (remisePct / 100);
-        const totalTTC     = totalBrut - remiseAmount;
-        const montantHT    = totalTTC / (1 + TVA_RATE);
-        const tva          = totalTTC - montantHT;
 
-        document.getElementById('totalBrut').textContent     = totalBrut.toFixed(2)    + ' MAD';
-        document.getElementById('montantRemise').textContent = '- ' + remiseAmount.toFixed(2) + ' MAD';
-        document.getElementById('totalTTC').textContent      = totalTTC.toFixed(2)     + ' MAD';
-        document.getElementById('tvaAmount').textContent     = tva.toFixed(2)          + ' MAD';
-        document.getElementById('montantHT').textContent     = montantHT.toFixed(2)    + ' MAD';
-        document.getElementById('hiddenMontantHT').value     = montantHT.toFixed(2);
-        document.getElementById('hiddenTva').value           = tva.toFixed(2);
-        document.getElementById('hiddenTotalTTC').value      = totalTTC.toFixed(2);
-        document.getElementById('hiddenRemiseAmount').value  = remiseAmount.toFixed(2);
-    }
+    function calculateGrandTotal() {
+    let totalTtcBrut = 0;
+    document.querySelectorAll('.item-total').forEach(s => {
+        totalTtcBrut += parseFloat(s.textContent) || 0;
+    });
+
+    const htBrut       = totalTtcBrut / 1.20;
+    const remisePct    = parseFloat(remiseInput.value) || 0;
+    const remiseAmount = htBrut * (remisePct / 100);
+    const htNet        = htBrut - remiseAmount;
+    const tva          = htNet * TVA_RATE;
+    const totalTTC     = htNet + tva;
+
+    document.getElementById('totalBrut').textContent     = totalTtcBrut.toFixed(2) + ' MAD';
+    document.getElementById('montantRemise').textContent = '- ' + remiseAmount.toFixed(2) + ' MAD';
+    document.getElementById('totalTTC').textContent      = totalTTC.toFixed(2)     + ' MAD';
+    document.getElementById('tvaAmount').textContent     = tva.toFixed(2)          + ' MAD';
+    document.getElementById('montantHT').textContent     = htNet.toFixed(2)        + ' MAD';
+    document.getElementById('hiddenMontantHT').value     = htNet.toFixed(2);
+    document.getElementById('hiddenTva').value           = tva.toFixed(2);
+    document.getElementById('hiddenTotalTTC').value      = totalTTC.toFixed(2);
+    document.getElementById('hiddenRemiseAmount').value  = remiseAmount.toFixed(2);
+}
 
     function updateSubmitButton() {
         submitBtn.disabled = itemsBody.children.length === 0;
