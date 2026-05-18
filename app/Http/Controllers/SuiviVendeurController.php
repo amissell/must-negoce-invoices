@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use App\Models\ObjectifVendeur;
+use App\Models\Categorie;
 
 
 class SuiviVendeurController extends Controller
@@ -268,11 +269,24 @@ class SuiviVendeurController extends Controller
         'chartDataCA'
     ));
 }
-    public function create()
-    {
-        $vendeurs = SuiviVendeur::distinct()->orderBy('vendeur_nom')->pluck('vendeur_nom');
-        return view('suivi_vendeurs.create', compact('vendeurs'));
-    }
+
+
+public function create()
+{
+    $vendeurs = SuiviVendeur::distinct()
+        ->orderBy('vendeur_nom')
+        ->pluck('vendeur_nom');
+
+    $categories = Categorie::all();
+
+    return view(
+        'suivi_vendeurs.create',
+        compact(
+            'vendeurs',
+            'categories'
+        )
+    );
+}
 
     public function store(Request $request)
     {

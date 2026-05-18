@@ -536,16 +536,11 @@ function addCategorie() {
     row.innerHTML = `
         <select name="categories[${catIndex}][categorie]" class="field-input" style="flex:2">
             <option value="">— Choisir catégorie —</option>
-            <option value="COMPACT">COMPACT</option>
-            <option value="SPARK">SPARK</option>
-            <option value="SILLA">SILLA</option>
-            <option value="NETTOYAGE">NETTOYAGE</option>
-            <option value="ECO-SOLUTIONS">ECO-SOLUTIONS</option>
-            <option value="EL FEDDAN GROS">EL FEDDAN GROS</option>
-            <option value="COUCHES">COUCHES</option>
-            <option value="FEDDANE DETAIL">FEDDANE DETAIL</option>
-            <option value="FOOD">FOOD</option>
-            <option value="TCOSMÉTIQUE">TCOSMÉTIQUE</option>
+            @foreach($categories as $cat)
+            <option value="{{ $cat->id }}">
+                {{ $cat->nom }}
+                 </option>
+                 @endforeach
         </select>
         <input type="number" name="categories[${catIndex}][quantite]" placeholder="Qté"
                class="field-input" style="flex:1" min="0">
