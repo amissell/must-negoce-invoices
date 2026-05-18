@@ -16,46 +16,40 @@ class SuiviVendeurController extends Controller
 {
     $mois  = (int) $request->get('mois', now()->month);
     $annee = (int) $request->get('annee', now()->year);
-
     $aliasMap = [
-        'SOUFAINE'  => 'SOUFIANE',
-        'SOUFIANE'  => 'SOUFIANE',
-        'ABDEILLAH' => 'ABDILILAH',
-        'ABDELILAH' => 'ABDILILAH',
-        'ABDILILAH' => 'ABDILILAH',
-        'ABDELLAH'  => 'ABDELLAH',
-    ];
+    // Abdelilah variations → one final name
+    'ABDEILLAH' => 'ABDELILAH 0777939547',
+    'ABDELILAH' => 'ABDELILAH 0777939547',
+    'ABDILILAH' => 'ABDELILAH 0777939547',
+
+    // Hassan → full name
+    'HASSAN' => 'OUISSADEN HASSAN',
+    'OUISSADEN HASSAN' => 'OUISSADEN HASSAN',
+
+    // Soufiane variations
+    'SOUFAINE' => 'SOUFIANE',
+    'SOUFIANE' => 'SOUFIANE',
+
+    // Others
+    'ABDELLAH' => 'ABDELLAH',
+    'NOUREDINE' => 'NOUREDINE',
+];
 
     $normalizeName = function ($nom) use ($aliasMap) {
         $nom = trim(mb_strtoupper($nom));
         return $aliasMap[$nom] ?? $nom;
     };
 
-    $vendeursFixes = collect([
-        'NOUREDINE',
-        'ABDILILAH',
-        'HASSAN',
-        'ABDELLAH',
-        'SOUFIANE',
-    ])->map($normalizeName)->unique()->values()->toArray();
-
-    $vendeursSuivi = SuiviVendeur::whereMonth('date', $mois)
-        ->whereYear('date', $annee)
-        ->pluck('vendeur_nom')
+    $vendeurs = collect(
+    array_merge(
+        SuiviVendeur::pluck('vendeur_nom')->toArray(),
+        
+        ObjectifVendeur::pluck('vendeur_nom')->toArray()
+        )
+        )
         ->map($normalizeName)
         ->unique()
-        ->toArray();
-
-    $vendeursObjectifs = ObjectifVendeur::where('mois', $mois)
-        ->where('annee', $annee)
-        ->pluck('vendeur_nom')
-        ->map($normalizeName)
-        ->unique()
-        ->toArray();
-
-    $vendeurs = collect(array_merge($vendeursFixes, $vendeursSuivi, $vendeursObjectifs))
-        ->map($normalizeName)
-        ->unique()
+        ->sort()
         ->values()
         ->toArray();
 

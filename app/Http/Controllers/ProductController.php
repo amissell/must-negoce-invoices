@@ -26,6 +26,7 @@ class ProductController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            // 'reference' => 'nullable|string|max:100',
             'prix_ttc' => 'required|numeric|min:0.01',
             'unite' => 'required|string|max:50'
         ]);
