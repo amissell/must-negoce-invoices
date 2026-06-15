@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\SuiviVendeur;
-use App\Models\SuiviCategorie;
-use Illuminate\Http\Request;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
-use App\Models\ObjectifVendeur;
 use App\Models\Categorie;
+use App\Models\ObjectifVendeur;
+use App\Models\SuiviCategorie;
+use App\Models\SuiviVendeur;
+use App\Models\Vendeur;
+use Carbon\Carbon;
+use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 
 class SuiviVendeurController extends Controller
@@ -493,39 +497,192 @@ public function create()
 }
 
 
-public function comparaison(Request $request)
-{
-    $mois1 = $request->get('mois1', Carbon::now()->month);
-    $annee1 = $request->get('annee1', Carbon::now()->year);
-    $mois2 = $request->get('mois2', Carbon::now()->subMonth()->month);
-    $annee2 = $request->get('annee2', Carbon::now()->subMonth()->year);
+    public function comparaison(Request $request)
+    {
+        $mois1 = $request->get('mois1', Carbon::now()->month);
+        $annee1 = $request->get('annee1', Carbon::now()->year);
+        $mois2 = $request->get('mois2', Carbon::now()->subMonth()->month);
+        $annee2 = $request->get('annee2', Carbon::now()->subMonth()->year);
 
-    $getData = function ($annee, $mois) {
-        $lignes = SuiviVendeur::parMois($annee, $mois)->where('jour_repos', 0)->get();
-        return [
-            'ca' => $lignes->sum('chiffre'),
-            'encaisse' => $lignes->sum('total_paye'),
-            'reste' => $lignes->sum('chiffre') - $lignes->sum('total_paye'),
-            'bl' => $lignes->sum('bl'),
-            'drops' => $lignes->sum('bl') > 0 ? round($lignes->sum('chiffre') / $lignes->sum('bl'), 2) : 0,
-            'par_vendeur' => $lignes->groupBy('vendeur_nom')->map(fn($e) => [
-                'ca' => $e->sum('chiffre'),
-                'encaisse' => $e->sum('total_paye'),
-                'bl' => $e->sum('bl'),
-            ]),
+        $getData = function ($annee, $mois) {
+            $lignes = SuiviVendeur::parMois($annee, $mois)->where('jour_repos', 0)->get();
+            return [
+                'ca' => $lignes->sum('chiffre'),
+                'encaisse' => $lignes->sum('total_paye'),
+                'reste' => $lignes->sum('chiffre') - $lignes->sum('total_paye'),
+                'bl' => $lignes->sum('bl'),
+                'drops' => $lignes->sum('bl') > 0 ? round($lignes->sum('chiffre') / $lignes->sum('bl'), 2) : 0,
+                'par_vendeur' => $lignes->groupBy('vendeur_nom')->map(fn($e) => [
+                    'ca' => $e->sum('chiffre'),
+                    'encaisse' => $e->sum('total_paye'),
+                    'bl' => $e->sum('bl'),
+                ]),
+            ];
+        };
+
+        $periode1 = $getData($annee1, $mois1);
+        $periode2 = $getData($annee2, $mois2);
+
+        $evolution = [
+            'ca' => $periode2['ca'] > 0 ? round((($periode1['ca'] - $periode2['ca']) / $periode2['ca']) * 100, 1) : 0,
+            'encaisse' => $periode2['encaisse'] > 0 ? round((($periode1['encaisse'] - $periode2['encaisse']) / $periode2['encaisse']) * 100, 1) : 0,
+            'drops' => $periode2['drops'] > 0 ? round((($periode1['drops'] - $periode2['drops']) / $periode2['drops']) * 100, 1) : 0,
         ];
-    };
 
-    $periode1 = $getData($annee1, $mois1);
-    $periode2 = $getData($annee2, $mois2);
+        return view('suivi_vendeurs.comparaison', compact('periode1', 'periode2', 'evolution', 'mois1', 'annee1', 'mois2', 'annee2'));
+    }
 
-    $evolution = [
-        'ca' => $periode2['ca'] > 0 ? round((($periode1['ca'] - $periode2['ca']) / $periode2['ca']) * 100, 1) : 0,
-        'encaisse' => $periode2['encaisse'] > 0 ? round((($periode1['encaisse'] - $periode2['encaisse']) / $periode2['encaisse']) * 100, 1) : 0,
-        'drops' => $periode2['drops'] > 0 ? round((($periode1['drops'] - $periode2['drops']) / $periode2['drops']) * 100, 1) : 0,
-    ];
 
-    return view('suivi_vendeurs.comparaison', compact('periode1', 'periode2', 'evolution', 'mois1', 'annee1', 'mois2', 'annee2'));
-}
+    public function importdata(Request $request)
+    {
+        $url = config('services.amevo.synchronisation_url', 'https://app.amevo.ma/must-negoce/public/synchronisation');
+
+        try {
+            $curlData = Http::timeout(30)->acceptJson()->get($url)->throw()->json();
+            $rows = $this->normalizeImportRows($curlData);
+
+            if ($rows->isEmpty()) {
+                return redirect()->route('suivi-vendeurs.index')
+                    ->with('error', "Aucune donnée trouvée pour aujourd'hui.");
+            }
+
+            $stats = DB::transaction(function () use ($rows) {
+                $stats = [
+                    'vendeurs' => 0,
+                    'lignes' => 0,
+                    'categories' => 0,
+                ];
+
+                foreach ($rows as $row) {
+                    $user = $row['User'] ?? $row['user'] ?? $row;
+                    $nom = trim((string) data_get($user, 'nom_complet', data_get($user, 'name', '')));
+
+                    if ($nom === '') {
+                        continue;
+                    }
+
+                    $amevoVendeurId = $this->stringOrNull(
+                        data_get($user, 'id')
+                        ?? data_get($user, 'user_id')
+                        ?? data_get($user, 'amevo_id')
+                    );
+
+                    if ($amevoVendeurId !== null) {
+                        Vendeur::updateOrCreate(
+                            ['amevo_id' => $amevoVendeurId],
+                            ['nom_complet' => $nom]
+                        );
+                        $stats['vendeurs']++;
+                    }
+
+                    $suivi = SuiviVendeur::updateOrCreate(
+                        [
+                            'date' => now()->toDateString(),
+                            'vendeur_id' => $amevoVendeurId,
+                            'vendeur_nom' => $nom,
+                        ],
+                        [
+                            'chiffre' => (float) data_get($user, 'chiffre', 0),
+                            'total_paye' => (float) data_get($user, 'total_paye', 0),
+                            'bl' => (int) data_get($user, 'total_bl', data_get($user, 'bl', 0)),
+                            'jour_repos' => false,
+                            'heure_debut' => null,
+                            'heure_fin' => null,
+                            'notes' => "Synchronisation automatique depuis l'application AMEVO",
+                            'created_by' => Auth::id(),
+                        ]
+                    );
+                    $stats['lignes']++;
+
+                    $remoteCategories = $this->extractRemoteCategories($row);
+                    if ($remoteCategories->isNotEmpty()) {
+                        $suivi->categories()->delete();
+                    }
+
+                    foreach ($remoteCategories as $remoteCategory) {
+                        $categoryName = trim((string) (
+                            data_get($remoteCategory, 'nom')
+                            ?? data_get($remoteCategory, 'categorie')
+                            ?? data_get($remoteCategory, 'name')
+                            ?? ''
+                        ));
+
+                        if ($categoryName === '') {
+                            continue;
+                        }
+
+                        $amevoCategorieId = $this->stringOrNull(
+                            data_get($remoteCategory, 'id')
+                            ?? data_get($remoteCategory, 'categorie_id')
+                            ?? data_get($remoteCategory, 'amevo_id')
+                        );
+
+                        if ($amevoCategorieId !== null) {
+                            Categorie::updateOrCreate(
+                                ['amevo_id' => $amevoCategorieId],
+                                ['nom' => $categoryName]
+                            );
+                        }
+
+                        $suivi->categories()->create([
+                            'categorie' => $categoryName,
+                            'categorie_id' => $amevoCategorieId,
+                            'vendeur_id' => $amevoVendeurId,
+                            'quantite' => (int) data_get($remoteCategory, 'quantite', data_get($remoteCategory, 'qte', 0)),
+                            'ca' => (float) data_get($remoteCategory, 'ca', data_get($remoteCategory, 'chiffre', 0)),
+                        ]);
+                        $stats['categories']++;
+                    }
+                }
+                return $stats;
+            });
+
+            return redirect()->route('suivi-vendeurs.index')
+                ->with('success', "Importation terminée : {$stats['lignes']} lignes, {$stats['vendeurs']} vendeurs, {$stats['categories']} catégories synchronisés.");
+        } catch (Exception $e) {
+            return redirect()->route('suivi-vendeurs.index')
+                ->with('error', 'Erreur importation AMEVO : ' . $e->getMessage());
+        }
+    }
+
+    private function normalizeImportRows(mixed $payload)
+    {
+        if (!is_array($payload)) {
+            return collect();
+        }
+        $rows = $payload['data'] ?? $payload['users'] ?? $payload['Users'] ?? $payload;
+
+        if (!is_array($rows)) {
+            return collect();
+        }
+
+        if (array_key_exists('User', $rows) || array_key_exists('user', $rows) || array_key_exists('nom_complet', $rows)) {
+            return collect([$rows]);
+        }
+
+        return collect($rows)->filter(fn($row) => is_array($row))->values();
+    }
+
+    private function extractRemoteCategories(array $row)
+    {
+        foreach (['Categories', 'categories', 'SuiviCategorie', 'suivi_categories', 'details'] as $key) {
+            $categories = data_get($row, $key);
+
+            if (is_array($categories)) {
+                return collect($categories)->filter(fn($category) => is_array($category))->values();
+            }
+        }
+
+        return collect();
+    }
+
+    private function stringOrNull(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return (string) $value;
+    }
 
 }

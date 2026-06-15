@@ -8,7 +8,8 @@ class SuiviVendeur extends Model
 {
     protected $fillable = [
         'vendeur_nom', 'date', 'chiffre', 'total_paye',
-        'heure_debut', 'heure_fin', 'bl', 'jour_repos', 'notes', 'created_by'
+        'heure_debut', 'heure_fin', 'bl', 'jour_repos', 'notes',
+        'vendeur_id', 'created_by',
     ];
 
     protected $casts = [

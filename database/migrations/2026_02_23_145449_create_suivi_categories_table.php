@@ -15,6 +15,8 @@ return new class extends Migration
         $table->id();
         $table->foreignId('suivi_vendeur_id')->constrained('suivi_vendeurs')->onDelete('cascade');
         $table->string('categorie');
+        $table->string('categorie_id')->nullable()->index(); // foreign key dila la table categories
+        $table->string('vendeur_id')->nullable()->index(); // foreign key dila la table vendeurs
         $table->integer('quantite')->default(0);
         $table->decimal('ca', 10, 2)->default(0);
         $table->timestamps();

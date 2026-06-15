@@ -18,6 +18,8 @@ return new class extends Migration
 
         $table->string('nom');
 
+        $table->string('amevo_id')->nullable()->unique(); // categorie_id li kin f amevo
+
         $table->timestamps();
 
     });

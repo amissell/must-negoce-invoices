@@ -22,6 +22,7 @@ return new class extends Migration
         $table->time('heure_fin')->nullable();
         $table->integer('bl')->default(0); 
         $table->text('notes')->nullable();
+        $table->string('vendeur_id')->nullable()->index(); // foreign key dila la table vendeurs
         $table->foreignId('created_by')->nullable()->constrained('users');
         $table->timestamps();
     });

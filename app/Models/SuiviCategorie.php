@@ -9,6 +9,8 @@ class SuiviCategorie extends Model
     protected $fillable = [
         'suivi_vendeur_id',
         'categorie',
+        'categorie_id',
+        'vendeur_id',
         'quantite',
         'ca',
     ];
