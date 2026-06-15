@@ -22,6 +22,7 @@ class ManualInvoiceController extends Controller
 
     public function store(Request $request)
     {
+        // dd($request->payment_mode);
         $validated = $request->validate([
             'client_id'          => 'nullable|exists:clients,id',
             'client_name'        => 'nullable|string|max:255',
@@ -31,7 +32,7 @@ class ManualInvoiceController extends Controller
             'save_as_client'     => 'nullable|in:0,1,true,false,on',
 
             'invoice_date'       => 'required|date',
-            'payment_mode'       => 'required|in:CH,ESP,LCN',
+            'payment_mode'       => 'required|in:CH,ESP,LCN,VIR',
             'remise_percentage'  => 'nullable|numeric|min:0|max:100',
 
             'items'              => 'required|array|min:1',
@@ -124,7 +125,7 @@ class ManualInvoiceController extends Controller
         $validated = $request->validate([
             'invoice_number'     => 'required|string|max:50',
             'invoice_date'       => 'required|date',
-            'payment_mode'       => 'required|in:CH,ESP,LCN',
+            'payment_mode'       => 'required|in:CH,ESP,LCN,VIR',
 
             'client_id'          => 'nullable|exists:clients,id',
             'client_name'        => 'nullable|string|max:255',
