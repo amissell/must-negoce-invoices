@@ -65,6 +65,7 @@
                         <option value="CH"  {{ old('payment_mode', $invoice->payment_mode) == 'CH'  ? 'selected' : '' }}>Chèque (CH)</option>
                         <option value="ESP" {{ old('payment_mode', $invoice->payment_mode) == 'ESP' ? 'selected' : '' }}>Espèces (ESP)</option>
                         <option value="LCN" {{ old('payment_mode', $invoice->payment_mode) == 'LCN' ? 'selected' : '' }}>(LCN)</option>
+                        <option value="VIR" {{ old('payment_mode') == 'VIR' ? 'selected' : '' }}>(VIR) Virement</option>
                     </select>
                 </div>
                 <div>
