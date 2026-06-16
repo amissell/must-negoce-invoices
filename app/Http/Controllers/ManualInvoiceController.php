@@ -21,9 +21,7 @@ class ManualInvoiceController extends Controller
     }
 
     public function store(Request $request)
-    {
-        // dd($request->payment_mode);
-        $validated = $request->validate([
+    {        $validated = $request->validate([
             'client_id'          => 'nullable|exists:clients,id',
             'client_name'        => 'nullable|string|max:255',
             'client_address'     => 'nullable|string|max:500',
