@@ -13,215 +13,195 @@
         .card-shadow { box-shadow: 0 4px 20px -4px rgba(30, 58, 95, 0.15); }
         .btn-primary { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); }
         .btn-primary:hover { background: linear-gradient(135deg, #2d5a87 0%, #3b7cb8 100%); }
+        #sidebar { scrollbar-width: thin; }
+        #sidebar::-webkit-scrollbar { width: 6px; }
+        #sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
     </style>
     @stack('styles')
 </head>
 <body class="bg-gray-50 min-h-screen">
 
-{{-- ══════════════════════════════════════════════════════════
-     NAVBAR
-══════════════════════════════════════════════════════════ --}}
-<nav class="gradient-header text-white sticky top-0 z-50">
-    <div class="max-w-full px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16">
+<div class="flex min-h-screen">
 
-            {{-- Logo --}}
-            <a href="{{ (auth()->user()->isAdmin() || auth()->user()->isAdv()) ? route('invoices.index') : route('suivi-vendeurs.index') }}"
-               class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                </div>
-                <div>
-                    <h1 class="text-lg font-bold">MUST NEGOCE</h1>
-                    <p class="text-xs text-white/60">Gestion de Factures</p>
-                </div>
-            </a>
+    {{-- ══════════════════════════════════════════════════════════
+         SIDEBAR
+    ══════════════════════════════════════════════════════════ --}}
+    <aside id="sidebar"
+           class="gradient-header text-white w-72 flex-shrink-0 fixed md:sticky top-0 h-screen z-50 overflow-y-auto
+                  transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
 
-            {{-- Navigation Links --}}
-            <div class="hidden md:flex items-center gap-1">
+        {{-- Logo --}}
+        <a href="{{ (auth()->user()->isAdmin() || auth()->user()->isAdv()) ? route('invoices.index') : route('suivi-vendeurs.index') }}"
+           class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
+            <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center shrink-0">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold leading-tight">MUST NEGOCE</h1>
+                <p class="text-xs text-white/60">Gestion de Factures</p>
+            </div>
+        </a>
 
-                {{-- ADMIN & ADV links --}}
-                @if(auth()->user()->isAdmin() || auth()->user()->isAdv())
+        {{-- Navigation Links --}}
+        <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+
+            {{-- ADMIN & ADV links --}}
+            @if(auth()->user()->isAdmin() || auth()->user()->isAdv())
+                <p class="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wider text-white/40">Gestion</p>
+
                 <a href="{{ route('invoices.index') }}"
-                   class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('invoices.index') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    📊 Tableau de Bord
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('invoices.index') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                    <span class="text-lg">📊</span> Tableau de Bord
                 </a>
                 <a href="{{ route('products.index') }}"
-                   class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('products.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    📦 Produits
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('products.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                    <span class="text-lg">📦</span> Produits
                 </a>
                 <a href="{{ route('clients.index') }}"
-                   class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('clients.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    👥 Clients
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('clients.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                    <span class="text-lg">👥</span> Clients
                 </a>
                 <a href="{{ route('invoices.manual.create') }}"
-                   class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('invoices.manual.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    ✏️ Facture Manuelle
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('invoices.manual.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                    <span class="text-lg">✏️</span> Facture Manuelle
                 </a>
-                @endif
-
-                @if(!auth()->user()->isAdv())
-                <a href="{{ route('suivi-vendeurs.index') }}"
-                   class="relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
-                   {{ request()->routeIs('suivi-vendeurs.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                    Suivi Vendeurs
-                    @if(isset($sidebarStats) && $sidebarStats->total_reste > 5000)
-                    <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold
-                    rounded-full flex items-center justify-center animate-pulse">!</span>
-                    @endif
-                </a>
-                @endif
-
-                @if(auth()->user()->isAdmin())
-                <a href="{{ route('statistics.daily') }}"
-                   class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('statistics.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    📈 Statistiques
-                </a>
-                <a href="{{ route('creances.index') }}"
-                   class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('creances.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    💰 Créances
-                </a>
-                <a href="{{ route('alertes.index') }}"
-                   class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('alertes.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    🔔 Alertes
-                </a>
-                <a href="{{ route('suivi-vendeurs.comparaison') }}"
-                   class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('suivi-vendeurs.comparaison') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    📊 Comparaison
-                </a>
-                <a href="{{ route('objectifs.index') }}" class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('objectifs.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    🎯 Objectifs
-                </a>
-
-                <a href="{{ route('admin.users') }}"
-                   class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('admin.users*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    👤 Utilisateurs
-                </a>
-                @endif
-
-                {{-- User Menu --}}
-                <div class="ml-2 relative group">
-                    <button class="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-white/10 transition-all">
-                        <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                            <span class="text-sm font-semibold">{{ substr(auth()->user()->name, 0, 1) }}</span>
-                        </div>
-                        <span class="text-sm font-medium">{{ auth()->user()->name }}</span>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </button>
-                    <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                        <div class="p-3 border-b border-gray-100">
-                            <p class="text-sm font-semibold text-gray-800">{{ auth()->user()->name }}</p>
-                            <p class="text-xs text-gray-500">{{ auth()->user()->email }}</p>
-                            <span class="inline-block mt-1 text-xs font-bold px-2 py-0.5 rounded-full
-                                {{ auth()->user()->isAdmin() ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700' }}">
-                                {{ ucfirst(auth()->user()->role) }}
-                            </span>
-                        </div>
-                        <form method="POST" action="{{ route('logout') }}" class="p-2">
-                            @csrf
-                            <button type="submit" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-all flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                                </svg>
-                                Déconnexion
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Mobile Menu Button --}}
-            <button id="mobileMenuBtn" class="md:hidden p-2 rounded-lg hover:bg-white/10">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                </svg>
-            </button>
-        </div>
-    </div>
-
-    {{-- Mobile Menu --}}
-    <div id="mobileMenu" class="hidden md:hidden border-t border-white/10">
-        <div class="px-4 py-3 space-y-2">
-            @if(auth()->user()->isAdmin() || auth()->user()->isAdv())
-            <a href="{{ route('invoices.index') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">📊 Tableau de Bord</a>
-            <a href="{{ route('products.index') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">📦 Produits</a>
-            <a href="{{ route('clients.index') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">👥 Clients</a>
-            <a href="{{ route('invoices.manual.create') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">✏️ Facture Manuelle</a>
             @endif
 
             @if(!auth()->user()->isAdv())
-            <a href="{{ route('suivi-vendeurs.index') }}" class="flex items-center justify-between px-4 py-2 rounded-lg hover:bg-white/10">
-                <span>👥 Suivi Vendeurs</span>
-                @if(isset($sidebarStats) && $sidebarStats->total_reste > 5000)
-                <span class="w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">!</span>
-                @endif
-            </a>
+                <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-white/40">Suivi</p>
+
+                <a href="{{ route('suivi-vendeurs.index') }}"
+                   class="relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all
+                   {{ request()->routeIs('suivi-vendeurs.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    <span class="flex-1">Suivi Vendeurs</span>
+                    @if(isset($sidebarStats) && $sidebarStats->total_reste > 5000)
+                    <span class="w-5 h-5 bg-red-500 text-white text-xs font-bold
+                    rounded-full flex items-center justify-center animate-pulse">!</span>
+                    @endif
+                </a>
             @endif
 
             @if(auth()->user()->isAdmin())
-            <a href="{{ route('statistics.daily') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">📈 Statistiques</a>
-            <a href="{{ route('creances.index') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">💰 Créances</a>
-            <a href="{{ route('alertes.index') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">🔔 Alertes</a>
-            <a href="{{ route('suivi-vendeurs.comparaison') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">📊 Comparaison</a>
-            <a href="{{ route('objectifs.index') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">🎯 Objectifs</a>
-            <a href="{{ route('admin.users') }}" class="block px-4 py-2 rounded-lg hover:bg-white/10">👤 Utilisateurs</a>
-            @endif
+                <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-white/40">Administration</p>
 
-            <div class="border-t border-white/10 pt-3 mt-3">
-                <div class="px-4 py-2 text-white/80 text-sm">
-                    <p class="font-semibold">{{ auth()->user()->name }}</p>
-                    <p class="text-xs text-white/60">{{ auth()->user()->email }}</p>
-                    <span class="text-xs font-bold {{ auth()->user()->isAdmin() ? 'text-indigo-300' : 'text-amber-300' }}">
+                <a href="{{ route('statistics.daily') }}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('statistics.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                    <span class="text-lg">📈</span> Statistiques
+                </a>
+                <a href="{{ route('creances.index') }}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('creances.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                    <span class="text-lg">💰</span> Créances
+                </a>
+                <a href="{{ route('alertes.index') }}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('alertes.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                    <span class="text-lg">🔔</span> Alertes
+                </a>
+                <a href="{{ route('suivi-vendeurs.comparaison') }}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('suivi-vendeurs.comparaison') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                    <span class="text-lg">📊</span> Comparaison
+                </a>
+                <a href="{{ route('objectifs.index') }}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('objectifs.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                    <span class="text-lg">🎯</span> Objectifs
+                </a>
+                <a href="{{ route('admin.users') }}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('admin.users*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                    <span class="text-lg">👤</span> Utilisateurs
+                </a>
+            @endif
+        </nav>
+
+        {{-- User Menu (bottom of sidebar) --}}
+        <div class="border-t border-white/10 p-3 relative group">
+            <button class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-all">
+                <div class="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center shrink-0">
+                    <span class="text-sm font-semibold">{{ substr(auth()->user()->name, 0, 1) }}</span>
+                </div>
+                <div class="flex-1 text-left min-w-0">
+                    <p class="text-sm font-medium truncate">{{ auth()->user()->name }}</p>
+                    <p class="text-xs text-white/50 truncate">{{ ucfirst(auth()->user()->role) }}</p>
+                </div>
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+                </svg>
+            </button>
+            <div class="absolute left-3 right-3 bottom-full mb-2 bg-white rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div class="p-3 border-b border-gray-100">
+                    <p class="text-sm font-semibold text-gray-800">{{ auth()->user()->name }}</p>
+                    <p class="text-xs text-gray-500">{{ auth()->user()->email }}</p>
+                    <span class="inline-block mt-1 text-xs font-bold px-2 py-0.5 rounded-full
+                        {{ auth()->user()->isAdmin() ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700' }}">
                         {{ ucfirst(auth()->user()->role) }}
                     </span>
                 </div>
-                <form method="POST" action="{{ route('logout') }}">
+                <form method="POST" action="{{ route('logout') }}" class="p-2">
                     @csrf
-                    <button type="submit" class="w-full text-left px-4 py-2 rounded-lg hover:bg-white/10 text-red-300 hover:text-red-200 transition-all">
+                    <button type="submit" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-all flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
                         Déconnexion
                     </button>
                 </form>
             </div>
         </div>
-    </div>
-</nav>
+    </aside>
 
-{{-- ══════════════════════════════════════════════════════════
-     FLASH MESSAGES
-══════════════════════════════════════════════════════════ --}}
-@if(session('success'))
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-        <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl flex items-center gap-3">
-            <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-            </svg>
-            {{ session('success') }}
+    {{-- Overlay for mobile, click to close sidebar --}}
+    <div id="sidebarOverlay" class="hidden fixed inset-0 bg-black/50 z-40 md:hidden"></div>
+
+    {{-- ══════════════════════════════════════════════════════════
+         MAIN COLUMN
+    ══════════════════════════════════════════════════════════ --}}
+    <div class="flex-1 flex flex-col min-w-0">
+
+        {{-- Mobile top bar --}}
+        <div class="md:hidden sticky top-0 z-30 gradient-header text-white flex items-center justify-between px-4 h-14 shadow-md">
+            <button id="sidebarToggle" class="p-2 rounded-lg hover:bg-white/10">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+            <span class="font-bold">MUST NEGOCE</span>
+            <div class="w-10"></div>
         </div>
-    </div>
-@endif
 
-@if(session('error'))
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-        <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl">
-            {{ session('error') }}
-        </div>
-    </div>
-@endif
+        {{-- ══════════════════════════════════════════════════════════
+             FLASH MESSAGES
+        ══════════════════════════════════════════════════════════ --}}
+        @if(session('success'))
+            <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 mt-4">
+                <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl flex items-center gap-3">
+                    <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    {{ session('success') }}
+                </div>
+            </div>
+        @endif
 
-{{-- ══════════════════════════════════════════════════════════
-     MAIN CONTENT
-══════════════════════════════════════════════════════════ --}}
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    @yield('content')
-</main>
+        @if(session('error'))
+            <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 mt-4">
+                <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl">
+                    {{ session('error') }}
+                </div>
+            </div>
+        @endif
+
+        {{-- ══════════════════════════════════════════════════════════
+             MAIN CONTENT
+        ══════════════════════════════════════════════════════════ --}}
+        <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+            @yield('content')
+        </main>
+    </div>
+</div>
 
 {{-- Statistics Modal --}}
 <div id="statsModal" class="fixed inset-0 z-50 hidden">
@@ -305,9 +285,20 @@ function loadStats() {
 </script>
 
 <script>
-    document.getElementById('mobileMenuBtn')?.addEventListener('click', function() {
-        document.getElementById('mobileMenu').classList.toggle('hidden');
-    });
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+
+    function openSidebar() {
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.remove('hidden');
+    }
+    function closeSidebar() {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
+    }
+
+    document.getElementById('sidebarToggle')?.addEventListener('click', openSidebar);
+    overlay?.addEventListener('click', closeSidebar);
 </script>
 @stack('scripts')
 

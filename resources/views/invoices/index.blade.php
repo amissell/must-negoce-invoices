@@ -176,7 +176,7 @@
                             <h2 class="text-xl font-bold text-gray-900">Liste des Factures</h2>
                             <p class="text-sm text-gray-500 mt-1">
                                 {{ $invoices->total() }} facture(s)
-                                @if(request('search') || request('type'))
+                                @if(request('search') || request('type') || request('client_id'))
                                     <span class="text-blue-500 font-medium">— résultats filtrés</span>
                                 @endif
                             </p>
@@ -197,6 +197,23 @@
                             <input type="text" name="search" value="{{ request('search') }}"
                                    placeholder="Rechercher par N° facture ou client..."
                                    class="w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                        </div>
+
+                        {{-- Client Filter --}}
+                        <div class="relative sm:w-56">
+                            <select name="client_id" onchange="this.form.submit()"
+                                    class="w-full pl-4 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white appearance-none">
+                                <option value="">Tous les clients</option>
+                                @foreach($clients as $c)
+                                    <option value="{{ $c->id }}" {{ request('client_id') == $c->id ? 'selected' : '' }}>
+                                        {{ $c->nom }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
                         </div>
 
                         <div class="flex gap-2">
@@ -225,7 +242,7 @@
                             </button>
 
                             {{-- Clear filters --}}
-                            @if(request('search') || request('type'))
+                            @if(request('search') || request('type') || request('client_id'))
                             <a href="{{ route('invoices.index') }}"
                                class="px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-500 text-sm font-semibold rounded-xl transition-all border border-red-100"
                                title="Effacer les filtres">
@@ -385,7 +402,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                         </svg>
                                     </div>
-                                    @if(request('search') || request('type'))
+                                    @if(request('search') || request('type') || request('client_id'))
                                         <h3 class="text-lg font-bold text-gray-900 mb-2">Aucun résultat</h3>
                                         <p class="text-gray-500 mb-4">Aucune facture ne correspond à votre recherche</p>
                                         <a href="{{ route('invoices.index') }}"

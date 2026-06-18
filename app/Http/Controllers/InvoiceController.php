@@ -20,6 +20,11 @@ class InvoiceController extends Controller
         $query->where('type', $request->type);
     }
 
+    // ── Filtre par client ────────────────────────────────────
+    if ($request->filled('client_id')) {
+        $query->where('client_id', $request->client_id);
+    }
+
     // ── Recherche par N° facture, client, ICE ───────────────
     if ($request->filled('search')) {
         $search = $request->search;
@@ -34,12 +39,14 @@ class InvoiceController extends Controller
     $totalInvoices  = Invoice::count();
     $automaticCount = Invoice::where('type', 'automatic')->count();
     $manualCount    = Invoice::where('type', 'manual')->count();
+    $clients        = \App\Models\Client::orderBy('nom')->get(['id', 'nom']);
 
     return view('invoices.index', compact(
         'invoices',
         'totalInvoices',
         'automaticCount',
-        'manualCount'
+        'manualCount',
+        'clients'
     ));
 }
 
