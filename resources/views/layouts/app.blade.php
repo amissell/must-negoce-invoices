@@ -94,6 +94,14 @@
                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('statistics.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
                     <span class="text-lg">📈</span> Statistiques
                 </a>
+                <a href="{{ route('vendeurs.index') }}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('vendeurs.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                    <span class="text-lg">🧑‍💼</span> Vendeurs
+                </a>
+                <a href="{{ route('categories.index') }}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('categories.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                    <span class="text-lg">📦</span> Catégories
+                </a>
                 <a href="{{ route('creances.index') }}"
                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('creances.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
                     <span class="text-lg">💰</span> Créances

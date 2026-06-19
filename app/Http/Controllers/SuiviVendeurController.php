@@ -543,24 +543,26 @@ public function create()
 
             if ($rows->isEmpty()) {
                 return redirect()->route('suivi-vendeurs.index')
-                    ->with('error', "Aucune donnée trouvée pour aujourd'hui.");
+                    ->with('error', "Aucune donnée reçue depuis AMEVO.");
             }
 
             $stats = DB::transaction(function () use ($rows) {
                 $stats = [
-                    'vendeurs' => 0,
-                    'lignes' => 0,
+                    'vendeurs'   => 0,
+                    'lignes'     => 0,
                     'categories' => 0,
                 ];
 
                 foreach ($rows as $row) {
+                    // ── 1. Identifier le bloc "user" ──────────────────────────
                     $user = $row['User'] ?? $row['user'] ?? $row;
-                    $nom = trim((string) data_get($user, 'nom_complet', data_get($user, 'name', '')));
+                    $nom  = trim((string) data_get($user, 'nom_complet', data_get($user, 'name', '')));
 
                     if ($nom === '') {
                         continue;
                     }
 
+                    // ── 2. Lier au vendeur local ──────────────────────────────
                     $amevoVendeurId = $this->stringOrNull(
                         data_get($user, 'id')
                         ?? data_get($user, 'user_id')
@@ -575,25 +577,43 @@ public function create()
                         $stats['vendeurs']++;
                     }
 
+                    // ── 3. Déterminer la date de la ligne ─────────────────────
+                    // BUG FIX: utiliser la date envoyée par AMEVO si elle existe,
+                    // sinon today.  Ça permet d'importer des données historiques.
+                    $rawDate = data_get($user, 'date')
+                        ?? data_get($user, 'created_at')
+                        ?? data_get($row,  'date')
+                        ?? now()->toDateString();
+
+                    try {
+                        $dateString = Carbon::parse($rawDate)->toDateString();
+                    } catch (\Throwable $e) {
+                        $dateString = now()->toDateString();
+                    }
+
+                    // ── 4. Upsert de la ligne suivi ───────────────────────────
+                    // On identifie une ligne par (vendeur + date) pour éviter
+                    // les doublons, mais on accepte n'importe quelle date.
                     $suivi = SuiviVendeur::updateOrCreate(
                         [
-                            'date' => now()->toDateString(),
-                            'vendeur_id' => $amevoVendeurId,
                             'vendeur_nom' => $nom,
+                            'date'        => $dateString,
                         ],
                         [
-                            'chiffre' => (float) data_get($user, 'chiffre', 0),
-                            'total_paye' => (float) data_get($user, 'total_paye', 0),
-                            'bl' => (int) data_get($user, 'total_bl', data_get($user, 'bl', 0)),
-                            'jour_repos' => false,
+                            'vendeur_id'  => $amevoVendeurId,
+                            'chiffre'     => (float) data_get($user, 'chiffre', 0),
+                            'total_paye'  => (float) data_get($user, 'total_paye', 0),
+                            'bl'          => (int)   data_get($user, 'total_bl', data_get($user, 'bl', 0)),
+                            'jour_repos'  => false,
                             'heure_debut' => null,
-                            'heure_fin' => null,
-                            'notes' => "Synchronisation automatique depuis l'application AMEVO",
-                            'created_by' => Auth::id(),
+                            'heure_fin'   => null,
+                            'notes'       => "Synchronisation automatique depuis l'application AMEVO",
+                            'created_by'  => Auth::id(),
                         ]
                     );
                     $stats['lignes']++;
 
+                    // ── 5. Catégories ─────────────────────────────────────────
                     $remoteCategories = $this->extractRemoteCategories($row);
                     if ($remoteCategories->isNotEmpty()) {
                         $suivi->categories()->delete();
@@ -617,31 +637,40 @@ public function create()
                             ?? data_get($remoteCategory, 'amevo_id')
                         );
 
+                        // BUG FIX: on enregistre la catégorie même sans amevo_id,
+                        // on essaie juste d'upsert si on a l'id, sinon firstOrCreate par nom.
                         if ($amevoCategorieId !== null) {
                             Categorie::updateOrCreate(
                                 ['amevo_id' => $amevoCategorieId],
-                                ['nom' => $categoryName]
+                                ['nom'      => $categoryName]
+                            );
+                        } else {
+                            Categorie::firstOrCreate(
+                                ['nom'      => $categoryName],
+                                ['amevo_id' => null]
                             );
                         }
 
                         $suivi->categories()->create([
-                            'categorie' => $categoryName,
+                            'categorie'    => $categoryName,
                             'categorie_id' => $amevoCategorieId,
-                            'vendeur_id' => $amevoVendeurId,
-                            'quantite' => (int) data_get($remoteCategory, 'quantite', data_get($remoteCategory, 'qte', 0)),
-                            'ca' => (float) data_get($remoteCategory, 'ca', data_get($remoteCategory, 'chiffre', 0)),
+                            'vendeur_id'   => $amevoVendeurId,
+                            'quantite'     => (int)   data_get($remoteCategory, 'quantite', data_get($remoteCategory, 'qte', 0)),
+                            'ca'           => (float) data_get($remoteCategory, 'ca', data_get($remoteCategory, 'chiffre', 0)),
                         ]);
                         $stats['categories']++;
                     }
                 }
+
                 return $stats;
             });
 
             return redirect()->route('suivi-vendeurs.index')
-                ->with('success', "Importation terminée : {$stats['lignes']} lignes, {$stats['vendeurs']} vendeurs, {$stats['categories']} catégories synchronisés.");
+                ->with('success', "✅ Import terminé : {$stats['lignes']} ligne(s), {$stats['vendeurs']} vendeur(s), {$stats['categories']} catégorie(s) synchronisés.");
+
         } catch (Exception $e) {
             return redirect()->route('suivi-vendeurs.index')
-                ->with('error', 'Erreur importation AMEVO : ' . $e->getMessage());
+                ->with('error', '❌ Erreur importation AMEVO : ' . $e->getMessage());
         }
     }
 

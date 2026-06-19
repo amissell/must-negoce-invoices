@@ -11,6 +11,8 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CreanceController;
 use App\Http\Controllers\AlerteController;
 use App\Http\Controllers\ObjectifVendeurController;
+use App\Http\Controllers\VendeurController;
+use App\Http\Controllers\CategorieController;
 
 
 Route::middleware('guest')->group(function () {
@@ -79,4 +81,9 @@ Route::middleware(['auth', 'admin'])->prefix('objectifs')->name('objectifs.')->g
     Route::get('/{id}/edit', [ObjectifVendeurController::class, 'edit'])->name('edit');
     Route::put('/{id}', [ObjectifVendeurController::class, 'update'])->name('update');
     Route::delete('/{id}', [ObjectifVendeurController::class, 'destroy'])->name('destroy');
+});
+
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::resource('vendeurs',   VendeurController::class)->except(['show']);
+    Route::resource('categories', CategorieController::class)->except(['show']);
 });
