@@ -13,6 +13,7 @@ use App\Http\Controllers\AlerteController;
 use App\Http\Controllers\ObjectifVendeurController;
 use App\Http\Controllers\VendeurController;
 use App\Http\Controllers\CategorieController;
+use App\Http\Controllers\DashboardVendeursController;
 
 
 Route::middleware('guest')->group(function () {
@@ -87,3 +88,5 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('vendeurs',   VendeurController::class)->except(['show']);
     Route::resource('categories', CategorieController::class)->except(['show']);
 });
+Route::get('/dashboard-vendeurs', [DashboardVendeursController::class, 'index'])
+    ->name('dashboard.vendeurs');

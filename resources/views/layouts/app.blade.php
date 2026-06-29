@@ -122,6 +122,10 @@
                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('admin.users*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
                     <span class="text-lg">👤</span> Utilisateurs
                 </a>
+                <a href="{{ route('dashboard.vendeurs') }}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('dashboard.vendeurs*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                    <span class="text-lg">👤</span> 📊 Dashboard Vendeurs
+                </a>
             @endif
         </nav>
 
