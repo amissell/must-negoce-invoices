@@ -153,6 +153,10 @@
                     @endif
                 </p>
             </div>
+            <a href="{{ route('dashboard.categories') }}"
+               class="px-5 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl text-sm font-bold transition-all border border-white/30">
+                🏷️ Voir les catégories vendues →
+            </a>
         </div>
     </div>
 
@@ -454,7 +458,7 @@
                         <th class="text-center">PIRE JOUR</th>
                         <th class="text-center">CA MIN</th>
                         <th class="text-center">TAUX %</th>
-                        <th class="text-center">📉 DROPS</th>
+                        <th class="text-center">📉DROPS</th>
                         <th class="text-center">RANK</th>
                     </tr>
                 </thead>
@@ -511,13 +515,13 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 fade-in-up" style="animation-delay:0.6s">
         <div class="table-card">
             <div class="p-6">
-                <h3 class="font-bold text-gray-900 mb-4">📊 CA vs Encaissé vs Reste par Vendeur</h3>
+                <h3 class="font-bold text-gray-900 mb-4">📊CA vs Encaissé vs Reste par Vendeur</h3>
                 <canvas id="barChart" height="220"></canvas>
             </div>
         </div>
         <div class="table-card">
             <div class="p-6">
-                <h3 class="font-bold text-gray-900 mb-4">🥧 Répartition CA par Vendeur</h3>
+                <h3 class="font-bold text-gray-900 mb-4">🥧Répartition CA par Vendeur</h3>
                 <canvas id="pieChart" height="220"></canvas>
             </div>
         </div>
@@ -525,7 +529,7 @@
 
     <div class="table-card fade-in-up" style="animation-delay:0.65s">
         <div class="p-6">
-            <h3 class="font-bold text-gray-900 mb-1">📉 DROPS par Vendeur</h3>
+            <h3 class="font-bold text-gray-900 mb-1">📉DROPS par Vendeur</h3>
             <p class="text-xs text-gray-400 mb-4">CA Total ÷ Nombre de BL — CA moyen par bon de livraison</p>
             <canvas id="dropsChart" height="140"></canvas>
         </div>
@@ -533,12 +537,12 @@
 
     <div class="table-card fade-in-up" style="animation-delay:0.7s">
         <div class="p-6">
-            <h3 class="font-bold text-gray-900 mb-4">📈 Évolution CA par Jour & Vendeur</h3>
+            <h3 class="font-bold text-gray-900 mb-4">📈Évolution CA par Jour & Vendeur</h3>
             <canvas id="lineChart" height="280"></canvas>
         </div>
     </div>
 
-    @endif {{-- end @if($data) --}}
+    @endif
 
 </div>
 </div>
