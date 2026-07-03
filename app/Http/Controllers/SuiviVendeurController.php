@@ -48,7 +48,7 @@ class SuiviVendeurController extends Controller
     $vendeurs = collect(
     array_merge(
         SuiviVendeur::pluck('vendeur_nom')->toArray(),
-        
+
         ObjectifVendeur::pluck('vendeur_nom')->toArray()
         )
         )

@@ -29,6 +29,72 @@
         </div>
     </div>
 
+    {{-- Panneau AMEVO - Reste a encaisser par vendeur (source: API AMEVO, live) --}}
+    <div class="bg-white shadow rounded-lg p-4 mb-6">
+        <div class="flex justify-between items-center mb-3">
+            <h2 class="text-lg font-bold">🔄 Reste à Encaisser (AMEVO) — {{ \Carbon\Carbon::now()->translatedFormat('F Y') }}</h2>
+            <span class="text-xs text-gray-400">Données vendeur AMEVO, à titre de recoupement — sans lien direct avec les créances clients ci-dessous</span>
+        </div>
+
+        @if($amevoErreur)
+            <div class="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+                <span class="text-red-500 text-lg mt-0.5">🔴</span>
+                <div>
+                    <p class="font-bold text-red-700 text-sm">Erreur API AMEVO</p>
+                    <p class="text-sm text-red-600 mt-1">{{ $amevoErreur }}</p>
+                </div>
+            </div>
+        @elseif($amevoData)
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                <div class="bg-red-50 rounded-lg p-3 text-center">
+                    <p class="text-xs text-gray-500">Reste à Payer (Global AMEVO)</p>
+                    <p class="text-lg font-bold text-red-600">{{ number_format($amevoData['reste_a_payer'] ?? 0, 0, ',', ' ') }} DH</p>
+                </div>
+                <div class="bg-indigo-50 rounded-lg p-3 text-center">
+                    <p class="text-xs text-gray-500">CA Total AMEVO</p>
+                    <p class="text-lg font-bold text-indigo-600">{{ number_format($amevoData['ca_total'] ?? 0, 0, ',', ' ') }} DH</p>
+                </div>
+                <div class="bg-emerald-50 rounded-lg p-3 text-center">
+                    <p class="text-xs text-gray-500">Encaissé AMEVO</p>
+                    <p class="text-lg font-bold text-emerald-600">{{ number_format($amevoData['ca_encaisse'] ?? 0, 0, ',', ' ') }} DH</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-3 text-center">
+                    <p class="text-xs text-gray-500">Total Créances (local)</p>
+                    <p class="text-lg font-bold text-gray-700">{{ number_format($totalCreances, 0, ',', ' ') }} DH</p>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Vendeur</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">CA Total</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Encaissé</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Reste à Payer</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @forelse(($amevoData['vendorCards'] ?? []) as $v)
+                            <tr>
+                                <td class="px-4 py-2 font-medium">{{ $v['nom'] }}</td>
+                                <td class="px-4 py-2 text-right">{{ number_format($v['ca_total'] ?? 0, 0, ',', ' ') }}</td>
+                                <td class="px-4 py-2 text-right text-emerald-600">{{ number_format($v['ca_encaisse'] ?? 0, 0, ',', ' ') }}</td>
+                                <td class="px-4 py-2 text-right font-bold {{ ($v['reste'] ?? 0) > 5000 ? 'text-red-600' : 'text-gray-700' }}">
+                                    {{ number_format($v['reste'] ?? 0, 0, ',', ' ') }}
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="4" class="text-center text-gray-400 py-4">Aucune donnée vendeur AMEVO pour ce mois.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <p class="text-sm text-gray-400">Aucune donnée AMEVO disponible.</p>
+        @endif
+    </div>
+
     {{-- Aging Table --}}
     <div class="bg-white shadow rounded-lg overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">

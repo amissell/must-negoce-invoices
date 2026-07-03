@@ -6,11 +6,40 @@ use App\Models\Client;
 use App\Exports\CreancesExport;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class CreanceController extends Controller
 {
+    private function getAmevoData()
+    {
+        // Même logique que DashboardVendeursController : synchronisation du mois en cours, tous vendeurs
+        $mois  = now()->format('m');
+        $annee = now()->year;
+
+        $url = "https://app.amevo.ma/must-negoce/public/synchronisation/{$mois}/{$annee}";
+
+        try {
+            $response = Http::timeout(15)->get($url);
+
+            if ($response->failed()) {
+                return ['erreur' => "Impossible de contacter l'API AMEVO.", 'data' => null];
+            }
+
+            $data = $response->json();
+
+            if (isset($data['error']) && $data['error'] === true) {
+                return ['erreur' => $data['message'] ?? "Erreur inconnue de l'API AMEVO.", 'data' => null];
+            }
+
+            return ['erreur' => null, 'data' => $data];
+
+        } catch (\Exception $e) {
+            return ['erreur' => "Erreur réseau AMEVO : " . $e->getMessage(), 'data' => null];
+        }
+    }
+
     private function getCreancesData()
     {
         $now = Carbon::now();
@@ -53,7 +82,12 @@ class CreanceController extends Controller
     public function index()
     {
         $data = $this->getCreancesData();
-        return view('creances.index', $data);
+        $amevo = $this->getAmevoData();
+
+        return view('creances.index', array_merge($data, [
+            'amevoErreur' => $amevo['erreur'],
+            'amevoData'   => $amevo['data'],
+        ]));
     }
 
     public function exportExcel()
