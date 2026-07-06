@@ -15,6 +15,7 @@ use App\Http\Controllers\VendeurController;
 use App\Http\Controllers\CategorieController;
 use App\Http\Controllers\DashboardVendeursController;
 use App\Http\Controllers\DashboardCategoriesController;
+use App\Http\Controllers\DashboardVendeurCategorieController;
 
 
 Route::middleware('guest')->group(function () {
@@ -93,3 +94,5 @@ Route::get('/dashboard-vendeurs', [DashboardVendeursController::class, 'index'])
     ->name('dashboard.vendeurs');
 Route::get('/dashboard-categories', [DashboardCategoriesController::class, 'index'])
     ->name('dashboard.categories');
+Route::get('/dashboard-vendeur-categorie', [DashboardVendeurCategorieController::class, 'index'])
+    ->name('dashboard.vendeur-categorie');
