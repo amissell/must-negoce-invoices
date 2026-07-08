@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\GenerateInvoiceRequest;
+use App\Http\Requests\StoreInvoiceProductsRequest;
 use App\Models\Invoice;
 use App\Models\Product;
 use App\Services\InvoiceService;
@@ -59,7 +60,7 @@ class InvoiceController extends Controller
         ));
     }
 
-    public function store(Request $request)
+    public function store(StoreInvoiceProductsRequest $request)
     {
         if ($request->has('montant_global_ttc')) {
             $this->invoiceService->createInvoicesFromAmount((float) $request->montant_global_ttc, 'divers', auth()->id());
@@ -68,11 +69,7 @@ class InvoiceController extends Controller
                 ->with('success', 'Facture(s) créée(s) avec succès');
         }
 
-        $validated = $request->validate([
-            'products' => 'required|array|min:1',
-            'products.*.id' => 'required|exists:products,id',
-            'products.*.quantity' => 'required|integer|min:1',
-        ]);
+        $validated = $request->validated();
 
         try {
             $this->invoiceService->createInvoicesFromProducts($validated['products'], 'divers', auth()->id());
