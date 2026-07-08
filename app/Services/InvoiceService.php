@@ -5,26 +5,28 @@ namespace App\Services;
 
 use App\Models\Client;
 use App\Models\Invoice;
-use App\Models\InvoiceItem;
 use App\Models\Product;
 use App\Services\InvoiceCalculationService;
 use App\Services\InvoiceNumberGenerator;
-use Illuminate\Support\Facades\DB;
+use App\Services\InvoicePersistence;
 
 class InvoiceService
 {
     private InvoiceCalculationService $invoiceCalculationService;
     private InvoiceNumberGenerator $invoiceNumberGenerator;
+    private InvoicePersistence $invoicePersistence;
 
     /**
      * InvoiceService constructor.
      */
     public function __construct(
         InvoiceCalculationService $invoiceCalculationService,
-        InvoiceNumberGenerator $invoiceNumberGenerator
+        InvoiceNumberGenerator $invoiceNumberGenerator,
+        InvoicePersistence $invoicePersistence
     ) {
         $this->invoiceCalculationService = $invoiceCalculationService;
         $this->invoiceNumberGenerator = $invoiceNumberGenerator;
+        $this->invoicePersistence = $invoicePersistence;
     }
 
     public function createManualInvoice(array $validated, int $userId): Invoice
@@ -35,49 +37,25 @@ class InvoiceService
             (float) ($validated['remise_percentage'] ?? 0)
         );
 
-        DB::beginTransaction();
-
-        try {
-            $invoice = Invoice::create([
-                'invoice_number'    => $this->generateNextInvoiceNumber(),
-                'type'              => 'manual',
-                'client_id'         => $validated['client_id'] ?? null,
-                'client_name'       => $validated['client_name'] ?? null,
-                'client_address'    => $validated['client_address'] ?? null,
-                'client_phone'      => $validated['client_phone'] ?? null,
-                'client_ice'        => $validated['client_ice'] ?? null,
-                'invoice_date'      => $validated['invoice_date'],
-                'payment_mode'      => $validated['payment_mode'],
-                'montant_ht'        => $calculation['montant_ht'],
-                'remise_percentage' => $calculation['remise_percentage'],
-                'remise_amount'     => $calculation['remise_amount'],
-                'tva_rate'          => 20,
-                'tva'               => $calculation['tva'],
-                'total_ttc'         => $calculation['total_ttc'],
-                'amount_in_words'   => $this->numberToWords($calculation['total_ttc']),
-                'created_by'        => $userId,
-            ]);
-
-            foreach ($calculation['items'] as $item) {
-                $product = Product::findOrFail($item['product_id']);
-
-                InvoiceItem::create([
-                    'invoice_id'  => $invoice->id,
-                    'product_id'  => $item['product_id'],
-                    'description' => $product->name,
-                    'quantity'    => $item['quantity'],
-                    'unit_price'  => $item['unit_price_ttc'],
-                    'total'       => $item['total_ttc'],
-                ]);
-            }
-
-            DB::commit();
-
-            return $invoice;
-        } catch (\Throwable $exception) {
-            DB::rollBack();
-            throw $exception;
-        }
+        return $this->invoicePersistence->createManualInvoice([
+            'invoice_number'    => $this->generateNextInvoiceNumber(),
+            'type'              => 'manual',
+            'client_id'         => $validated['client_id'] ?? null,
+            'client_name'       => $validated['client_name'] ?? null,
+            'client_address'    => $validated['client_address'] ?? null,
+            'client_phone'      => $validated['client_phone'] ?? null,
+            'client_ice'        => $validated['client_ice'] ?? null,
+            'invoice_date'      => $validated['invoice_date'],
+            'payment_mode'      => $validated['payment_mode'],
+            'montant_ht'        => $calculation['montant_ht'],
+            'remise_percentage' => $calculation['remise_percentage'],
+            'remise_amount'     => $calculation['remise_amount'],
+            'tva_rate'          => 20,
+            'tva'               => $calculation['tva'],
+            'total_ttc'         => $calculation['total_ttc'],
+            'amount_in_words'   => $this->numberToWords($calculation['total_ttc']),
+            'created_by'        => $userId,
+        ], $this->buildManualInvoiceItems($calculation['items']));
     }
 
     public function updateManualInvoice(Invoice $invoice, array $validated, int $userId): Invoice
@@ -88,10 +66,9 @@ class InvoiceService
             (float) ($validated['remise_percentage'] ?? 0)
         );
 
-        DB::beginTransaction();
-
-        try {
-            $invoice->update([
+        return $this->invoicePersistence->updateManualInvoice(
+            $invoice,
+            [
                 'invoice_number'    => $validated['invoice_number'],
                 'invoice_date'      => $validated['invoice_date'],
                 'payment_mode'      => $validated['payment_mode'],
@@ -108,30 +85,9 @@ class InvoiceService
                 'total_ttc'         => $calculation['total_ttc'],
                 'amount_in_words'   => $this->numberToWords($calculation['total_ttc']),
                 'updated_by'        => $userId,
-            ]);
-
-            $invoice->items()->delete();
-
-            foreach ($calculation['items'] as $item) {
-                $product = Product::findOrFail($item['product_id']);
-
-                InvoiceItem::create([
-                    'invoice_id'  => $invoice->id,
-                    'product_id'  => $item['product_id'],
-                    'description' => $product->name,
-                    'quantity'    => $item['quantity'],
-                    'unit_price'  => $item['unit_price_ttc'],
-                    'total'       => $item['total_ttc'],
-                ]);
-            }
-
-            DB::commit();
-
-            return $invoice;
-        } catch (\Throwable $exception) {
-            DB::rollBack();
-            throw $exception;
-        }
+            ],
+            $this->buildManualInvoiceItems($calculation['items'])
+        );
     }
 
     public function createInvoicesFromAmount(float $amount, string $customerName, int $userId): void
@@ -357,7 +313,7 @@ class InvoiceService
         $montantHt = round($totalTtc / 1.2, 2);
         $tva = round($totalTtc - $montantHt, 2);
 
-        $invoice = Invoice::create([
+        $this->invoicePersistence->createAutomaticInvoice([
             'invoice_number' => $this->generateInvoiceNumber(),
             'invoice_date' => now(),
             'montant_ht' => $montantHt,
@@ -367,17 +323,26 @@ class InvoiceService
             'type' => 'automatic',
             'client_name' => $customerName,
             'created_by' => $userId,
-        ]);
+        ], $items);
+    }
 
-        foreach ($items as $item) {
-            InvoiceItem::create([
-                'invoice_id' => $invoice->id,
-                'product_id' => $item['product']->id ?? null,
+    /**
+     * Format calculated manual invoice items for persistence.
+     *
+     * @param array<int, array<string, mixed>> $items
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildManualInvoiceItems(array $items): array
+    {
+        return array_map(function (array $item) {
+            return [
+                'product' => Product::findOrFail($item['product_id']),
+                'product_id' => $item['product_id'],
                 'quantity' => $item['quantity'],
-                'unit_price' => $item['unit_price'],
-                'total' => $item['total'],
-            ]);
-        }
+                'unit_price_ttc' => $item['unit_price_ttc'],
+                'total_ttc' => $item['total_ttc'],
+            ];
+        }, $items);
     }
 
     private function splitIntoMultipleInvoices(string $customerName, array $items, int $userId): void
