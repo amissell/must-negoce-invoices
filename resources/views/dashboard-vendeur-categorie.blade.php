@@ -226,10 +226,7 @@
                     @foreach($categoriesData as $cat)
 
                         @php
-
-                            $estimation =
-                                ($vendeur['ca_total'] * $cat['pct']) / 100;
-
+                            $estimation = ($vendeur['ca_total'] * $cat['pct']) / 100;
                         @endphp
 
                         <td>
@@ -241,9 +238,7 @@
                             <br>
 
                             <small class="text-gray-500">
-
                                 {{ number_format($cat['pct'],1) }} %
-
                             </small>
 
                         </td>

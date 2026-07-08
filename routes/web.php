@@ -49,29 +49,20 @@ Route::middleware(['auth', 'admin_or_adv'])->group (function () {
     Route::get('/creances/export/excel', [CreanceController::class, 'exportExcel'])->name('creances.export.excel');
     Route::get('/creances/export/pdf', [CreanceController::class, 'exportPdf'])->name('creances.export.pdf');
     Route::get('/alertes', [AlerteController::class, 'index'])->name('alertes.index');
-    Route::get('/suivi-vendeurs/comparaison', [SuiviVendeurController::class, 'comparaison'])->name('suivi-vendeurs.comparaison');
+    // Route::get('/suivi-vendeurs/comparaison', [SuiviVendeurController::class, 'comparaison'])->name('suivi-vendeurs.comparaison');
 
 });
 
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/users',                    [UserController::class, 'index'])->name('admin.users');
-    Route::put('/admin/users/{user}/role',         [UserController::class, 'updateRole'])->name('admin.users.role');
-    Route::delete('/admin/users/{user}',           [UserController::class, 'destroy'])->name('admin.users.destroy');
+    Route::put('/admin/users/{user}/role',         [UserController::class, 'updateRole'])->name('admin.users.role'); Route::delete('/admin/users/{user}',           [UserController::class, 'destroy'])->name('admin.users.destroy');
     Route::get('/admin/users/create',  [UserController::class, 'create'])->name('admin.users.create');
     Route::post('/admin/users',        [UserController::class, 'store'])->name('admin.users.store');
 
-    Route::get('/suivi-vendeurs/create',                        [SuiviVendeurController::class, 'create'])->name('suivi-vendeurs.create');
-    Route::post('/suivi-vendeurs',                              [SuiviVendeurController::class, 'store'])->name('suivi-vendeurs.store');
-    Route::get('/suivi-vendeurs/{suiviVendeur}/edit',           [SuiviVendeurController::class, 'edit'])->name('suivi-vendeurs.edit');
-    Route::put('/suivi-vendeurs/{suiviVendeur}',                [SuiviVendeurController::class, 'update'])->name('suivi-vendeurs.update');
-    Route::delete('/suivi-vendeurs/{suiviVendeur}',             [SuiviVendeurController::class, 'destroy'])->name('suivi-vendeurs.destroy');
-    Route::post('/suivi-vendeurs/importdata',                   [SuiviVendeurController::class, 'importdata'])->name('suivi-vendeurs.importdata');
-    Route::get('/suivi-vendeurs/vendeur/{nom}', [SuiviVendeurController::class, 'showVendeur'])->name('suivi-vendeurs.show');
-    Route::get('/statistics/daily', [SuiviVendeurController::class, 'dailyStatsPage'])->name('statistics.daily');
+    // Route::get('/statistics/daily', [SuiviVendeurController::class, 'dailyStatsPage'])->name('statistics.daily');
 });
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/suivi-vendeurs', [SuiviVendeurController::class, 'index'])->name('suivi-vendeurs.index');
     Route::post('/admin/users/{user}/approve', [UserController::class, 'approve'])->name('admin.users.approve');
     Route::post('/admin/users/{user}/reject',  [UserController::class, 'reject'])->name('admin.users.reject');
 });

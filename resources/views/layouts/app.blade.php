@@ -72,7 +72,7 @@
             @if(!auth()->user()->isAdv())
                 <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-white/40">Suivi</p>
 
-                <a href="{{ route('suivi-vendeurs.index') }}"
+                <a href="#"
                    class="relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all
                    {{ request()->routeIs('suivi-vendeurs.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
                     <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,7 +90,7 @@
             @if(auth()->user()->isAdmin())
                 <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-white/40">Administration</p>
 
-                <a href="{{ route('statistics.daily') }}"
+                <a href="#"
                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('statistics.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
                     <span class="text-lg">📈</span> Statistiques
                 </a>
@@ -110,7 +110,7 @@
                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('alertes.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
                     <span class="text-lg">🔔</span> Alertes
                 </a>
-                <a href="{{ route('suivi-vendeurs.comparaison') }}"
+                <a href="#"
                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('suivi-vendeurs.comparaison') ? 'bg-white/20' : 'hover:bg-white/10' }}">
                     <span class="text-lg">📊</span> Comparaison
                 </a>

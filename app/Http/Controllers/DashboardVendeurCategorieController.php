@@ -19,7 +19,6 @@ class DashboardVendeurCategorieController extends Controller
         if (!$response->successful()) {
             return back()->with('error', 'Impossible de récupérer les données.');
         }
-
         $data = $response->json();
 
         $vendorCards = collect($data['vendorCards'] ?? []);
@@ -37,3 +36,4 @@ class DashboardVendeurCategorieController extends Controller
         ]);
     }
 }
+
