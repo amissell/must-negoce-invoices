@@ -5,30 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'MUST NEGOCE') - Gestion de Factures</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+qdLa+GQYdQ3e5FzC3S1adx0EC4U8g5P4xx8E3P7y0vhu4CpC3kxv2Hr+8dWZ3j6" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <style>
-        * { font-family: 'Inter', sans-serif; }
-        .gradient-header { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 50%, #3b7cb8 100%); }
-        .card-shadow { box-shadow: 0 4px 20px -4px rgba(30, 58, 95, 0.15); }
-        .btn-primary { background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); }
-        .btn-primary:hover { background: linear-gradient(135deg, #2d5a87 0%, #3b7cb8 100%); }
-        #sidebar { scrollbar-width: thin; }
-        #sidebar::-webkit-scrollbar { width: 6px; }
-        #sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        :root {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color-scheme: light;
+            font-size: 15px;
+        }
+        body {
+            background-color: #f8fafc;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 280px;
+            min-width: 280px;
+            background: linear-gradient(180deg, #0d6efd 0%, #0b5ed7 100%);
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,.88);
+            transition: background .2s ease, color .2s ease;
+        }
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: #fff;
+            background-color: rgba(255,255,255,.12);
+        }
+        .sidebar .nav-link svg {
+            width: 1.25rem;
+            height: 1.25rem;
+            margin-right: .5rem;
+        }
+        .content-wrapper {
+            margin-left: 0;
+            transition: margin .3s ease;
+        }
+        @media (min-width: 768px) {
+            .content-wrapper {
+                margin-left: 280px;
+            }
+        }
+        .bg-brand {
+            background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+        }
+        .card-glass {
+            background: rgba(255,255,255,.98);
+            border: 1px solid rgba(209, 213, 219, 0.4);
+            box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+        }
+        .sidebar-close-btn {
+            background: transparent;
+            border: none;
+            color: rgba(255,255,255,.9);
+        }
+        .sidebar-backdrop {
+            background: rgba(0,0,0,.45);
+        }
+        .navbar-brand strong {
+            letter-spacing: .02em;
+        }
     </style>
     @stack('styles')
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body>
 
-<div class="flex min-h-screen">
+<div class="d-flex min-vh-100">
 
     {{-- ══════════════════════════════════════════════════════════
          SIDEBAR
     ══════════════════════════════════════════════════════════ --}}
     <aside id="sidebar"
-           class="gradient-header text-white w-72 flex-shrink-0 fixed md:sticky top-0 h-screen z-50 overflow-y-auto
-                  transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
+           class="sidebar text-white position-fixed top-0 start-0 vh-100 overflow-auto d-md-block d-none">
 
         {{-- Logo --}}
         <a href="{{ (auth()->user()->isAdmin() || auth()->user()->isAdv()) ? route('invoices.index') : route('suivi-vendeurs.index') }}"
@@ -134,43 +181,28 @@
         </nav>
 
         {{-- User Menu (bottom of sidebar) --}}
-        <div class="border-t border-white/10 p-3 relative group">
-            <button class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-all">
-                <div class="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center shrink-0">
-                    <span class="text-sm font-semibold">{{ substr(auth()->user()->name, 0, 1) }}</span>
+        <div class="position-absolute bottom-0 start-0 w-100 p-3 border-top border-white-25">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-white-10 rounded-3 p-2 d-flex align-items-center justify-content-center" style="width:44px;height:44px;">
+                    <span class="text-white fw-semibold">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
                 </div>
-                <div class="flex-1 text-left min-w-0">
-                    <p class="text-sm font-medium truncate">{{ auth()->user()->name }}</p>
-                    <p class="text-xs text-white/50 truncate">{{ ucfirst(auth()->user()->role) }}</p>
+                <div class="text-white small">
+                    <div class="fw-semibold">{{ auth()->user()->name }}</div>
+                    <div class="text-white-75">{{ ucfirst(auth()->user()->role) }}</div>
                 </div>
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
-                </svg>
-            </button>
-            <div class="absolute left-3 right-3 bottom-full mb-2 bg-white rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <div class="p-3 border-b border-gray-100">
-                    <p class="text-sm font-semibold text-gray-800">{{ auth()->user()->name }}</p>
-                    <p class="text-xs text-gray-500">{{ auth()->user()->email }}</p>
-                    <span class="inline-block mt-1 text-xs font-bold px-2 py-0.5 rounded-full
-                        {{ auth()->user()->isAdmin() ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700' }}">
-                        {{ ucfirst(auth()->user()->role) }}
-                    </span>
-                </div>
-                <form method="POST" action="{{ route('logout') }}" class="p-2">
-                    @csrf
-                    <button type="submit" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-all flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                        </svg>
-                        Déconnexion
-                    </button>
-                </form>
             </div>
+            <form method="POST" action="{{ route('logout') }}" class="mt-3">
+                @csrf
+                <button type="submit" class="btn btn-outline-light btn-sm w-100">
+                    <i class="bi bi-box-arrow-right me-2"></i>
+                    Déconnexion
+                </button>
+            </form>
         </div>
     </aside>
 
     {{-- Overlay for mobile, click to close sidebar --}}
-    <div id="sidebarOverlay" class="hidden fixed inset-0 bg-black/50 z-40 md:hidden"></div>
+    <div id="sidebarBackdrop" class="d-none position-fixed top-0 start-0 w-100 h-100 sidebar-backdrop d-md-none"></div>
 
     {{-- ══════════════════════════════════════════════════════════
          MAIN COLUMN
@@ -178,87 +210,87 @@
     <div class="flex-1 flex flex-col min-w-0">
 
         {{-- Mobile top bar --}}
-        <div class="md:hidden sticky top-0 z-30 gradient-header text-white flex items-center justify-between px-4 h-14 shadow-md">
-            <button id="sidebarToggle" class="p-2 rounded-lg hover:bg-white/10">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                </svg>
+        <div class="d-md-none position-sticky top-0 zindex-sticky bg-brand text-white d-flex align-items-center justify-content-between px-3 py-2 shadow-sm">
+            <button id="sidebarToggle" class="btn btn-link text-white p-0">
+                <i class="bi bi-list fs-4"></i>
             </button>
-            <span class="font-bold">MUST NEGOCE</span>
-            <div class="w-10"></div>
+            <span class="fw-bold">MUST NEGOCE</span>
+            <div style="width:2.5rem;"></div>
         </div>
 
         {{-- ══════════════════════════════════════════════════════════
              FLASH MESSAGES
         ══════════════════════════════════════════════════════════ --}}
-        @if(session('success'))
-            <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 mt-4">
-                <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl flex items-center gap-3">
-                    <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                    </svg>
-                    {{ session('success') }}
-                </div>
-            </div>
-        @endif
+        <div class="content-wrapper">
+            <div class="container-fluid py-4">
+                @if(session('success'))
+                    <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
 
-        @if(session('error'))
-            <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 mt-4">
-                <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl">
-                    {{ session('error') }}
-                </div>
-            </div>
-        @endif
+                @if(session('error'))
+                    <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        {{ session('error') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
 
-        {{-- ══════════════════════════════════════════════════════════
-             MAIN CONTENT
-        ══════════════════════════════════════════════════════════ --}}
-        <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
-            @yield('content')
-        </main>
+                {{-- ══════════════════════════════════════════════════════════
+                     MAIN CONTENT
+                ══════════════════════════════════════════════════════════ --}}
+                <main class="pb-5">
+                    @yield('content')
+                </main>
+            </div>
+        </div>
+
     </div>
 </div>
 
 {{-- Statistics Modal --}}
-<div id="statsModal" class="fixed inset-0 z-50 hidden">
-    <div class="absolute inset-0 bg-black/50" onclick="closeStatsModal()"></div>
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-2xl shadow-2xl p-6">
-        <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-bold text-gray-800">📈 Statistiques du Jour</h2>
-            <button onclick="closeStatsModal()" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            </button>
-        </div>
-        <div class="mb-4">
-            <input type="date" id="statsDate" value="{{ now()->toDateString() }}"
-                onchange="loadStats()"
-                class="w-full border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-        </div>
-        <div id="statsContent">
-            <div class="text-center py-8 text-gray-400">Chargement...</div>
+<div id="statsModal" class="position-fixed top-0 start-0 w-100 h-100 d-none" style="z-index:1050;">
+    <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50" onclick="closeStatsModal()"></div>
+    <div class="position-absolute top-50 start-50 translate-middle w-100" style="max-width: 680px;">
+        <div class="bg-white rounded-4 shadow-lg border border-200 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="h5 mb-0">📈 Statistiques du Jour</h2>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="closeStatsModal()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="mb-4">
+                <input type="date" id="statsDate" value="{{ now()->toDateString() }}"
+                    onchange="loadStats()"
+                    class="form-control form-control-sm">
+            </div>
+            <div id="statsContent">
+                <div class="text-center py-4 text-secondary">Chargement...</div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
 function openStatsModal() {
-    document.getElementById('statsModal').classList.remove('hidden');
+    document.getElementById('statsModal').classList.remove('d-none');
     loadStats();
 }
 function closeStatsModal() {
-    document.getElementById('statsModal').classList.add('hidden');
+    document.getElementById('statsModal').classList.add('d-none');
 }
 function loadStats() {
     const date = document.getElementById('statsDate').value;
-    document.getElementById('statsContent').innerHTML = '<div class="text-center py-8 text-gray-400">Chargement...</div>';
+    document.getElementById('statsContent').innerHTML = '<div class="text-center py-4 text-secondary">Chargement...</div>';
     fetch(`/statistics/daily?date=${date}`)
         .then(r => r.json())
         .then(data => {
             if (data.stats.length === 0) {
                 document.getElementById('statsContent').innerHTML =
-                    '<div class="text-center py-8 text-gray-400">Aucune vente pour cette date</div>';
+                    '<div class="text-center py-4 text-secondary">Aucune vente pour cette date</div>';
                 return;
             }
             let totalCA = 0, totalQte = 0, rows = '';
@@ -266,28 +298,28 @@ function loadStats() {
                 totalCA += parseFloat(s.total_ca);
                 totalQte += parseInt(s.total_quantite);
                 rows += `
-                    <tr class="border-b border-gray-100 hover:bg-gray-50">
-                        <td class="py-3 px-4 font-medium text-gray-700">${s.categorie}</td>
-                        <td class="py-3 px-4 text-center text-gray-600">${s.total_quantite}</td>
-                        <td class="py-3 px-4 text-right font-semibold text-green-600">${parseFloat(s.total_ca).toLocaleString('fr-FR')} DH</td>
+                    <tr>
+                        <td class="py-2 px-3 text-sm text-secondary">${s.categorie}</td>
+                        <td class="py-2 px-3 text-sm text-center text-secondary">${s.total_quantite}</td>
+                        <td class="py-2 px-3 text-sm text-end text-success">${parseFloat(s.total_ca).toLocaleString('fr-FR')} DH</td>
                     </tr>`;
             });
             document.getElementById('statsContent').innerHTML = `
-                <div class="overflow-hidden rounded-xl border border-gray-200">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-50">
+                <div class="table-responsive rounded-3 border border-200">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light">
                             <tr>
-                                <th class="py-3 px-4 text-left text-gray-600 font-semibold">Catégorie</th>
-                                <th class="py-3 px-4 text-center text-gray-600 font-semibold">Quantité</th>
-                                <th class="py-3 px-4 text-right text-gray-600 font-semibold">CA</th>
+                                <th>Catégorie</th>
+                                <th class="text-center">Quantité</th>
+                                <th class="text-end">CA</th>
                             </tr>
                         </thead>
                         <tbody>${rows}</tbody>
-                        <tfoot class="bg-blue-50">
+                        <tfoot class="table-secondary fw-semibold">
                             <tr>
-                                <td class="py-3 px-4 font-bold text-gray-800">Total</td>
-                                <td class="py-3 px-4 text-center font-bold text-gray-800">${totalQte}</td>
-                                <td class="py-3 px-4 text-right font-bold text-blue-700">${totalCA.toLocaleString('fr-FR')} DH</td>
+                                <td>Total</td>
+                                <td class="text-center">${totalQte}</td>
+                                <td class="text-end">${totalCA.toLocaleString('fr-FR')} DH</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -295,28 +327,38 @@ function loadStats() {
         })
         .catch(() => {
             document.getElementById('statsContent').innerHTML =
-                '<div class="text-center py-8 text-red-400">Erreur de chargement</div>';
+                '<div class="text-center py-4 text-danger">Erreur de chargement</div>';
         });
 }
 </script>
 
-<script>
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-zQYYfd490+Qb0TupbXzHZZR8xfYvOLqvHGvQ8BDzaePUnh3ct78R+gXktv6cWR3s" crossorigin="anonymous"></script>
+    <script>
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+        const contentWrapper = document.querySelector('.content-wrapper');
 
-    function openSidebar() {
-        sidebar.classList.remove('-translate-x-full');
-        overlay.classList.remove('hidden');
-    }
-    function closeSidebar() {
-        sidebar.classList.add('-translate-x-full');
-        overlay.classList.add('hidden');
-    }
+        function openSidebar() {
+            sidebar.classList.add('d-block');
+            sidebarBackdrop.classList.remove('d-none');
+        }
+        function closeSidebar() {
+            sidebar.classList.remove('d-block');
+            sidebarBackdrop.classList.add('d-none');
+        }
 
-    document.getElementById('sidebarToggle')?.addEventListener('click', openSidebar);
-    overlay?.addEventListener('click', closeSidebar);
-</script>
-@stack('scripts')
+        sidebarToggle?.addEventListener('click', function () {
+            if (sidebar.classList.contains('d-block')) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        });
+
+        sidebarBackdrop?.addEventListener('click', closeSidebar);
+    </script>
+    @stack('scripts')
 
 </body>
 </html>
