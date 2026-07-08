@@ -7,25 +7,30 @@ use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Product;
+use App\Services\InvoiceCalculationService;
 use App\Services\InvoiceNumberGenerator;
 use Illuminate\Support\Facades\DB;
 
 class InvoiceService
 {
+    private InvoiceCalculationService $invoiceCalculationService;
     private InvoiceNumberGenerator $invoiceNumberGenerator;
 
     /**
      * InvoiceService constructor.
      */
-    public function __construct(InvoiceNumberGenerator $invoiceNumberGenerator)
-    {
+    public function __construct(
+        InvoiceCalculationService $invoiceCalculationService,
+        InvoiceNumberGenerator $invoiceNumberGenerator
+    ) {
+        $this->invoiceCalculationService = $invoiceCalculationService;
         $this->invoiceNumberGenerator = $invoiceNumberGenerator;
     }
 
     public function createManualInvoice(array $validated, int $userId): Invoice
     {
         $validated = $this->prepareClientData($validated);
-        $calculation = $this->calculateInvoiceTotals(
+        $calculation = $this->invoiceCalculationService->calculateInvoiceTotals(
             $validated['items'],
             (float) ($validated['remise_percentage'] ?? 0)
         );
@@ -78,7 +83,7 @@ class InvoiceService
     public function updateManualInvoice(Invoice $invoice, array $validated, int $userId): Invoice
     {
         $validated = $this->prepareClientData($validated);
-        $calculation = $this->calculateInvoiceTotals(
+        $calculation = $this->invoiceCalculationService->calculateInvoiceTotals(
             $validated['items'],
             (float) ($validated['remise_percentage'] ?? 0)
         );
@@ -314,44 +319,6 @@ class InvoiceService
         }
 
         return number_format($number, 2) . ' DHS';
-    }
-
-    private function calculateInvoiceTotals(array $items, float $remisePercentage = 0): array
-    {
-        $totalTtcBrut = 0;
-        $itemsCalculated = [];
-
-        foreach ($items as $item) {
-            $quantity = (int) $item['quantity'];
-            $unitPriceTtc = round((float) $item['unit_price'], 2);
-            $lineTotalTtc = round($quantity * $unitPriceTtc, 2);
-
-            $totalTtcBrut += $lineTotalTtc;
-
-            $itemsCalculated[] = [
-                'product_id'      => $item['product_id'],
-                'quantity'        => $quantity,
-                'unit_price_ttc'  => $unitPriceTtc,
-                'total_ttc'       => $lineTotalTtc,
-            ];
-        }
-
-        $totalTtcBrut = round($totalTtcBrut, 2);
-        $montantHtBrut = round($totalTtcBrut / 1.20, 2);
-        $remisePercentage = round($remisePercentage, 2);
-        $remiseAmount = round($montantHtBrut * $remisePercentage / 100, 2);
-        $montantHtNet = round($montantHtBrut - $remiseAmount, 2);
-        $tva = round($montantHtNet * 0.20, 2);
-        $totalTtc = round($montantHtNet + $tva, 2);
-
-        return [
-            'items'              => $itemsCalculated,
-            'montant_ht'         => $montantHtNet,
-            'remise_percentage'  => $remisePercentage,
-            'remise_amount'      => $remiseAmount,
-            'tva'                => $tva,
-            'total_ttc'          => $totalTtc,
-        ];
     }
 
     private function prepareClientData(array $validated): array
