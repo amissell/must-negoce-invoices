@@ -24,7 +24,7 @@ class InvoiceServiceTest extends TestCase
         parent::setUp();
 
         Carbon::setTestNow(Carbon::create(2026, 1, 1, 0, 0, 0));
-        $this->invoiceService = new InvoiceService();
+        $this->invoiceService = app(InvoiceService::class);
     }
 
     protected function tearDown(): void

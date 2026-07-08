@@ -29,16 +29,16 @@ class CreanceController extends Controller
             'amevoData'   => $amevo['data'],
         ]));
     }
-}
+
     public function exportExcel()
     {
-        $data = $this->getCreancesData();
+        $data = $this->creanceService->getCreancesData();
         return Excel::download(new CreancesExport($data['clients']), 'creances_' . now()->format('Y-m-d') . '.xlsx');
     }
 
     public function exportPdf()
     {
-        $data = $this->getCreancesData();
+        $data = $this->creanceService->getCreancesData();
         $pdf = Pdf::loadView('creances.pdf', $data);
         return $pdf->download('creances_' . now()->format('Y-m-d') . '.pdf');
     }
