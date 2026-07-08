@@ -8,17 +8,19 @@ use App\Http\Requests\StoreInvoiceProductsRequest;
 use App\Models\Invoice;
 use App\Models\Product;
 use App\Services\InvoiceService;
+use App\Services\PdfService;
 use App\Helpers\NumberToFrenchWords;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
 class InvoiceController extends Controller
 {
     private InvoiceService $invoiceService;
+    private PdfService $pdfService;
 
-    public function __construct(InvoiceService $invoiceService)
+    public function __construct(InvoiceService $invoiceService, PdfService $pdfService)
     {
         $this->invoiceService = $invoiceService;
+        $this->pdfService = $pdfService;
     }
 
     public function index(Request $request)
@@ -99,10 +101,7 @@ class InvoiceController extends Controller
             ? 'invoices.pdf-manual'
             : 'invoices.pdf';
 
-        $pdf = Pdf::loadView($template, compact('invoice', 'amountInWords'));
-        $pdf->setPaper('A4', 'portrait');
-
-        return $pdf->download("FACTURE_$safeNumber.pdf");
+        return $this->pdfService->download($template, compact('invoice', 'amountInWords'), "FACTURE_$safeNumber.pdf");
     }
 
     public function export(Request $request)

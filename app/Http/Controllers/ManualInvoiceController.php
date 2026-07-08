@@ -8,15 +8,17 @@ use App\Http\Requests\UpdateManualInvoiceRequest;
 use App\Models\Invoice;
 use App\Models\Product;
 use App\Services\InvoiceService;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\PdfService;
 
 class ManualInvoiceController extends Controller
 {
     private InvoiceService $invoiceService;
+    private PdfService $pdfService;
 
-    public function __construct(InvoiceService $invoiceService)
+    public function __construct(InvoiceService $invoiceService, PdfService $pdfService)
     {
         $this->invoiceService = $invoiceService;
+        $this->pdfService = $pdfService;
     }
 
     public function create()
@@ -72,9 +74,7 @@ class ManualInvoiceController extends Controller
         $invoice = Invoice::with('items.product')->findOrFail($id);
         $amountInWords = $this->invoiceService->numberToWords($invoice->total_ttc);
 
-        $pdf = Pdf::loadView('invoices.pdf-manual', compact('invoice', 'amountInWords'));
-
-        return $pdf->download("facture_{$invoice->invoice_number}.pdf");
+        return $this->pdfService->download('invoices.pdf-manual', compact('invoice', 'amountInWords'), "facture_{$invoice->invoice_number}.pdf");
     }
 
     public function edit(int $id)
