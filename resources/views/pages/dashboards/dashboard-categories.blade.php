@@ -3,11 +3,6 @@
 
 @push('styles')
 <style>
-    /* ═══════════════════════════════════════════════════════════════════
-       DASHBOARD CATEGORIES - PROFESSIONAL MODERN DESIGN
-       Unified Color Palette: Corporate Blue & Teal
-       ═══════════════════════════════════════════════════════════════════ */
-
     .page-hero {
         background: linear-gradient(135deg, #1e3a5f 0%, #2d5380 50%, #14B8A6 100%);
         border-radius: 24px;
@@ -105,7 +100,6 @@
         background: linear-gradient(135deg, #152d48, #1e3a5f);
     }
 
-    /* ═══════════════ KPI CARDS ═══════════════ */
     .kpi-card {
         background: white;
         border-radius: 16px;
@@ -168,7 +162,6 @@
         color: #64748b;
     }
 
-    /* ═══════════════ TABLE CARD ═══════════════ */
     .table-card {
         background: white;
         border-radius: 16px;
@@ -499,8 +492,6 @@ if (categoriesData.length > 0) {
         }
     });
 }
-
-// Courbes : évolution du CA par catégorie, jour par jour
 if (catEvoLabels.length > 0 && catEvoSeries.length > 0) {
     const catLineDatasets = catEvoSeries.map((serie, index) => ({
         label: serie.nom,

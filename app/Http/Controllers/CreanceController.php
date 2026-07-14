@@ -26,7 +26,7 @@ class CreanceController extends Controller
         $data = $this->creanceService->getCreancesData();
         $amevo = $this->creanceService->getAmevoData();
 
-        return view('creances.index', array_merge($data, [
+        return view('pages.creances.index', array_merge($data, [
             'amevoErreur' => $amevo['erreur'],
             'amevoData'   => $amevo['data'],
         ]));

@@ -326,7 +326,6 @@ class InvoiceService
             'created_by' => $userId,
         ], $items);
     }
-
     /**
      * Format calculated manual invoice items for persistence.
      *
@@ -345,7 +344,6 @@ class InvoiceService
             ];
         }, $items);
     }
-
     private function splitIntoMultipleInvoices(string $customerName, array $items, int $userId): void
     {
         $max = 4999;

@@ -24,7 +24,7 @@ class DashboardVendeurCategorieController extends Controller
         $vendorCards = collect($data['vendorCards'] ?? []);
         $categoriesData = collect($data['categoriesData'] ?? []);
 
-        return view('dashboard-vendeur-categorie', [
+        return view('pages.dashboards.dashboard-vendeur-categorie', [
             'mois' => $mois,
             'annee' => $annee,
 
@@ -36,4 +36,3 @@ class DashboardVendeurCategorieController extends Controller
         ]);
     }
 }
-

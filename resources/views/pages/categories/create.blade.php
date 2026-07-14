@@ -13,7 +13,7 @@
             </svg>
         </a>
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">📦 Nouvelle Catégorie</h1>
+            <h1 class="text-2xl font-bold text-gray-900">📦Nouvelle Catégorie</h1>
             <p class="text-sm text-gray-500 mt-0.5">Ajouter une catégorie manuellement</p>
         </div>
     </div>
@@ -21,8 +21,6 @@
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <form method="POST" action="{{ route('categories.store') }}" class="space-y-5">
             @csrf
-
-            {{-- Nom --}}
             <div>
                 <label for="nom" class="block text-sm font-semibold text-gray-700 mb-1.5">
                     Nom de la catégorie <span class="text-red-500">*</span>

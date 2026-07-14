@@ -17,12 +17,12 @@ class VendeurController extends Controller
 
         $vendeurs = $query->orderBy('nom_complet')->paginate(20)->withQueryString();
 
-        return view('vendeurs.index', compact('vendeurs'));
+        return view('pages.vendeurs.index', compact('vendeurs'));
     }
 
     public function create()
     {
-        return view('vendeurs.create');
+        return view('pages.vendeurs.create');
     }
 
     public function store(Request $request)
@@ -44,7 +44,7 @@ class VendeurController extends Controller
 
     public function edit(Vendeur $vendeur)
     {
-        return view('vendeurs.edit', compact('vendeur'));
+        return view('pages.vendeurs.edit', compact('vendeur'));
     }
 
     public function update(Request $request, Vendeur $vendeur)

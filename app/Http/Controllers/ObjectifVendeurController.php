@@ -28,7 +28,7 @@ class ObjectifVendeurController extends Controller
             'SOUFAINE',
         ];
 
-        return view('objectifs.index', compact('objectifs', 'vendeurs', 'mois', 'annee'));
+        return view('pages.objectifs.index', compact('objectifs', 'vendeurs', 'mois', 'annee'));
     }
 
     /**
@@ -44,7 +44,7 @@ class ObjectifVendeurController extends Controller
             'SOUFAINE',
         ];
 
-        return view('objectifs.form', [
+        return view('pages.objectifs.form', [
             'vendeurs' => $vendeurs,
             'objectif' => null,
         ]);
@@ -98,7 +98,7 @@ class ObjectifVendeurController extends Controller
             'SOUFAINE',
         ];
 
-        return view('objectifs.form', compact('objectif', 'vendeurs'));
+        return view('pages.objectifs.form', compact('objectif', 'vendeurs'));
     }
 
     /**

@@ -24,7 +24,7 @@ class DashboardCategoriesController extends Controller
             $response = Http::timeout(15)->get($url);
 
             if ($response->failed()) {
-                return view('dashboard-categories', [
+                return view('pages.dashboards.dashboard-categories', [
                     'erreur' => "Impossible de contacter l'API.",
                     'data'   => null,
                 ]);
@@ -33,14 +33,14 @@ class DashboardCategoriesController extends Controller
             $data = $response->json();
 
             if (isset($data['error']) && $data['error'] === true) {
-                return view('dashboard-categories', [
+                return view('pages.dashboards.dashboard-categories', [
                     'erreur' => $data['message'] ?? 'Erreur inconnue de l\'API.',
                     'data'   => null,
                 ]);
             }
 
         } catch (\Exception $e) {
-            return view('dashboard-categories', [
+            return view('pages.dashboards.dashboard-categories', [
                 'erreur' => "Erreur réseau : " . $e->getMessage(),
                 'data'   => null,
             ]);
@@ -49,7 +49,7 @@ class DashboardCategoriesController extends Controller
         // Tout est OK → on envoie les données à la vue (on garde tout $data,
         // la vue n'utilisera que les blocs "Catégories vendues" : categoriesData,
         // cat_ca_total, cat_qte_total, catEvoLabels, catEvoSeries).
-        return view('dashboard-categories', [
+        return view('pages.dashboards.dashboard-categories', [
             'erreur'  => null,
             'data'    => $data,
             'mois'    => $mois,

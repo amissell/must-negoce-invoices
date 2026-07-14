@@ -23,7 +23,7 @@ class DashboardVendeursController extends Controller
             $response = Http::timeout(15)->get($url);
 
             if ($response->failed()) {
-                return view('dashboard-vendeurs', [
+                return view('pages.dashboards.dashboard-vendeurs', [
                     'erreur' => "Impossible de contacter l'API.",
                     'data' => null,
                     'mois' => $mois,
@@ -35,7 +35,7 @@ class DashboardVendeursController extends Controller
             $data = $response->json();
 
             if (isset($data['error']) && $data['error'] === true) {
-                return view('dashboard-vendeurs', [
+                return view('pages.dashboards.dashboard-vendeurs', [
                     'erreur' => $data['message'] ?? 'Erreur inconnue de l\'API.',
                     'data' => null,
                     'mois' => $mois,
@@ -80,7 +80,7 @@ class DashboardVendeursController extends Controller
             }
 
         } catch (\Exception $e) {
-            return view('dashboard-vendeurs', [
+            return view('pages.dashboards.dashboard-vendeurs', [
                 'erreur' => "Erreur réseau : " . $e->getMessage(),
                 'data' => null,
                 'mois' => $mois,
@@ -89,7 +89,7 @@ class DashboardVendeursController extends Controller
             ]);
         }
 
-        return view('dashboard-vendeurs', [
+        return view('pages.dashboards.dashboard-vendeurs', [
             'erreur' => null,
             'data' => $data,
             'mois' => $mois,

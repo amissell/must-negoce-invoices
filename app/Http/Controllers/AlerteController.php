@@ -51,6 +51,6 @@ class AlerteController extends Controller
             ->merge($vendeursInactifs)
             ->sortBy('niveau');
 
-        return view('alertes.index', compact('alertes'));
+        return view('pages.alertes.index', compact('alertes'));
     }
 }
