@@ -19,7 +19,7 @@ class ProductController extends Controller
         $products = $query->orderBy('name')->paginate(20);
         $totalProducts = Product::count();
 
-        return view('products.index', compact('products', 'totalProducts'));
+        return view('pages.products.index', compact('products', 'totalProducts'));
     }
 
     public function store(Request $request)

@@ -3,75 +3,312 @@
 
 @push('styles')
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-    * { font-family: 'Plus Jakarta Sans', sans-serif; }
-
-    .gradient-blue   { background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%); }
-    .gradient-orange { background: linear-gradient(135deg, #F97316 0%, #FB923C 100%); }
-    .gradient-green  { background: linear-gradient(135deg, #10B981 0%, #34D399 100%); }
-    .gradient-red    { background: linear-gradient(135deg, #EF4444 0%, #F87171 100%); }
-    .gradient-purple { background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%); }
-    .gradient-yellow { background: linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%); }
-    .gradient-teal   { background: linear-gradient(135deg, #14B8A6 0%, #2DD4BF 100%); }
+    /* ═══════════════════════════════════════════════════════════════════
+       DASHBOARD CATEGORIES - PROFESSIONAL MODERN DESIGN
+       Unified Color Palette: Corporate Blue & Teal
+       ═══════════════════════════════════════════════════════════════════ */
 
     .page-hero {
-        background: linear-gradient(135deg, #1e3a5f 0%, #3b7cb8 100%);
-        border-radius: 24px; position: relative; overflow: hidden;
+        background: linear-gradient(135deg, #1e3a5f 0%, #2d5380 50%, #14B8A6 100%);
+        border-radius: 24px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 12px 32px rgba(30, 58, 95, 0.15);
     }
+
     .page-hero::before {
-        content: ''; position: absolute; top: -50%; right: -20%;
-        width: 600px; height: 600px;
-        background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
         animation: float 20s ease-in-out infinite;
     }
+
     @keyframes float {
-        0%,100% { transform: translate(0,0) rotate(0deg); }
-        50%      { transform: translate(-30px,30px) rotate(180deg); }
+        0%,100% {
+            transform: translate(0, 0) rotate(0deg);
+        }
+        50% {
+            transform: translate(-30px, 30px) rotate(180deg);
+        }
     }
 
+    /* ═══════════════ FILTER BAR ═══════════════ */
     .filter-bar {
-        background: white; border-radius: 20px; padding: 20px 24px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.07); border: 1px solid rgba(0,0,0,0.05);
-        display: flex; align-items: center; flex-wrap: wrap; gap: 12px;
+        background: white;
+        border-radius: 16px;
+        padding: 20px 24px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
     }
-    .filter-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:#94A3B8; margin-bottom:4px; }
+
+    .filter-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: #64748b;
+        margin-bottom: 6px;
+        display: block;
+    }
+
     .filter-select {
-        padding: 9px 14px; border: 2px solid #E2E8F0; border-radius: 12px;
-        font-size: 13px; font-weight: 600; color: #1E293B; background: #F8FAFC;
-        transition: all 0.2s; outline: none; font-family: 'Plus Jakarta Sans', sans-serif; min-width: 140px;
+        padding: 10px 14px;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #1e293b;
+        background: #f8fafc;
+        transition: all 0.25s ease;
+        outline: none;
+        min-width: 140px;
     }
-    .filter-select:focus { border-color: #3b7cb8; background: white; box-shadow: 0 0 0 3px rgba(59,124,184,0.10); }
+
+    .filter-select:hover {
+        border-color: #cbd5e1;
+        background: white;
+    }
+
+    .filter-select:focus {
+        border-color: #14B8A6;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+    }
+
     .btn-filter-apply {
-        display: inline-flex; align-items: center; gap: 6px; padding: 9px 20px;
-        background: linear-gradient(135deg, #1e3a5f, #3b7cb8); color: white; border: none;
-        border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s;
-        box-shadow: 0 3px 10px rgba(30,58,95,0.3); font-family: 'Plus Jakarta Sans', sans-serif;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        background: linear-gradient(135deg, #1e3a5f, #2d5380);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        box-shadow: 0 4px 12px rgba(30, 58, 95, 0.2);
     }
-    .btn-filter-apply:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(30,58,95,0.35); }
 
+    .btn-filter-apply:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(30, 58, 95, 0.3);
+        background: linear-gradient(135deg, #152d48, #1e3a5f);
+    }
+
+    /* ═══════════════ KPI CARDS ═══════════════ */
     .kpi-card {
-        background: white; border-radius: 20px; padding: 24px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08); transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-        position: relative; overflow: hidden; border: 1px solid rgba(0,0,0,0.05);
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
     }
-    .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; }
-    .kpi-card:hover { transform: translateY(-6px); box-shadow: 0 12px 32px rgba(0,0,0,0.12); }
-    .kpi-card.blue::before   { background: linear-gradient(90deg,#4F46E5,#6366F1); }
-    .kpi-card.teal::before   { background: linear-gradient(90deg,#14B8A6,#2DD4BF); }
-    .kpi-icon  { width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:20px; margin-bottom:12px; }
-    .kpi-value { font-size:26px; font-weight:800; line-height:1.1; margin-bottom:6px; }
-    .kpi-label { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:#64748B; }
 
-    .table-card { background:white; border-radius:20px; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,0.08); border:1px solid rgba(0,0,0,0.05); }
-    .table-header { background:linear-gradient(135deg,#1e3a5f,#3b7cb8); padding:20px 28px; color:white; }
-    .dashboard-table thead th { background:#F8FAFC; color:#475569; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; padding:16px 20px; border-bottom:2px solid #E2E8F0; }
-    .dashboard-table tbody td { padding:16px 20px; border-bottom:1px solid #F1F5F9; vertical-align:middle; }
-    .dashboard-table tbody tr:hover { background:#F8FAFC; }
+    .kpi-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #1e3a5f, #14B8A6);
+    }
 
-    @keyframes fadeInUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
-    .fade-in-up { animation: fadeInUp 0.5s ease-out backwards; }
+    .kpi-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+        border-color: #14B8A6;
+    }
 
-    .badge-drops { background:#EFF6FF; color:#1e3a5f; padding:4px 10px; border-radius:999px; font-size:12px; font-weight:800; border:1px solid #BFDBFE; white-space:nowrap; }
+    .kpi-card.blue::before {
+        background: linear-gradient(90deg, #1e3a5f, #2d5380);
+    }
+
+    .kpi-card.teal::before {
+        background: linear-gradient(90deg, #14B8A6, #2dd4bf);
+    }
+
+    .kpi-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin-bottom: 12px;
+    }
+
+    .kpi-value {
+        font-size: 28px;
+        font-weight: 800;
+        line-height: 1.1;
+        margin-bottom: 6px;
+        color: #1e293b;
+    }
+
+    .kpi-label {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #64748b;
+    }
+
+    /* ═══════════════ TABLE CARD ═══════════════ */
+    .table-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e2e8f0;
+    }
+
+    .table-header {
+        background: linear-gradient(135deg, #1e3a5f, #2d5380);
+        padding: 20px 28px;
+        color: white;
+    }
+
+    .table-header h2 {
+        font-size: 16px;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .dashboard-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .dashboard-table thead th {
+        background: #f8fafc;
+        color: #475569;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 16px 20px;
+        border-bottom: 2px solid #e2e8f0;
+        text-align: left;
+    }
+
+    .dashboard-table tbody td {
+        padding: 16px 20px;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+        color: #1e293b;
+    }
+
+    .dashboard-table tbody tr:hover {
+        background: #f8fafc;
+        transition: all 0.2s ease;
+    }
+
+    /* ═══════════════ BADGE ═══════════════ */
+    .badge-drops {
+        background: #eff6ff;
+        color: #1e3a5f;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 800;
+        border: 1px solid #bfdbfe;
+        white-space: nowrap;
+        display: inline-block;
+    }
+
+    /* ═══════════════ ERROR ALERT ═══════════════ */
+    .error-alert {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        background: #fef2f2;
+        border: 1px solid #fca5a5;
+        border-radius: 12px;
+        padding: 16px 20px;
+        border-left: 4px solid #ef4444;
+    }
+
+    .error-alert-title {
+        font-weight: 700;
+        color: #991b1b;
+        margin: 0;
+    }
+
+    .error-alert-message {
+        font-size: 14px;
+        color: #dc2626;
+        margin: 6px 0 0 0;
+    }
+
+    /* ═══════════════ ANIMATIONS ═══════════════ */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(24px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fade-in-up {
+        animation: fadeInUp 0.5s ease-out backwards;
+    }
+
+    /* ═══════════════ CHART STYLING ═══════════════ */
+    canvas {
+        max-height: 300px;
+    }
+
+    /* ═══════════════ RESPONSIVE ═══════════════ */
+    @media (max-width: 768px) {
+        .page-hero {
+            padding: 24px !important;
+        }
+
+        .filter-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .filter-select,
+        .btn-filter-apply {
+            width: 100%;
+        }
+
+        .kpi-card {
+            padding: 20px;
+        }
+
+        .kpi-value {
+            font-size: 24px;
+        }
+
+        .dashboard-table {
+            font-size: 13px;
+        }
+
+        .dashboard-table th,
+        .dashboard-table td {
+            padding: 12px 16px;
+        }
+    }
 </style>
 @endpush
 
@@ -133,26 +370,27 @@
 
     {{-- ══════════════ ERREUR ══════════════ --}}
     @if($erreur)
-        <div class="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-5 py-4">
-            <span class="text-red-500 text-lg mt-0.5">🔴</span>
+        <div class="error-alert">
+            <span style="font-size: 20px; flex-shrink: 0;">⚠️</span>
             <div>
-                <p class="font-bold text-red-700">Erreur API</p>
-                <p class="text-sm text-red-600 mt-1">{{ $erreur }}</p>
+                <p class="error-alert-title">Erreur API</p>
+                <p class="error-alert-message">{{ $erreur }}</p>
             </div>
         </div>
     @endif
 
     @if($data)
     @php
+        // Modern Professional Color Palette - Blue & Teal Theme
         $catColors = [
             ['hex'=>'#1e3a5f', 'text'=>'text-[#1e3a5f]'],
-            ['hex'=>'#F97316', 'text'=>'text-orange-600'],
-            ['hex'=>'#10B981', 'text'=>'text-emerald-600'],
-            ['hex'=>'#EF4444', 'text'=>'text-red-600'],
-            ['hex'=>'#8B5CF6', 'text'=>'text-purple-600'],
-            ['hex'=>'#F59E0B', 'text'=>'text-amber-600'],
-            ['hex'=>'#14B8A6', 'text'=>'text-teal-600'],
-            ['hex'=>'#EC4899', 'text'=>'text-pink-600'],
+            ['hex'=>'#2d5380', 'text'=>'text-[#2d5380]'],
+            ['hex'=>'#14B8A6', 'text'=>'text-[#14B8A6]'],
+            ['hex'=>'#2dd4bf', 'text'=>'text-[#2dd4bf]'],
+            ['hex'=>'#0d9488', 'text'=>'text-[#0d9488]'],
+            ['hex'=>'#3b7cb8', 'text'=>'text-[#3b7cb8]'],
+            ['hex'=>'#152d48', 'text'=>'text-[#152d48]'],
+            ['hex'=>'#006b5b', 'text'=>'text-[#006b5b]'],
         ];
         $categoriesData = $data['categoriesData'] ?? [];
     @endphp
@@ -232,7 +470,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 @if($data)
-const COLORS = ['#1e3a5f','#F97316','#10B981','#EF4444','#8B5CF6','#F59E0B','#14B8A6','#EC4899'];
+// Professional Modern Color Palette - Corporate Blue & Teal
+const COLORS = ['#1e3a5f','#2d5380','#14B8A6','#2dd4bf','#0d9488','#3b7cb8','#152d48','#006b5b'];
 
 const categoriesData = @json($data['categoriesData'] ?? []);
 const catEvoLabels   = @json($data['catEvoLabels'] ?? []);

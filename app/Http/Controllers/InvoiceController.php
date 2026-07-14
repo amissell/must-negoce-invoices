@@ -11,6 +11,7 @@ use App\Services\InvoiceService;
 use App\Services\PdfService;
 use App\Helpers\NumberToFrenchWords;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class InvoiceController extends Controller
 {
@@ -53,7 +54,7 @@ class InvoiceController extends Controller
         $manualCount    = Invoice::where('type', 'manual')->count();
         $clients        = \App\Models\Client::orderBy('nom')->get(['id', 'nom']);
 
-        return view('invoices.index', compact(
+        return view('pages.invoices.index', compact(
             'invoices',
             'totalInvoices',
             'automaticCount',
@@ -65,7 +66,7 @@ class InvoiceController extends Controller
     public function store(StoreInvoiceProductsRequest $request)
     {
         if ($request->has('montant_global_ttc')) {
-            $this->invoiceService->createInvoicesFromAmount((float) $request->montant_global_ttc, 'divers', auth()->id());
+            $this->invoiceService->createInvoicesFromAmount((float) $request->montant_global_ttc, 'divers', Auth::id());
 
             return redirect()->route('invoices.index')
                 ->with('success', 'Facture(s) créée(s) avec succès');
@@ -74,7 +75,7 @@ class InvoiceController extends Controller
         $validated = $request->validated();
 
         try {
-            $this->invoiceService->createInvoicesFromProducts($validated['products'], 'divers', auth()->id());
+            $this->invoiceService->createInvoicesFromProducts($validated['products'], 'divers', Auth::id());
 
             return redirect()->route('invoices.index')
                 ->with('success', 'Facture(s) créée(s) avec succès');
@@ -85,7 +86,7 @@ class InvoiceController extends Controller
 
     public function generate(GenerateInvoiceRequest $request)
     {
-        $result = $this->invoiceService->generateAutomaticInvoices((float) $request->montant_global_ttc, auth()->id());
+        $result = $this->invoiceService->generateAutomaticInvoices((float) $request->montant_global_ttc, Auth::id());
 
         return redirect()->route('invoices.index')
             ->with('success', $result['createdInvoices'] . ' Facture(s) créée(s) avec succès! Total généré: ' . number_format($result['totalGenerated'], 2) . ' MAD / ' . number_format($result['requestedAmount'], 2) . ' MAD demandé');
@@ -98,8 +99,8 @@ class InvoiceController extends Controller
         $amountInWords = NumberToFrenchWords::convert($invoice->total_ttc);
 
         $template = $invoice->type === 'manual'
-            ? 'invoices.pdf-manual'
-            : 'invoices.pdf';
+            ? 'pages.invoices.pdf-manual'
+            : 'pages.invoices.pdf';
 
         return $this->pdfService->download($template, compact('invoice', 'amountInWords'), "FACTURE_$safeNumber.pdf");
     }
@@ -170,7 +171,7 @@ class InvoiceController extends Controller
             ->whereYear('invoice_date', date('Y'))
             ->sum('total_ttc');
 
-        return view('invoices.statistics', compact(
+        return view('pages.invoices.statistics', compact(
             'totalInvoices',
             'manualInvoices',
             'automaticInvoices',

@@ -4,364 +4,823 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'MUST NEGOCE') - Gestion de Factures</title>
+    <title>@yield('title', 'Dashboard') - Gestion de Factures</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="preconnect" href="https://rsms.me/">
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+
     <style>
+        /* ═══════════════════════════════════════════════════════════════════
+           PROFESSIONAL MODERN DASHBOARD DESIGN SYSTEM
+           Color Palette: Corporate Blue & Teal
+           Typography: Inter (system-ui)
+           ═══════════════════════════════════════════════════════════════════ */
+
         :root {
+            --primary-color: #1e3a5f;
+            --primary-light: #2d5380;
+            --primary-dark: #152d48;
+            --accent-color: #14B8A6;
+            --accent-light: #2dd4bf;
+            --accent-hover: #0d9488;
+            --bg-primary: #f8fafc;
+            --bg-secondary: #f1f5f9;
+            --bg-tertiary: #eff6ff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-tertiary: #94a3b8;
+            --border-color: #e2e8f0;
+            --border-light: #cbd5e1;
+            --white: #ffffff;
+            --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
+            --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.08);
+            --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.12);
+            --shadow-xl: 0 20px 48px rgba(15, 23, 42, 0.15);
+
             font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             color-scheme: light;
             font-size: 15px;
+            line-height: 1.5;
         }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
         body {
-            background-color: #f8fafc;
-            min-height: 100vh;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-tertiary) 100%);
+            color: var(--text-primary);
+            display: flex;
         }
+
+        /* ═══════════════ SIDEBAR ═══════════════ */
         .sidebar {
             width: 280px;
             min-width: 280px;
-            background: linear-gradient(180deg, #0d6efd 0%, #0b5ed7 100%);
+            height: 100vh;
+            background: var(--primary-color);
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            z-index: 1000;
         }
-        .sidebar .nav-link {
-            color: rgba(255,255,255,.88);
-            transition: background .2s ease, color .2s ease;
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.1), rgba(255,255,255,0));
         }
-        .sidebar .nav-link:hover,
-        .sidebar .nav-link.active {
-            color: #fff;
-            background-color: rgba(255,255,255,.12);
+
+        .sidebar-header {
+            padding: 24px 20px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
-        .sidebar .nav-link svg {
-            width: 1.25rem;
-            height: 1.25rem;
-            margin-right: .5rem;
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 18px;
+            transition: opacity 0.2s ease;
         }
-        .content-wrapper {
-            margin-left: 0;
-            transition: margin .3s ease;
+
+        .brand:hover {
+            opacity: 0.9;
         }
-        @media (min-width: 768px) {
-            .content-wrapper {
-                margin-left: 280px;
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            padding: 16px 8px;
+            margin: 0;
+        }
+
+        .sidebar-nav-group-title {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 12px 16px 8px;
+            margin-top: 8px;
+        }
+
+        .sidebar-nav-item {
+            margin: 4px 0;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.75);
+            padding: 11px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+        }
+
+        .nav-link.active {
+            background: var(--accent-color);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: transparent;
+            border-radius: 0 3px 3px 0;
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            margin-top: auto;
+            position: sticky;
+            bottom: 0;
+            background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.1) 100%);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .user-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 14px;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .logout-btn {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* ═══════════════ MAIN CONTENT ═══════════════ */
+        .main-container {
+            flex: 1;
+            margin-left: 280px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* ═══════════════ TOP NAVBAR ═══════════════ */
+        .navbar {
+            background: var(--white);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .navbar-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .navbar-breadcrumb {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .navbar-breadcrumb a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .navbar-breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .navbar-search {
+            display: none;
+        }
+
+        .search-input {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            color: var(--text-primary);
+            width: 240px;
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            background: var(--white);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+        }
+
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 20px;
+            transition: color 0.2s ease;
+            padding: 4px;
+        }
+
+        .action-btn:hover {
+            color: var(--accent-color);
+        }
+
+        .user-menu {
+            position: relative;
+        }
+
+        .user-menu-trigger {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-light));
+            border: none;
+            border-radius: 50%;
+            color: var(--primary-color);
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .user-menu-trigger:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-md);
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
+            min-width: 200px;
+            margin-top: 8px;
+            display: none;
+            z-index: 1001;
+        }
+
+        .user-dropdown.active {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 12px 16px;
+            color: var(--text-primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s ease;
+            font-size: 14px;
+        }
+
+        .dropdown-item:hover {
+            background: var(--bg-secondary);
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 4px 0;
+        }
+
+        /* ═══════════════ MAIN CONTENT AREA ═══════════════ */
+        .content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .page-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* ═══════════════ ALERTS & MESSAGES ═══════════════ */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
-        .bg-brand {
-            background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+
+        .alert-success {
+            background: #ecfdf5;
+            border: 1px solid #d1fae5;
+            color: #047857;
         }
-        .card-glass {
-            background: rgba(255,255,255,.98);
-            border: 1px solid rgba(209, 213, 219, 0.4);
-            box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+
+        .alert-error {
+            background: #fef2f2;
+            border: 1px solid #fee2e2;
+            color: #dc2626;
         }
-        .sidebar-close-btn {
-            background: transparent;
+
+        .alert-warning {
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            color: #d97706;
+        }
+
+        .alert-info {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1e40af;
+        }
+
+        .alert-close {
+            background: none;
             border: none;
-            color: rgba(255,255,255,.9);
+            cursor: pointer;
+            font-size: 18px;
+            color: inherit;
+            padding: 0;
+            margin-left: auto;
         }
-        .sidebar-backdrop {
-            background: rgba(0,0,0,.45);
+
+        /* ═══════════════ RESPONSIVE ═══════════════ */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 240px;
+            }
+            .main-container {
+                margin-left: 240px;
+            }
         }
-        .navbar-brand strong {
-            letter-spacing: .02em;
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                width: 240px;
+                z-index: 1100;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-container {
+                margin-left: 0;
+            }
+
+            .navbar {
+                padding: 12px 16px;
+            }
+
+            .navbar-search {
+                display: none;
+            }
+
+            .navbar-title {
+                font-size: 16px;
+            }
+
+            .content {
+                padding: 16px;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+        }
+
+        /* ═══════════════ SCROLLBAR ═══════════════ */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--border-light);
         }
     </style>
-    @stack('styles')
 </head>
 <body>
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="{{ route('invoices.index') }}" class="brand">
+                <div class="brand-icon">📊</div>
+                <span>Invoice Hub</span>
+            </a>
+        </div>
 
-<div class="d-flex min-vh-100">
+        <nav class="sidebar-nav">
+            <!-- Main Menu -->
+            <div class="sidebar-nav-group-title">Menu Principal</div>
 
-    {{-- ══════════════════════════════════════════════════════════
-         SIDEBAR
-    ══════════════════════════════════════════════════════════ --}}
-    <aside id="sidebar"
-           class="sidebar text-white position-fixed top-0 start-0 vh-100 overflow-auto d-md-block d-none">
+            <li class="sidebar-nav-item">
+                <a href="{{ route('invoices.index') }}" class="nav-link {{ request()->routeIs('invoices.*') ? 'active' : '' }}">
+                    <span class="nav-icon">📄</span>
+                    <span>Factures</span>
+                </a>
+            </li>
 
-        {{-- Logo --}}
-        <a href="{{ (auth()->user()->isAdmin() || auth()->user()->isAdv()) ? route('invoices.index') : route('suivi-vendeurs.index') }}"
-           class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
-            <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center shrink-0">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-            </div>
-            <div>
-                <h1 class="text-lg font-bold leading-tight">MUST NEGOCE</h1>
-                <p class="text-xs text-white/60">Gestion de Factures</p>
-            </div>
-        </a>
+            <li class="sidebar-nav-item">
+                <a href="{{ route('clients.index') }}" class="nav-link {{ request()->routeIs('clients.*') ? 'active' : '' }}">
+                    <span class="nav-icon">👥</span>
+                    <span>Clients</span>
+                </a>
+            </li>
 
-        {{-- Navigation Links --}}
-        <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+            <li class="sidebar-nav-item">
+                <a href="{{ route('creances.index') }}" class="nav-link {{ request()->routeIs('creances.*') ? 'active' : '' }}">
+                    <span class="nav-icon">💰</span>
+                    <span>Créances</span>
+                </a>
+            </li>
 
-            {{-- ADMIN & ADV links --}}
-            @if(auth()->user()->isAdmin() || auth()->user()->isAdv())
-                <p class="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wider text-white/40">Gestion</p>
+            <li class="sidebar-nav-item">
+                <a href="{{ route('alertes.index') }}" class="nav-link {{ request()->routeIs('alertes.*') ? 'active' : '' }}">
+                    <span class="nav-icon">🔔</span>
+                    <span>Alertes</span>
+                </a>
+            </li>
 
-                <a href="{{ route('invoices.index') }}"
-                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('invoices.index') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    <span class="text-lg">📊</span> Tableau de Bord
-                </a>
-                <a href="{{ route('products.index') }}"
-                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('products.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    <span class="text-lg">📦</span> Produits
-                </a>
-                <a href="{{ route('clients.index') }}"
-                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('clients.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    <span class="text-lg">👥</span> Clients
-                </a>
-                <a href="{{ route('invoices.manual.create') }}"
-                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('invoices.manual.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    <span class="text-lg">✏️</span> Facture Manuelle
-                </a>
-            @endif
+            <!-- Admin Menu -->
+            @if(auth()->user() && auth()->user()->role === 'admin')
+            <div class="sidebar-nav-group-title">Administration</div>
 
-            @if(!auth()->user()->isAdv())
-                <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-white/40">Suivi</p>
+            <li class="sidebar-nav-item">
+                <a href="{{ route('admin.users') }}" class="nav-link {{ request()->routeIs('admin.users*') ? 'active' : '' }}">
+                    <span class="nav-icon">🔐</span>
+                    <span>Utilisateurs</span>
+                </a>
+            </li>
 
-                <a href="#"
-                   class="relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all
-                   {{ request()->routeIs('suivi-vendeurs.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                    <span class="flex-1">Suivi Vendeurs</span>
-                    @if(isset($sidebarStats) && $sidebarStats->total_reste > 5000)
-                    <span class="w-5 h-5 bg-red-500 text-white text-xs font-bold
-                    rounded-full flex items-center justify-center animate-pulse">!</span>
-                    @endif
+            <li class="sidebar-nav-item">
+                <a href="{{ route('vendeurs.index') }}" class="nav-link {{ request()->routeIs('vendeurs.*') ? 'active' : '' }}">
+                    <span class="nav-icon">🏷️</span>
+                    <span>Vendeurs</span>
                 </a>
-            @endif
+            </li>
 
-            @if(auth()->user()->isAdmin())
-                <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-white/40">Administration</p>
+            <li class="sidebar-nav-item">
+                <a href="{{ route('categories.index') }}" class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}">
+                    <span class="nav-icon">📂</span>
+                    <span>Catégories</span>
+                </a>
+            </li>
 
-                <a href="#"
-                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('statistics.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    <span class="text-lg">📈</span> Statistiques
+            <li class="sidebar-nav-item">
+                <a href="{{ route('objectifs.index') }}" class="nav-link {{ request()->routeIs('objectifs.*') ? 'active' : '' }}">
+                    <span class="nav-icon">🎯</span>
+                    <span>Objectifs</span>
                 </a>
-                <a href="{{ route('vendeurs.index') }}"
-                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('vendeurs.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    <span class="text-lg">🧑‍💼</span> Vendeurs
+            </li>
+
+            <li class="sidebar-nav-item">
+                <a href="{{ route('dashboard.vendeurs') }}" class="nav-link {{ request()->routeIs('dashboard.vendeurs') ? 'active' : '' }}">
+                    <span class="nav-icon">📈</span>
+                    <span>Tableau Vendeurs</span>
                 </a>
-                <a href="{{ route('categories.index') }}"
-                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('categories.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    <span class="text-lg">📦</span> Catégories
+            </li>
+
+            <li class="sidebar-nav-item">
+                <a href="{{ route('dashboard.categories') }}" class="nav-link {{ request()->routeIs('dashboard.categories') ? 'active' : '' }}">
+                    <span class="nav-icon">📊</span>
+                    <span>Tableau Catégories</span>
                 </a>
-                <a href="{{ route('creances.index') }}"
-                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('creances.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    <span class="text-lg">💰</span> Créances
-                </a>
-                <a href="{{ route('alertes.index') }}"
-                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('alertes.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    <span class="text-lg">🔔</span> Alertes
-                </a>
-                <a href="#"
-                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('suivi-vendeurs.comparaison') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    <span class="text-lg">📊</span> Comparaison
-                </a>
-                <a href="{{ route('objectifs.index') }}"
-                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('objectifs.*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    <span class="text-lg">🎯</span> Objectifs
-                </a>
-                <a href="{{ route('admin.users') }}"
-                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('admin.users*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    <span class="text-lg">👤</span> Utilisateurs
-                </a>
-                <a href="{{ route('dashboard.vendeurs') }}"
-                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('dashboard.vendeurs*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    <span class="text-lg">👤</span> 📊 Dashboard Vendeurs
-                </a>
-                <a href="{{ route('dashboard.vendeur-categorie') }}"
-                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('dashboard.vendeur-categorie*') ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                    <span class="text-lg">📋</span> Vendeur × Catégorie
-                </a>
+            </li>
             @endif
         </nav>
 
-        {{-- User Menu (bottom of sidebar) --}}
-        <div class="position-absolute bottom-0 start-0 w-100 p-3 border-top border-white-25">
-            <div class="d-flex align-items-center gap-3">
-                <div class="bg-white-10 rounded-3 p-2 d-flex align-items-center justify-content-center" style="width:44px;height:44px;">
-                    <span class="text-white fw-semibold">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
-                </div>
-                <div class="text-white small">
-                    <div class="fw-semibold">{{ auth()->user()->name }}</div>
-                    <div class="text-white-75">{{ ucfirst(auth()->user()->role) }}</div>
+        <!-- SIDEBAR FOOTER -->
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">{{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}</div>
+                <div class="user-details">
+                    <span class="user-name">{{ auth()->user()->name ?? 'User' }}</span>
+                    <span class="user-role">{{ auth()->user()->role ?? 'Member' }}</span>
                 </div>
             </div>
-            <form method="POST" action="{{ route('logout') }}" class="mt-3">
+
+            <form action="{{ route('logout') }}" method="POST">
                 @csrf
-                <button type="submit" class="btn btn-outline-light btn-sm w-100">
-                    <i class="bi bi-box-arrow-right me-2"></i>
-                    Déconnexion
+                <button type="submit" class="logout-btn">
+                    <span>🚪</span>
+                    <span>Déconnexion</span>
                 </button>
             </form>
         </div>
     </aside>
 
-    {{-- Overlay for mobile, click to close sidebar --}}
-    <div id="sidebarBackdrop" class="d-none position-fixed top-0 start-0 w-100 h-100 sidebar-backdrop d-md-none"></div>
-
-    {{-- ══════════════════════════════════════════════════════════
-         MAIN COLUMN
-    ══════════════════════════════════════════════════════════ --}}
-    <div class="flex-1 flex flex-col min-w-0">
-
-        {{-- Mobile top bar --}}
-        <div class="d-md-none position-sticky top-0 zindex-sticky bg-brand text-white d-flex align-items-center justify-content-between px-3 py-2 shadow-sm">
-            <button id="sidebarToggle" class="btn btn-link text-white p-0">
-                <i class="bi bi-list fs-4"></i>
-            </button>
-            <span class="fw-bold">MUST NEGOCE</span>
-            <div style="width:2.5rem;"></div>
-        </div>
-
-        {{-- ══════════════════════════════════════════════════════════
-             FLASH MESSAGES
-        ══════════════════════════════════════════════════════════ --}}
-        <div class="content-wrapper">
-            <div class="container-fluid py-4">
-                @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm" role="alert">
-                        <i class="bi bi-check-circle-fill me-2"></i>
-                        {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                @endif
-
-                @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm" role="alert">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                @endif
-
-                {{-- ══════════════════════════════════════════════════════════
-                     MAIN CONTENT
-                ══════════════════════════════════════════════════════════ --}}
-                <main class="pb-5">
-                    @yield('content')
-                </main>
-            </div>
-        </div>
-
-    </div>
-</div>
-
-{{-- Statistics Modal --}}
-<div id="statsModal" class="position-fixed top-0 start-0 w-100 h-100 d-none" style="z-index:1050;">
-    <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50" onclick="closeStatsModal()"></div>
-    <div class="position-absolute top-50 start-50 translate-middle w-100" style="max-width: 680px;">
-        <div class="bg-white rounded-4 shadow-lg border border-200 p-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="h5 mb-0">📈 Statistiques du Jour</h2>
-                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="closeStatsModal()">
-                    <i class="bi bi-x-lg"></i>
+    <!-- MAIN CONTAINER -->
+    <div class="main-container">
+        <!-- NAVBAR -->
+        <nav class="navbar">
+            <div class="navbar-left">
+                <button class="action-btn" id="sidebarToggle" style="display: none;">
+                    ☰
                 </button>
+                <h1 class="navbar-title">@yield('page-title', 'Dashboard')</h1>
             </div>
-            <div class="mb-4">
-                <input type="date" id="statsDate" value="{{ now()->toDateString() }}"
-                    onchange="loadStats()"
-                    class="form-control form-control-sm">
+
+            <div class="navbar-right">
+                <input type="text" class="search-input navbar-search" placeholder="Rechercher...">
+
+                <div class="user-menu">
+                    <button class="user-menu-trigger" id="userMenuTrigger">
+                        {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
+                    </button>
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="#" class="dropdown-item">👤 Profil</a>
+                        <a href="#" class="dropdown-item">⚙️ Paramètres</a>
+                        <div class="dropdown-divider"></div>
+                        <form action="{{ route('logout') }}" method="POST" style="margin: 0;">
+                            @csrf
+                            <button type="submit" class="dropdown-item" style="width: 100%; text-align: left; background: none; border: none; cursor: pointer;">
+                                🚪 Déconnexion
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
-            <div id="statsContent">
-                <div class="text-center py-4 text-secondary">Chargement...</div>
+        </nav>
+
+        <!-- CONTENT AREA -->
+        <div class="content">
+            <!-- FLASH MESSAGES -->
+            @if ($message = Session::get('success'))
+            <div class="alert alert-success">
+                <span>✅</span>
+                <span>{{ $message }}</span>
+                <button class="alert-close" onclick="this.parentElement.style.display='none';">×</button>
             </div>
+            @endif
+
+            @if ($message = Session::get('error'))
+            <div class="alert alert-error">
+                <span>❌</span>
+                <span>{{ $message }}</span>
+                <button class="alert-close" onclick="this.parentElement.style.display='none';">×</button>
+            </div>
+            @endif
+
+            @if ($message = Session::get('warning'))
+            <div class="alert alert-warning">
+                <span>⚠️</span>
+                <span>{{ $message }}</span>
+                <button class="alert-close" onclick="this.parentElement.style.display='none';">×</button>
+            </div>
+            @endif
+
+            @if ($message = Session::get('info'))
+            <div class="alert alert-info">
+                <span>ℹ️</span>
+                <span>{{ $message }}</span>
+                <button class="alert-close" onclick="this.parentElement.style.display='none';">×</button>
+            </div>
+            @endif
+
+            <!-- VALIDATION ERRORS -->
+            @if ($errors->any())
+            <div class="alert alert-error">
+                <span>⚠️</span>
+                <div>
+                    <strong>Erreurs de validation:</strong>
+                    <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+                        @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+            @endif
+
+            <!-- PAGE CONTENT -->
+            @yield('content')
         </div>
     </div>
-</div>
 
-<script>
-function openStatsModal() {
-    document.getElementById('statsModal').classList.remove('d-none');
-    loadStats();
-}
-function closeStatsModal() {
-    document.getElementById('statsModal').classList.add('d-none');
-}
-function loadStats() {
-    const date = document.getElementById('statsDate').value;
-    document.getElementById('statsContent').innerHTML = '<div class="text-center py-4 text-secondary">Chargement...</div>';
-    fetch(`/statistics/daily?date=${date}`)
-        .then(r => r.json())
-        .then(data => {
-            if (data.stats.length === 0) {
-                document.getElementById('statsContent').innerHTML =
-                    '<div class="text-center py-4 text-secondary">Aucune vente pour cette date</div>';
-                return;
-            }
-            let totalCA = 0, totalQte = 0, rows = '';
-            data.stats.forEach(s => {
-                totalCA += parseFloat(s.total_ca);
-                totalQte += parseInt(s.total_quantite);
-                rows += `
-                    <tr>
-                        <td class="py-2 px-3 text-sm text-secondary">${s.categorie}</td>
-                        <td class="py-2 px-3 text-sm text-center text-secondary">${s.total_quantite}</td>
-                        <td class="py-2 px-3 text-sm text-end text-success">${parseFloat(s.total_ca).toLocaleString('fr-FR')} DH</td>
-                    </tr>`;
-            });
-            document.getElementById('statsContent').innerHTML = `
-                <div class="table-responsive rounded-3 border border-200">
-                    <table class="table table-sm mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Catégorie</th>
-                                <th class="text-center">Quantité</th>
-                                <th class="text-end">CA</th>
-                            </tr>
-                        </thead>
-                        <tbody>${rows}</tbody>
-                        <tfoot class="table-secondary fw-semibold">
-                            <tr>
-                                <td>Total</td>
-                                <td class="text-center">${totalQte}</td>
-                                <td class="text-end">${totalCA.toLocaleString('fr-FR')} DH</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>`;
-        })
-        .catch(() => {
-            document.getElementById('statsContent').innerHTML =
-                '<div class="text-center py-4 text-danger">Erreur de chargement</div>';
-        });
-}
-</script>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
     <script>
-        const sidebarToggle = document.getElementById('sidebarToggle');
+        // Sidebar toggle for mobile
         const sidebar = document.getElementById('sidebar');
-        const sidebarBackdrop = document.getElementById('sidebarBackdrop');
-        const contentWrapper = document.querySelector('.content-wrapper');
+        const sidebarToggle = document.getElementById('sidebarToggle');
 
-        function openSidebar() {
-            sidebar.classList.add('d-block');
-            sidebarBackdrop.classList.remove('d-none');
-        }
-        function closeSidebar() {
-            sidebar.classList.remove('d-block');
-            sidebarBackdrop.classList.add('d-none');
+        if (window.innerWidth <= 768) {
+            sidebarToggle.style.display = 'block';
         }
 
-        sidebarToggle?.addEventListener('click', function () {
-            if (sidebar.classList.contains('d-block')) {
-                closeSidebar();
+        window.addEventListener('resize', () => {
+            if (window.innerWidth <= 768) {
+                sidebarToggle.style.display = 'block';
             } else {
-                openSidebar();
+                sidebarToggle.style.display = 'none';
+                sidebar.classList.remove('active');
             }
         });
 
-        sidebarBackdrop?.addEventListener('click', closeSidebar);
-    </script>
-    @stack('scripts')
+        sidebarToggle?.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+        });
 
+        // User menu dropdown
+        const userMenuTrigger = document.getElementById('userMenuTrigger');
+        const userDropdown = document.getElementById('userDropdown');
+
+        userMenuTrigger?.addEventListener('click', () => {
+            userDropdown.classList.toggle('active');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.user-menu')) {
+                userDropdown.classList.remove('active');
+            }
+        });
+
+        // Auto-hide alerts
+        document.querySelectorAll('.alert').forEach(alert => {
+            setTimeout(() => {
+                alert.style.opacity = '0';
+                alert.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => alert.remove(), 300);
+            }, 5000);
+        });
+    </script>
 </body>
 </html>

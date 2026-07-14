@@ -17,12 +17,12 @@ class CategorieController extends Controller
 
         $categories = $query->orderBy('nom')->paginate(20)->withQueryString();
 
-        return view('categories.index', compact('categories'));
+        return view('pages.categories.index', compact('categories'));
     }
 
     public function create()
     {
-        return view('categories.create');
+        return view('pages.categories.create');
     }
 
     public function store(Request $request)
@@ -44,7 +44,7 @@ class CategorieController extends Controller
 
     public function edit(Categorie $categorie)
     {
-        return view('categories.edit', compact('categorie'));
+        return view('pages.categories.edit', compact('categorie'));
     }
 
     public function update(Request $request, Categorie $categorie)
@@ -55,7 +55,7 @@ class CategorieController extends Controller
         ], [
             'nom.required' => 'Le nom de la catégorie est obligatoire.',
             'nom.unique'   => 'Ce nom est déjà utilisé par une autre catégorie.',
-            'amevo_id.unique' => 'Cet ID AMEVO est déjà utilisé.',
+            'amevo_id.unique' => 'Cet ID AMEVO est déjà utilisé par une autre catégorie.',
         ]);
 
         $categorie->update($validated);
@@ -69,6 +69,6 @@ class CategorieController extends Controller
         $categorie->delete();
 
         return redirect()->route('categories.index')
-            ->with('success', '🗑️ Catégorie supprimée !');
+            ->with('success', '✅ Catégorie supprimée !');
     }
 }

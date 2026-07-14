@@ -23,12 +23,12 @@ class ClientController extends Controller
 
         $clients = $query->orderBy('nom')->paginate(15)->withQueryString();
 
-        return view('clients.index', compact('clients'));
+        return view('pages.clients.index', compact('clients'));
     }
 
     public function create()
     {
-        return view('clients.create');
+        return view('pages.clients.create');
     }
 
     public function store(Request $request)
@@ -58,14 +58,14 @@ class ClientController extends Controller
         $totalFacture   = $client->totalFacture();
         $nombreFactures = $client->nombreFactures();
 
-        return view('clients.show', compact(
+        return view('pages.clients.show', compact(
             'client', 'invoices', 'manualInvoices', 'totalFacture', 'nombreFactures'
         ));
     }
 
     public function edit(Client $client)
     {
-        return view('clients.edit', compact('client'));
+        return view('pages.clients.edit', compact('client'));
     }
 
     public function update(Request $request, Client $client)

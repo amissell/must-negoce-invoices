@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Services\InvoiceCalculationService;
 use App\Services\InvoiceNumberGenerator;
 use App\Services\InvoicePersistence;
+use App\Models\InvoiceItem;
 
 class InvoiceService
 {

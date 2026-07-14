@@ -9,6 +9,9 @@ use App\Models\Invoice;
 use App\Models\Product;
 use App\Services\InvoiceService;
 use App\Services\PdfService;
+use App\Helpers\NumberToFrenchWords;
+use Illuminate\Support\Facades\Auth;
+
 
 class ManualInvoiceController extends Controller
 {
@@ -26,13 +29,13 @@ class ManualInvoiceController extends Controller
         $products = Product::orderBy('name')->get();
         $nextInvoiceNumber = $this->invoiceService->generateNextInvoiceNumber();
 
-        return view('invoices.create-manual', compact('products', 'nextInvoiceNumber'));
+        return view('pages.invoices.create-manual', compact('products', 'nextInvoiceNumber'));
     }
 
     public function store(StoreManualInvoiceRequest $request)
     {
         try {
-            $this->invoiceService->createManualInvoice($request->validated(), auth()->id());
+            $this->invoiceService->createManualInvoice($request->validated(), Auth::id());
 
             return redirect()->route('invoices.index')
                 ->with('success', 'Facture créée');
@@ -46,7 +49,7 @@ class ManualInvoiceController extends Controller
         $invoice = Invoice::findOrFail($id);
 
         try {
-            $this->invoiceService->updateManualInvoice($invoice, $request->validated(), auth()->id());
+            $this->invoiceService->updateManualInvoice($invoice, $request->validated(), Auth::id());
 
             return redirect()->route('invoices.index')
                 ->with('success', 'Facture modifiée');
@@ -72,9 +75,9 @@ class ManualInvoiceController extends Controller
     public function downloadPDF($id)
     {
         $invoice = Invoice::with('items.product')->findOrFail($id);
-        $amountInWords = $this->invoiceService->numberToWords($invoice->total_ttc);
+        $amountInWords = NumberToFrenchWords::convert($invoice->total_ttc);
 
-        return $this->pdfService->download('invoices.pdf-manual', compact('invoice', 'amountInWords'), "facture_{$invoice->invoice_number}.pdf");
+        return $this->pdfService->download('pages.invoices.pdf-manual', compact('invoice', 'amountInWords'), "facture_{$invoice->invoice_number}.pdf");
     }
 
     public function edit(int $id)
@@ -82,6 +85,6 @@ class ManualInvoiceController extends Controller
         $invoice = Invoice::with('items.product')->findOrFail($id);
         $products = Product::orderBy('name')->get();
 
-        return view('invoices.edit', compact('invoice', 'products'));
+        return view('pages.invoices.edit', compact('invoice', 'products'));
     }
 }
