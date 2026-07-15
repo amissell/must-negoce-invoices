@@ -44,7 +44,6 @@ class DashboardVendeursController extends Controller
                 ]);
             }
 
-            // Liste des vendeurs autorisés
             $allowed = [
                 'ABDELILAH 0777939547',
                 'OUISSADEN HASSAN',
@@ -64,7 +63,6 @@ class DashboardVendeursController extends Controller
                 return in_array($nom, $allowed);
             };
 
-            // Filtrer toutes les sections du dashboard
             foreach ([
                 'vendorCards',
                 'inactivite',

@@ -7,9 +7,7 @@ use App\Models\ObjectifVendeur;
 
 class ObjectifVendeurController extends Controller
 {
-    /**
-     * Liste des objectifs par mois / année
-     */
+
     public function index(Request $request)
     {
         $mois = (int) $request->get('mois', now()->month);
@@ -31,9 +29,6 @@ class ObjectifVendeurController extends Controller
         return view('pages.objectifs.index', compact('objectifs', 'vendeurs', 'mois', 'annee'));
     }
 
-    /**
-     * Formulaire de création
-     */
     public function create()
     {
         $vendeurs = [
@@ -49,10 +44,6 @@ class ObjectifVendeurController extends Controller
             'objectif' => null,
         ]);
     }
-
-    /**
-     * Enregistrer ou mettre à jour si même vendeur + mois + année
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -83,9 +74,6 @@ class ObjectifVendeurController extends Controller
         ])->with('success', 'Objectif enregistré ✔️');
     }
 
-    /**
-     * Formulaire d'édition
-     */
     public function edit($id)
     {
         $objectif = ObjectifVendeur::findOrFail($id);

@@ -48,8 +48,6 @@ Route::middleware(['auth', 'admin_or_adv'])->group (function () {
     Route::get('/creances/export/excel', [CreanceController::class, 'exportExcel'])->name('creances.export.excel');
     Route::get('/creances/export/pdf', [CreanceController::class, 'exportPdf'])->name('creances.export.pdf');
     Route::get('/alertes', [AlerteController::class, 'index'])->name('alertes.index');
-    // Route::get('/suivi-vendeurs/comparaison', [SuiviVendeurController::class, 'comparaison'])->name('suivi-vendeurs.comparaison');
-
 });
 
 Route::middleware(['auth', 'admin'])->group(function () {
@@ -57,11 +55,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/admin/users/{user}/role',         [UserController::class, 'updateRole'])->name('admin.users.role'); Route::delete('/admin/users/{user}',           [UserController::class, 'destroy'])->name('admin.users.destroy');
     Route::get('/admin/users/create',  [UserController::class, 'create'])->name('admin.users.create');
     Route::post('/admin/users',        [UserController::class, 'store'])->name('admin.users.store');
-
-    // Route::get('/statistics/daily', [SuiviVendeurController::class, 'dailyStatsPage'])->name('statistics.daily');
-});
-
-Route::middleware(['auth'])->group(function () {
     Route::post('/admin/users/{user}/approve', [UserController::class, 'approve'])->name('admin.users.approve');
     Route::post('/admin/users/{user}/reject',  [UserController::class, 'reject'])->name('admin.users.reject');
 });

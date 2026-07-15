@@ -28,17 +28,14 @@ class InvoiceController extends Controller
     {
         $query = Invoice::with('creator')->latest();
 
-        // ── Filtre par type ──────────────────────────────────────
         if ($request->filled('type')) {
             $query->where('type', $request->type);
         }
 
-        // ── Filtre par client ────────────────────────────────────
         if ($request->filled('client_id')) {
             $query->where('client_id', $request->client_id);
         }
 
-        // ── Recherche par N° facture, client, ICE ───────────────
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {

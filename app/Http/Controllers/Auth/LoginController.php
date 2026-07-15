@@ -37,13 +37,11 @@ class LoginController extends Controller
     /** @var \App\Models\User $user */
     $user = Auth::user();
 
-    // Check if user is approved
     if (!$user->isAdmin() && !$user->isApproved()) {
         Auth::logout();
         return back()->with('error', '⏳ Votre compte est en attente d\'approbation par l\'administrateur.');
     }
 
-    // Redirect adv to invoices
     if ($user->isAdv()) {
         return redirect()->route('invoices.index')
         ->with('success', 'Bienvenue ' . $user->name . '!');

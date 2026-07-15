@@ -9,8 +9,6 @@ class DashboardCategoriesController extends Controller
 {
     public function index(Request $request)
     {
-        // Mêmes paramètres que le dashboard vendeurs : mois/année (l'API ne connaît pas
-        // de plage de dates libre), + user_id optionnel si on veut un jour filtrer par vendeur.
         $mois   = $request->get('mois',    now()->format('m'));
         $annee  = $request->get('annee',   now()->year);
         $userId = $request->get('user_id', null);
@@ -45,10 +43,6 @@ class DashboardCategoriesController extends Controller
                 'data'   => null,
             ]);
         }
-
-        // Tout est OK → on envoie les données à la vue (on garde tout $data,
-        // la vue n'utilisera que les blocs "Catégories vendues" : categoriesData,
-        // cat_ca_total, cat_qte_total, catEvoLabels, catEvoSeries).
         return view('pages.dashboards.dashboard-categories', [
             'erreur'  => null,
             'data'    => $data,

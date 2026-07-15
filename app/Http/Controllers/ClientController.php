@@ -96,7 +96,6 @@ class ClientController extends Controller
                          ->with('success', 'Client supprimé.');
     }
 
-    // AJAX — pour le dropdown dans les formulaires factures
     public function search(Request $request)
     {
         $clients = Client::where('nom', 'like', '%' . $request->q . '%')
