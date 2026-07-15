@@ -48,12 +48,12 @@ class LoginController extends Controller
         return redirect()->route('invoices.index')
         ->with('success', 'Bienvenue ' . $user->name . '!');
         }
-        
+
         if (!$user->isAdmin()) {
-            return redirect()->route('suivi-vendeurs.index')
+            return redirect()->route('dashboard.vendeurs')
             ->with('success', 'Bienvenue ' . $user->name . '!');
             }
-            
+
             return redirect()->intended(route('invoices.index'))
             ->with('success', 'Bienvenue ' . $user->name . '!');
         }

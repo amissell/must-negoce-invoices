@@ -578,6 +578,7 @@
             background: var(--border-light);
         }
     </style>
+    @stack('styles')
 </head>
 <body>
     <!-- SIDEBAR -->
@@ -822,5 +823,6 @@
             }, 5000);
         });
     </script>
+    @stack('scripts')
 </body>
 </html>

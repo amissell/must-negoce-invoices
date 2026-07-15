@@ -5,7 +5,6 @@
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
     * { font-family: 'Plus Jakarta Sans', sans-serif; }
-
     .page-hero {
         background: linear-gradient(135deg, #1e3a5f 0%, #3b7cb8 100%);
         border-radius: 24px; position: relative; overflow: hidden;
@@ -20,7 +19,6 @@
         0%,100% { transform: translate(0,0) rotate(0deg); }
         50%      { transform: translate(-30px,30px) rotate(180deg); }
     }
-
     .filter-bar {
         background: white; border-radius: 20px; padding: 20px 24px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.07); border: 1px solid rgba(0,0,0,0.05);
@@ -139,7 +137,6 @@
         </form>
     </div>
 
-    {{-- ══════════════ KPI ══════════════ --}}
 
     {{-- ══════════════ KPI ══════════════ --}}
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -260,7 +257,6 @@
 <div class="mt-6 bg-yellow-50 border border-yellow-300 rounded-xl p-4">
 
     <strong>ℹ️ Information</strong>
-
     <p class="mt-2 text-sm text-gray-700">
 
         Les montants affichés par catégorie sont des estimations calculées
@@ -270,10 +266,7 @@
         Ils ne représentent pas les ventes réelles du vendeur par catégorie.
 
     </p>
-
 </div>
-
-
 <p class="text-xs text-gray-500 mt-6">
     Les données affichées proviennent directement de l'API AMEVO
     (<strong>vendorCards</strong> et <strong>categoriesData</strong>).

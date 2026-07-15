@@ -14,12 +14,17 @@ class DashboardVendeurCategorieController extends Controller
 
         $url = "https://app.amevo.ma/must-negoce/public/synchronisation/{$mois}/{$annee}";
 
-        $response = Http::timeout(30)->get($url);
+        try {
+            $response = Http::timeout(30)->get($url);
 
-        if (!$response->successful()) {
-            return back()->with('error', 'Impossible de récupérer les données.');
+            if (!$response->successful()) {
+                return back()->with('error', 'Impossible de récupérer les données.');
+            }
+
+            $data = $response->json();
+        } catch (\Throwable $exception) {
+            return back()->with('error', 'Impossible de contacter l\'API.');
         }
-        $data = $response->json();
 
         $vendorCards = collect($data['vendorCards'] ?? []);
         $categoriesData = collect($data['categoriesData'] ?? []);

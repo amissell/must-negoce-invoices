@@ -6,7 +6,6 @@ use App\Http\Controllers\ManualInvoiceController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\SuiviVendeurController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CreanceController;
 use App\Http\Controllers\AlerteController;
@@ -81,9 +80,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('vendeurs',   VendeurController::class)->except(['show']);
     Route::resource('categories', CategorieController::class)->except(['show']);
 });
-Route::get('/dashboard-vendeurs', [DashboardVendeursController::class, 'index'])
-    ->name('dashboard.vendeurs');
-Route::get('/dashboard-categories', [DashboardCategoriesController::class, 'index'])
-    ->name('dashboard.categories');
-Route::get('/dashboard-vendeur-categorie', [DashboardVendeurCategorieController::class, 'index'])
-    ->name('dashboard.vendeur-categorie');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard-vendeurs', [DashboardVendeursController::class, 'index'])
+        ->name('dashboard.vendeurs');
+    Route::get('/dashboard-categories', [DashboardCategoriesController::class, 'index'])
+        ->name('dashboard.categories');
+    Route::get('/dashboard-vendeur-categorie', [DashboardVendeurCategorieController::class, 'index'])
+        ->name('dashboard.vendeur-categorie');
+});

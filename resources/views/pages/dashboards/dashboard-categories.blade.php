@@ -161,7 +161,6 @@
         letter-spacing: 0.5px;
         color: #64748b;
     }
-
     .table-card {
         background: white;
         border-radius: 16px;

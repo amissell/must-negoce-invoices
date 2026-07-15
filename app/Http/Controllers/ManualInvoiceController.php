@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreManualInvoiceRequest;
 use App\Http\Requests\UpdateManualInvoiceRequest;
+use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Product;
 use App\Services\InvoiceService;
@@ -27,9 +28,10 @@ class ManualInvoiceController extends Controller
     public function create()
     {
         $products = Product::orderBy('name')->get();
+        $clients = Client::orderBy('nom')->get(['id', 'nom']);
         $nextInvoiceNumber = $this->invoiceService->generateNextInvoiceNumber();
 
-        return view('pages.invoices.create-manual', compact('products', 'nextInvoiceNumber'));
+        return view('pages.invoices.create-manual', compact('products', 'clients', 'nextInvoiceNumber'));
     }
 
     public function store(StoreManualInvoiceRequest $request)
@@ -84,7 +86,8 @@ class ManualInvoiceController extends Controller
     {
         $invoice = Invoice::with('items.product')->findOrFail($id);
         $products = Product::orderBy('name')->get();
+        $clients = Client::orderBy('nom')->get(['id', 'nom']);
 
-        return view('pages.invoices.edit', compact('invoice', 'products'));
+        return view('pages.invoices.edit', compact('invoice', 'products', 'clients'));
     }
 }

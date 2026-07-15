@@ -20,7 +20,7 @@
                    style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:white;color:#4F46E5;border-radius:14px;font-weight:700;font-size:14px;text-decoration:none;">
                     ➕ Nouvel Utilisateur
                 </a>
-                <a href="{{ route('suivi-vendeurs.index') }}"
+                <a href="{{ route('dashboard.vendeurs') }}"
                    style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:rgba(255,255,255,0.2);backdrop-filter:blur(8px);color:white;border-radius:14px;font-weight:700;font-size:14px;text-decoration:none;border:1px solid rgba(255,255,255,0.3)">
                     ← Dashboard
                 </a>
