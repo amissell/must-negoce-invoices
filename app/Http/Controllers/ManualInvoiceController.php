@@ -28,7 +28,7 @@ class ManualInvoiceController extends Controller
     public function create()
     {
         $products = Product::orderBy('name')->get();
-        $clients = Client::orderBy('nom')->get(['id', 'nom']);
+        $clients = Client::orderBy('nom')->get(['id', 'nom', 'ice', 'telephone', 'adresse']);
         $nextInvoiceNumber = $this->invoiceService->generateNextInvoiceNumber();
 
         return view('pages.invoices.create-manual', compact('products', 'clients', 'nextInvoiceNumber'));
@@ -86,7 +86,7 @@ class ManualInvoiceController extends Controller
     {
         $invoice = Invoice::with('items.product')->findOrFail($id);
         $products = Product::orderBy('name')->get();
-        $clients = Client::orderBy('nom')->get(['id', 'nom']);
+        $clients = Client::orderBy('nom')->get(['id', 'nom', 'ice', 'telephone', 'adresse']);
 
         return view('pages.invoices.edit', compact('invoice', 'products', 'clients'));
     }
