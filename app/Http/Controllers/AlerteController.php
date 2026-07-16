@@ -46,10 +46,13 @@ class AlerteController extends Controller
             ];
         })->filter();
 
+        $ordreNiveau = ['critique' => 0, 'attention' => 1];
+
         $alertes = collect()
             ->merge($facturesImpayees)
             ->merge($vendeursInactifs)
-            ->sortBy('niveau');
+            ->sortBy(fn($a) => $ordreNiveau[$a['niveau']] ?? 2)
+            ->values();
 
         return view('pages.alertes.index', compact('alertes'));
     }

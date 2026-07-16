@@ -609,6 +609,13 @@
             </li>
 
             <li class="sidebar-nav-item">
+                <a href="{{ route('products.index') }}" class="nav-link {{ request()->routeIs('products.*') ? 'active' : '' }}">
+                    <span class="nav-icon">📦</span>
+                    <span>Produits</span>
+                </a>
+            </li>
+
+            <li class="sidebar-nav-item">
                 <a href="{{ route('creances.index') }}" class="nav-link {{ request()->routeIs('creances.*') ? 'active' : '' }}">
                     <span class="nav-icon">💰</span>
                     <span>Créances</span>

@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -7,7 +6,6 @@ use App\Models\ObjectifVendeur;
 
 class ObjectifVendeurController extends Controller
 {
-
     public function index(Request $request)
     {
         $mois = (int) $request->get('mois', now()->month);
@@ -38,7 +36,6 @@ class ObjectifVendeurController extends Controller
             'ABDELLAH',
             'SOUFAINE',
         ];
-
         return view('pages.objectifs.form', [
             'vendeurs' => $vendeurs,
             'objectif' => null,
@@ -54,7 +51,6 @@ class ObjectifVendeurController extends Controller
             'objectif_bl' => 'required|integer|min:0',
             'prime' => 'required|numeric|min:0',
         ]);
-
         ObjectifVendeur::updateOrCreate(
             [
                 'vendeur_nom' => $request->vendeur_nom,
@@ -67,17 +63,14 @@ class ObjectifVendeurController extends Controller
                 'prime' => $request->prime,
             ]
         );
-
         return redirect()->route('objectifs.index', [
             'mois' => $request->mois,
             'annee' => $request->annee,
         ])->with('success', 'Objectif enregistré ✔️');
     }
-
     public function edit($id)
     {
         $objectif = ObjectifVendeur::findOrFail($id);
-
         $vendeurs = [
             'NOUREDINE',
             'ABDILILAH',
@@ -85,17 +78,11 @@ class ObjectifVendeurController extends Controller
             'ABDELLAH',
             'SOUFAINE',
         ];
-
         return view('pages.objectifs.form', compact('objectif', 'vendeurs'));
     }
-
-    /**
-     * Mise à jour
-     */
     public function update(Request $request, $id)
     {
         $objectif = ObjectifVendeur::findOrFail($id);
-
         $request->validate([
             'vendeur_nom' => 'required|string',
             'mois' => 'required|integer|min:1|max:12',
@@ -104,7 +91,6 @@ class ObjectifVendeurController extends Controller
             'objectif_bl' => 'required|integer|min:0',
             'prime' => 'required|numeric|min:0',
         ]);
-
         $objectif->update([
             'vendeur_nom' => $request->vendeur_nom,
             'mois' => $request->mois,
@@ -119,10 +105,6 @@ class ObjectifVendeurController extends Controller
             'annee' => $request->annee,
         ])->with('success', 'Objectif mis à jour ✔️');
     }
-
-    /**
-     * Supprimer
-     */
     public function destroy($id)
     {
         $objectif = ObjectifVendeur::findOrFail($id);
