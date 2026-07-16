@@ -136,8 +136,8 @@
                     <select name="product_id[]" class="col-span-5 px-4 py-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
                         <option value="">Sélectionner un produit...</option>
                         @foreach($products as $p)
-                            <option value="{{ $p->id }}" data-price="{{ $p->prix_unitaire }}">
-                                {{ $p->designation }} ({{ number_format($p->prix_unitaire, 2) }} MAD)
+                            <option value="{{ $p->id }}" data-price="{{ $p->prix_ttc }}">
+                                {{ $p->name }} ({{ number_format($p->prix_ttc, 2) }} MAD)
                             </option>
                         @endforeach
                     </select>
