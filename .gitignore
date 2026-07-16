@@ -25,3 +25,5 @@ Thumbs.db
 /UserSeeder.php
 setup.sh
 schema.sql
+.phpunit.result.cache
+

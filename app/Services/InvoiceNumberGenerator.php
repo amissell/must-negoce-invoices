@@ -3,62 +3,53 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Models\Invoice;
+use Illuminate\Support\Facades\DB;
+use RuntimeException;
 
 /**
- * Generates invoice numbers following the existing project rules.
+ * Generates invoice numbers atomically using a dedicated sequence table
+ * protected by SELECT ... FOR UPDATE. Must be called inside an active
+ * database transaction.
  */
 class InvoiceNumberGenerator
 {
     /**
-     * Generate the next invoice number using the last invoice for the two-digit year prefix.
+     * Reserve and return the next invoice number for the current year.
+     * MUST be called inside a DB::transaction() to guarantee the row lock.
      */
     public function generateNextInvoiceNumber(): string
     {
+        if (DB::transactionLevel() < 1) {
+            throw new RuntimeException(
+                'InvoiceNumberGenerator::generateNextInvoiceNumber() must be called inside a database transaction.'
+            );
+        }
+
         $year = date('y');
 
-        $lastInvoice = Invoice::where('invoice_number', 'like', $year . '/%')
-            ->orderByRaw('CAST(SUBSTRING(invoice_number, 4) AS UNSIGNED) DESC')
+        // Ensure the row exists before locking (safe upsert; no-op if present).
+        DB::table('invoice_sequences')->insertOrIgnore([
+            'year_prefix' => $year,
+            'last_number' => 0,
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ]);
+
+        // Lock the row for the duration of the transaction.
+        $row = DB::table('invoice_sequences')
+            ->where('year_prefix', $year)
+            ->lockForUpdate()
             ->first();
 
-        $newNumber = $lastInvoice
-            ? intval(explode('/', $lastInvoice->invoice_number)[1]) + 1
-            : 1;
+        $next = ((int) $row->last_number) + 1;
 
-        return $year . '/' . str_pad((string) $newNumber, 3, '0', STR_PAD_LEFT);
-    }
+        DB::table('invoice_sequences')
+            ->where('year_prefix', $year)
+            ->update([
+                'last_number' => $next,
+                'updated_at'  => now(),
+            ]);
 
-    /**
-     * Generate an invoice number for the current year, filling gaps when present.
-     */
-    public function generateInvoiceNumber(): string
-    {
-        $year = date('y');
-        $currentYear = date('Y');
-
-        $existingNumbers = Invoice::whereYear('created_at', $currentYear)
-            ->pluck('invoice_number')
-            ->map(function ($number) {
-                $parts = explode('/', $number);
-                return isset($parts[1]) ? (int) $parts[1] : null;
-            })
-            ->filter()
-            ->sort()
-            ->values()
-            ->toArray();
-
-        if (empty($existingNumbers)) {
-            return $year . '/001';
-        }
-
-        $nextNumber = 1;
-        foreach ($existingNumbers as $num) {
-            if ($num != $nextNumber) {
-                break;
-            }
-            $nextNumber++;
-        }
-
-        return $year . '/' . str_pad((string) $nextNumber, 3, '0', STR_PAD_LEFT);
+        return $year . '/' . str_pad((string) $next, 3, '0', STR_PAD_LEFT);
     }
 }

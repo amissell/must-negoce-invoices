@@ -454,7 +454,6 @@ document.addEventListener('DOMContentLoaded', function () {
         submitBtn.disabled = itemsBody.children.length === 0;
     }
 
-    // ── SEED EXISTING ITEMS ─────────────────────────────────────────────────
     const existingItems = JSON.parse(document.getElementById('existingItemsData').textContent || '[]');
     if (existingItems.length > 0) {
         existingItems.forEach(item => addItem(item));

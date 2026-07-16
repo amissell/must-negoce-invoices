@@ -5,28 +5,19 @@ namespace App\Services;
 
 use App\Models\Client;
 use App\Models\Invoice;
-use App\Models\Product;
-use App\Services\InvoiceCalculationService;
-use App\Services\InvoiceNumberGenerator;
-use App\Services\InvoicePersistence;
 use App\Models\InvoiceItem;
+use App\Models\Product;
 
 class InvoiceService
 {
     private InvoiceCalculationService $invoiceCalculationService;
-    private InvoiceNumberGenerator $invoiceNumberGenerator;
     private InvoicePersistence $invoicePersistence;
 
-    /**
-     * InvoiceService constructor.
-     */
     public function __construct(
         InvoiceCalculationService $invoiceCalculationService,
-        InvoiceNumberGenerator $invoiceNumberGenerator,
         InvoicePersistence $invoicePersistence
     ) {
         $this->invoiceCalculationService = $invoiceCalculationService;
-        $this->invoiceNumberGenerator = $invoiceNumberGenerator;
         $this->invoicePersistence = $invoicePersistence;
     }
 
@@ -38,8 +29,8 @@ class InvoiceService
             (float) ($validated['remise_percentage'] ?? 0)
         );
 
+        // NOTE: invoice_number is generated atomically inside InvoicePersistence.
         return $this->invoicePersistence->createManualInvoice([
-            'invoice_number'    => $this->generateNextInvoiceNumber(),
             'type'              => 'manual',
             'client_id'         => $validated['client_id'] ?? null,
             'client_name'       => $validated['client_name'] ?? null,
@@ -67,10 +58,10 @@ class InvoiceService
             (float) ($validated['remise_percentage'] ?? 0)
         );
 
+        // invoice_number is IMMUTABLE — intentionally not passed here.
         return $this->invoicePersistence->updateManualInvoice(
             $invoice,
             [
-                'invoice_number'    => $validated['invoice_number'],
                 'invoice_date'      => $validated['invoice_date'],
                 'payment_mode'      => $validated['payment_mode'],
                 'client_id'         => $validated['client_id'] ?? null,
@@ -95,10 +86,10 @@ class InvoiceService
     {
         $items = [
             [
-                'product' => (object) ['id' => 0],
-                'quantity' => 1,
+                'product'    => (object) ['id' => 0],
+                'quantity'   => 1,
                 'unit_price' => $amount,
-                'total' => $amount,
+                'total'      => $amount,
             ],
         ];
 
@@ -123,10 +114,10 @@ class InvoiceService
             $totalAmount += $lineTotal;
 
             $allItems[] = [
-                'product' => $product,
-                'quantity' => $quantity,
+                'product'    => $product,
+                'quantity'   => $quantity,
                 'unit_price' => $unitPrice,
-                'total' => $lineTotal,
+                'total'      => $lineTotal,
             ];
         }
 
@@ -147,11 +138,9 @@ class InvoiceService
         $totalGenerated = 0;
 
         while ($remainingAmount > 50) {
-            if ($remainingAmount <= $maxInvoiceAmount) {
-                $targetInvoiceAmount = $remainingAmount;
-            } else {
-                $targetInvoiceAmount = rand($minInvoiceAmount, $maxInvoiceAmount);
-            }
+            $targetInvoiceAmount = $remainingAmount <= $maxInvoiceAmount
+                ? $remainingAmount
+                : rand($minInvoiceAmount, $maxInvoiceAmount);
 
             if ($targetInvoiceAmount < 100) {
                 break;
@@ -164,28 +153,16 @@ class InvoiceService
             $endDate = \Carbon\Carbon::now();
             $randomDate = \Carbon\Carbon::createFromTimestamp(rand($startDate->timestamp, $endDate->timestamp));
 
-            $invoice = Invoice::create([
-                'invoice_number' => $this->generateInvoiceNumber(),
-                'invoice_date' => $randomDate,
-                'montant_ht' => $montantHT,
-                'tva' => $tva,
-                'total_ttc' => $targetInvoiceAmount,
-                'is_locked' => true,
-                'type' => 'automatic',
-                'client_name' => 'divers',
-                'created_by' => $userId,
-            ]);
-
             $numberOfProducts = rand(300, 400);
             $products = Product::inRandomOrder()->limit($numberOfProducts)->get();
 
             if ($products->isEmpty()) {
-                $invoice->delete();
                 break;
             }
 
+            // Pre-compute items so we know the final total BEFORE persisting.
+            $items = [];
             $actualInvoiceTotal = 0;
-            $itemsAdded = 0;
             $itemsRemaining = $targetInvoiceAmount;
 
             foreach ($products as $product) {
@@ -205,33 +182,34 @@ class InvoiceService
                     continue;
                 }
 
-                InvoiceItem::create([
-                    'invoice_id' => $invoice->id,
-                    'product_id' => $product->id,
-                    'quantity' => $quantity,
+                $items[] = [
+                    'product'    => $product,
+                    'quantity'   => $quantity,
                     'unit_price' => $product->prix_ttc,
-                    'total' => $itemTotal,
-                ]);
+                    'total'      => $itemTotal,
+                ];
 
                 $actualInvoiceTotal += $itemTotal;
                 $itemsRemaining -= $itemTotal;
-                $itemsAdded++;
             }
 
-            if ($itemsAdded === 0 || $actualInvoiceTotal < 100) {
-                $invoice->delete();
+            if (empty($items) || $actualInvoiceTotal < 100) {
                 break;
             }
 
             $actualMontantHT = round($actualInvoiceTotal / 1.2, 2);
             $actualTva = round($actualInvoiceTotal - $actualMontantHT, 2);
 
-            $invoice->update([
-                'montant_ht' => $actualMontantHT,
-                'tva' => $actualTva,
-                'total_ttc' => $actualInvoiceTotal,
-                'updated_by' => $userId,
-            ]);
+            $this->invoicePersistence->createAutomaticInvoice([
+                'invoice_date' => $randomDate,
+                'montant_ht'   => $actualMontantHT,
+                'tva'          => $actualTva,
+                'total_ttc'    => $actualInvoiceTotal,
+                'is_locked'    => true,
+                'type'         => 'automatic',
+                'client_name'  => 'divers',
+                'created_by'   => $userId,
+            ], $items);
 
             $remainingAmount -= $actualInvoiceTotal;
             $totalGenerated += $actualInvoiceTotal;
@@ -244,19 +222,9 @@ class InvoiceService
 
         return [
             'createdInvoices' => $createdInvoices,
-            'totalGenerated' => $totalGenerated,
+            'totalGenerated'  => $totalGenerated,
             'requestedAmount' => $totalTTC,
         ];
-    }
-
-    public function generateNextInvoiceNumber(): string
-    {
-        return $this->invoiceNumberGenerator->generateNextInvoiceNumber();
-    }
-
-    public function generateInvoiceNumber(): string
-    {
-        return $this->invoiceNumberGenerator->generateInvoiceNumber();
     }
 
     public function numberToWords(float $number): string
@@ -315,20 +283,18 @@ class InvoiceService
         $tva = round($totalTtc - $montantHt, 2);
 
         $this->invoicePersistence->createAutomaticInvoice([
-            'invoice_number' => $this->generateInvoiceNumber(),
             'invoice_date' => now(),
-            'montant_ht' => $montantHt,
-            'tva' => $tva,
-            'total_ttc' => $totalTtc,
-            'is_locked' => true,
-            'type' => 'automatic',
-            'client_name' => $customerName,
-            'created_by' => $userId,
+            'montant_ht'   => $montantHt,
+            'tva'          => $tva,
+            'total_ttc'    => $totalTtc,
+            'is_locked'    => true,
+            'type'         => 'automatic',
+            'client_name'  => $customerName,
+            'created_by'   => $userId,
         ], $items);
     }
+
     /**
-     * Format calculated manual invoice items for persistence.
-     *
      * @param array<int, array<string, mixed>> $items
      * @return array<int, array<string, mixed>>
      */
@@ -336,14 +302,15 @@ class InvoiceService
     {
         return array_map(function (array $item) {
             return [
-                'product' => Product::findOrFail($item['product_id']),
-                'product_id' => $item['product_id'],
-                'quantity' => $item['quantity'],
+                'product'        => Product::findOrFail($item['product_id']),
+                'product_id'     => $item['product_id'],
+                'quantity'       => $item['quantity'],
                 'unit_price_ttc' => $item['unit_price_ttc'],
-                'total_ttc' => $item['total_ttc'],
+                'total_ttc'      => $item['total_ttc'],
             ];
         }, $items);
     }
+
     private function splitIntoMultipleInvoices(string $customerName, array $items, int $userId): void
     {
         $max = 4999;
@@ -365,4 +332,23 @@ class InvoiceService
             $this->createAutomaticSingleInvoice($customerName, $currentItems, $currentTotal, $userId);
         }
     }
+
+    public function generateNextInvoiceNumber(): string
+{
+    $year = date('y');
+
+    $lastInvoice = \App\Models\Invoice::where('invoice_number', 'like', $year . '/%')
+        ->orderByDesc('invoice_number')
+        ->first();
+
+    if (!$lastInvoice) {
+        return $year . '/001';
+    }
+
+    $parts = explode('/', $lastInvoice->invoice_number);
+
+    $next = ((int) $parts[1]) + 1;
+
+    return $year . '/' . str_pad((string) $next, 3, '0', STR_PAD_LEFT);
+}
 }
