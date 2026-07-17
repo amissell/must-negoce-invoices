@@ -3,12 +3,15 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 use App\Http\Requests\GenerateInvoiceRequest;
 use App\Http\Requests\StoreInvoiceProductsRequest;
+use App\Models\CompanySetting;
 use App\Models\Invoice;
 use App\Services\InvoiceService;
 use App\Services\PdfService;
 use App\Helpers\NumberToFrenchWords;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\View;
+
 class InvoiceController extends Controller
 {
     private InvoiceService $invoiceService;
@@ -74,15 +77,29 @@ class InvoiceController extends Controller
         return redirect()->route('invoices.index')
             ->with('success', $result['createdInvoices'] . ' Facture(s) créée(s) avec succès! Total généré: ' . number_format($result['totalGenerated'], 2) . ' MAD / ' . number_format($result['requestedAmount'], 2) . ' MAD demandé');
     }
+
     public function downloadPdf($id)
     {
         $invoice = Invoice::with('items.product')->findOrFail($id);
         $safeNumber = str_replace('/', '-', $invoice->invoice_number);
         $amountInWords = NumberToFrenchWords::convert($invoice->total_ttc);
-        $template = $invoice->type === 'manual'
-            ? 'pages.invoices.pdf-manual'
-            : 'pages.invoices.pdf';
-        return $this->pdfService->download($template, compact('invoice', 'amountInWords'), "FACTURE_$safeNumber.pdf");
+
+        $company  = CompanySetting::current();
+        $template = in_array($company->default_pdf_template, ['classic', 'modern'], true)
+            ? $company->default_pdf_template
+            : 'classic';
+
+        $variant = $invoice->type === 'manual' ? 'manual' : 'auto';
+        $view    = "pages.invoices.templates.$template.$variant";
+
+        // Backward compatibility: fall back to legacy blade if template is missing.
+        if (! View::exists($view)) {
+            $view = $invoice->type === 'manual'
+                ? 'pages.invoices.pdf-manual'
+                : 'pages.invoices.pdf';
+        }
+
+        return $this->pdfService->download($view, compact('invoice', 'amountInWords'), "FACTURE_$safeNumber.pdf");
     }
 
     public function export(Request $request)
@@ -98,17 +115,8 @@ class InvoiceController extends Controller
         header('Content-Disposition: attachment; filename="' . $filename . '"');
         $output = fopen('php://output', 'w');
         fputcsv($output, [
-            'N° Facture',
-            'Type',
-            'Client',
-            'Téléphone',
-            'Email',
-            'Date',
-            'Mode Paiement',
-            'Montant HT',
-            'TVA',
-            'Montant TTC',
-            'Créé par',
+            'N° Facture', 'Type', 'Client', 'Téléphone', 'Email', 'Date',
+            'Mode Paiement', 'Montant HT', 'TVA', 'Montant TTC', 'Créé par',
         ]);
         foreach ($invoices as $invoice) {
             fputcsv($output, [
@@ -141,13 +149,8 @@ class InvoiceController extends Controller
             ->whereYear('invoice_date', date('Y'))
             ->sum('total_ttc');
         return view('pages.invoices.statistics', compact(
-            'totalInvoices',
-            'manualInvoices',
-            'automaticInvoices',
-            'totalRevenue',
-            'manualRevenue',
-            'automaticRevenue',
-            'monthlyRevenue'
+            'totalInvoices', 'manualInvoices', 'automaticInvoices',
+            'totalRevenue', 'manualRevenue', 'automaticRevenue', 'monthlyRevenue'
         ));
     }
     public function show($id)

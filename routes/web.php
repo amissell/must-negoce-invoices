@@ -5,6 +5,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ManualInvoiceController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\CompanySettingController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CreanceController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\CategorieController;
 use App\Http\Controllers\DashboardVendeursController;
 use App\Http\Controllers\DashboardCategoriesController;
 use App\Http\Controllers\DashboardVendeurCategorieController;
+use App\Http\Controllers\ExecutiveDashboardController;
 
 
 Route::middleware('guest')->group(function () {
@@ -52,11 +54,17 @@ Route::middleware(['auth', 'admin_or_adv'])->group (function () {
 
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/users',                    [UserController::class, 'index'])->name('admin.users');
-    Route::put('/admin/users/{user}/role',         [UserController::class, 'updateRole'])->name('admin.users.role'); Route::delete('/admin/users/{user}',           [UserController::class, 'destroy'])->name('admin.users.destroy');
+    Route::put('/admin/users/{user}/role',         [UserController::class, 'updateRole'])->name('admin.users.role');
+    Route::delete('/admin/users/{user}',           [UserController::class, 'destroy'])->name('admin.users.destroy');
     Route::get('/admin/users/create',  [UserController::class, 'create'])->name('admin.users.create');
     Route::post('/admin/users',        [UserController::class, 'store'])->name('admin.users.store');
     Route::post('/admin/users/{user}/approve', [UserController::class, 'approve'])->name('admin.users.approve');
     Route::post('/admin/users/{user}/reject',  [UserController::class, 'reject'])->name('admin.users.reject');
+    Route::get('/dashboard/executive', [ExecutiveDashboardController::class, 'index'])
+        ->name('dashboard.executive');
+
+    Route::get('/admin/company-settings',  [CompanySettingController::class, 'edit'])->name('admin.company-settings.edit');
+    Route::put('/admin/company-settings',  [CompanySettingController::class, 'update'])->name('admin.company-settings.update');
 });
 
 

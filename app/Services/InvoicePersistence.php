@@ -97,9 +97,7 @@ class InvoicePersistence
     {
         return DB::transaction(function () use ($invoiceData, $items) {
             $invoiceData['invoice_number'] = $this->invoiceNumberGenerator->generateNextInvoiceNumber();
-
             $invoice = Invoice::create($invoiceData);
-
             foreach ($items as $item) {
                 InvoiceItem::create([
                     'invoice_id' => $invoice->id,
