@@ -47,6 +47,12 @@
         </div>
     </div>
 
+    {{-- Vue widgets mount points (Vite-built components will mount here) --}}
+    <div class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div id="vue-sales-pulse" class="bg-white rounded-2xl card-shadow p-4" data-initial='@json($sales_pulse)'></div>
+        <div id="vue-ceo-scorecard" class="bg-white rounded-2xl card-shadow p-4" data-initial='@json(["mtd_revenue" => $k["current_month_revenue"], "outstanding_receivables" => $recv["total"], "overdue_invoices" => $k["overdue_invoice_count"]])'></div>
+    </div>
+
     {{-- Daily sales pulse and target attainment --}}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div class="bg-white rounded-2xl card-shadow p-5">

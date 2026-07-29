@@ -63,6 +63,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
         ->name('dashboard.executive');
     Route::get('/dashboard/executive/data', [ExecutiveDashboardController::class, 'data'])
         ->name('dashboard.executive.data');
+    // Lightweight JSON endpoints for front-end widgets
+    Route::get('/api/kpis/sales-pulse', [ExecutiveDashboardController::class, 'salesPulse'])
+        ->name('api.kpis.sales_pulse');
+    Route::get('/api/kpis/ceo-scorecard', [ExecutiveDashboardController::class, 'ceoScorecard'])
+        ->name('api.kpis.ceo_scorecard');
     Route::get('/admin/company-targets', [CompanyTargetController::class, 'index'])
         ->name('admin.company-targets.index');
     Route::put('/admin/company-targets', [CompanyTargetController::class, 'upsert'])
@@ -92,6 +97,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard-vendeur-categorie', [DashboardVendeurCategorieController::class, 'index'])
         ->name('dashboard.vendeur-categorie');
 });
+
+// (development-only test route removed)
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     Route::get('activity-logs/{activity}', [ActivityLogController::class, 'show'])->name('activity-logs.show');
