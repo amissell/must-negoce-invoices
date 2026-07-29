@@ -16,4 +16,9 @@ class ExecutiveDashboardController extends Controller
 
         return view('pages.dashboards.executive', $data);
     }
+
+    public function data()
+    {
+        return response()->json($this->dashboard->getDashboardData());
+    }
 }

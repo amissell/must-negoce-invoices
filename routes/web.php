@@ -5,6 +5,7 @@ use App\Http\Controllers\ManualInvoiceController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CompanySettingController;
+use App\Http\Controllers\CompanyTargetController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CreanceController;
@@ -60,6 +61,14 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/users/{user}/reject',  [UserController::class, 'reject'])->name('admin.users.reject');
     Route::get('/dashboard/executive', [ExecutiveDashboardController::class, 'index'])
         ->name('dashboard.executive');
+    Route::get('/dashboard/executive/data', [ExecutiveDashboardController::class, 'data'])
+        ->name('dashboard.executive.data');
+    Route::get('/admin/company-targets', [CompanyTargetController::class, 'index'])
+        ->name('admin.company-targets.index');
+    Route::put('/admin/company-targets', [CompanyTargetController::class, 'upsert'])
+        ->name('admin.company-targets.upsert');
+    Route::delete('/admin/company-targets/{companyTarget}', [CompanyTargetController::class, 'destroy'])
+        ->name('admin.company-targets.destroy');
     Route::get('/admin/company-settings',  [CompanySettingController::class, 'edit'])->name('admin.company-settings.edit');
     Route::put('/admin/company-settings',  [CompanySettingController::class, 'update'])->name('admin.company-settings.update');
 });

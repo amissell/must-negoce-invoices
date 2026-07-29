@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\CompanySetting;
+use App\Models\CompanyTarget;
 use App\Models\Invoice;
 use App\Models\User;
 use Carbon\Carbon;
@@ -25,7 +27,7 @@ use Illuminate\Support\Facades\Schema;
  */
 class ExecutiveDashboardService
 {
-    private const CACHE_TTL    = 300;
+    private const CACHE_TTL    = 900;
     private const CACHE_PREFIX = 'exec_dashboard';
 
     public function __construct(
@@ -105,6 +107,297 @@ class ExecutiveDashboardService
         return Cache::remember($this->key('alertes_count'), self::CACHE_TTL,
             fn () => $this->alerteService->getAllAlertes()->count(),
         );
+    }
+
+    /**
+     * CEO daily pulse, including comparisons with the same day last week and
+     * the matching calendar date last month, plus a 14-day sparkline.
+     *
+     * @return array<string, mixed>
+     */
+    public function salesPulse(): array
+    {
+        return Cache::remember($this->key('sales_pulse'), self::CACHE_TTL, function (): array {
+            $today = Carbon::today();
+            $lastWeek = $today->copy()->subWeek();
+            $lastMonth = $today->copy()->subMonthNoOverflow();
+            $start = $today->copy()->subDays(13);
+
+            $daily = Invoice::query()
+                ->whereBetween('invoice_date', [$start, $today])
+                ->selectRaw('DATE(invoice_date) as day, SUM(total_ttc) as total')
+                ->groupBy('day')
+                ->pluck('total', 'day');
+
+            $sparkline = [];
+            for ($date = $start->copy(); $date->lte($today); $date->addDay()) {
+                $sparkline[] = (float) ($daily[$date->toDateString()] ?? 0);
+            }
+
+            $current = (float) ($daily[$today->toDateString()] ?? 0);
+            $weekAgo = (float) Invoice::whereDate('invoice_date', $lastWeek)->sum('total_ttc');
+            $monthAgo = (float) Invoice::whereDate('invoice_date', $lastMonth)->sum('total_ttc');
+
+            return [
+                'current' => $current,
+                'vs_last_week' => $this->comparison($current, $weekAgo),
+                'vs_last_month' => $this->comparison($current, $monthAgo),
+                'sparkline' => $sparkline,
+            ];
+        });
+    }
+
+    /** @return array<string, mixed> */
+    public function companyTarget(): array
+    {
+        return Cache::remember($this->key('company_target'), self::CACHE_TTL, function (): array {
+            $today = Carbon::today();
+            $actual = $this->currentMonthRevenue();
+            $target = (float) (CompanyTarget::query()
+                ->where('month', $today->month)
+                ->where('year', $today->year)
+                ->value('target_amount') ?? 0);
+            $elapsedDays = $today->day;
+            $daysInMonth = $today->daysInMonth;
+            $projection = $elapsedDays > 0 ? ($actual / $elapsedDays) * $daysInMonth : 0.0;
+
+            return [
+                'actual' => $actual,
+                'target' => $target,
+                'attainment_percent' => $target > 0 ? ($actual / $target) * 100 : null,
+                'projection' => round($projection, 2),
+                'days_elapsed' => $elapsedDays,
+                'days_in_month' => $daysInMonth,
+            ];
+        });
+    }
+
+    /** @return array<string, int> */
+    public function activeClients(): array
+    {
+        return Cache::remember($this->key('active_clients'), self::CACHE_TTL, function (): array {
+            $today = Carbon::today();
+
+            return collect([30, 60, 90])->mapWithKeys(function (int $days) use ($today): array {
+                $count = Invoice::query()
+                    ->whereNotNull('client_id')
+                    ->whereDate('invoice_date', '>=', $today->copy()->subDays($days - 1))
+                    ->distinct('client_id')
+                    ->count('client_id');
+
+                return ["last_{$days}_days" => $count];
+            })->all();
+        });
+    }
+
+    public function overdueInvoiceCount(): int
+    {
+        return Cache::remember($this->key('overdue_invoice_count'), self::CACHE_TTL,
+            fn (): int => Invoice::query()
+                ->whereDate('date_echeance', '<', Carbon::today())
+                ->whereRaw('total_ttc > COALESCE(montant_paye, 0)')
+                ->count(),
+        );
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    public function revenueComparisonGrid(): array
+    {
+        return Cache::remember($this->key('revenue_comparison_grid'), self::CACHE_TTL, function (): array {
+            $today = Carbon::today();
+            $currentStart = $today->copy()->startOfMonth();
+            $previousStart = $today->copy()->subMonthNoOverflow()->startOfMonth();
+            $previousEnd = $previousStart->copy()->addDays(min($today->day, $previousStart->daysInMonth) - 1);
+            $yearAgoStart = $currentStart->copy()->subYear();
+            $yearAgoEnd = $today->copy()->subYearNoOverflow();
+            $current = $this->revenueBetween($currentStart, $today);
+            $previous = $this->revenueBetween($previousStart, $previousEnd);
+            $yearAgo = $this->revenueBetween($yearAgoStart, $yearAgoEnd);
+
+            return [
+                ['label' => 'MTD', 'current' => $current, 'comparison_label' => 'Mois précédent (même durée)', 'comparison' => $previous, ...$this->comparison($current, $previous)],
+                ['label' => 'MTD', 'current' => $current, 'comparison_label' => 'Même période N-1', 'comparison' => $yearAgo, ...$this->comparison($current, $yearAgo)],
+            ];
+        });
+    }
+
+    /**
+     * Margin is calculated from the line's stored sale price and the current
+     * product cost. Both values are TTC in the current schema. Lines without a
+     * cost are deliberately excluded rather than overstating profitability.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public function grossMarginAnalysis(): array
+    {
+        return Cache::remember($this->key('gross_margin_analysis'), self::CACHE_TTL, function (): array {
+            return [
+                'products' => $this->marginBy('product'),
+                'clients' => $this->marginBy('client'),
+                'sellers' => $this->marginBy('seller'),
+                'missing_cost_lines' => (int) DB::table('invoice_items')
+                    ->join('products', 'products.id', '=', 'invoice_items.product_id')
+                    ->whereNull('products.cost_price')
+                    ->count(),
+            ];
+        });
+    }
+
+    /** @return array{labels:array<int,string>, margins:array<int,float>, percentages:array<int,float>, revenues:array<int,float>} */
+    private function marginBy(string $dimension): array
+    {
+        $query = DB::table('invoice_items')
+            ->join('invoices', 'invoices.id', '=', 'invoice_items.invoice_id')
+            ->join('products', 'products.id', '=', 'invoice_items.product_id')
+            ->whereNotNull('products.cost_price');
+
+        $labelSql = match ($dimension) {
+            'client' => 'COALESCE(clients.nom, invoices.client_name, \'Client inconnu\')',
+            'seller' => 'COALESCE(users.name, \'Non attribué\')',
+            default => 'products.name',
+        };
+
+        if ($dimension === 'client') {
+            $query->leftJoin('clients', 'clients.id', '=', 'invoices.client_id');
+        }
+
+        if ($dimension === 'seller') {
+            $query->leftJoin('users', 'users.id', '=', 'invoices.created_by');
+        }
+
+        $rows = $query
+            ->selectRaw("{$labelSql} as label")
+            ->selectRaw('SUM((invoice_items.unit_price - products.cost_price) * invoice_items.quantity) as margin')
+            ->selectRaw('SUM(invoice_items.unit_price * invoice_items.quantity) as revenue')
+            ->groupBy('label')
+            ->orderByDesc('margin')
+            ->limit(10)
+            ->get();
+
+        return [
+            'labels' => $rows->pluck('label')->map(fn ($value): string => (string) $value)->all(),
+            'margins' => $rows->pluck('margin')->map(fn ($value): float => (float) $value)->all(),
+            'revenues' => $rows->pluck('revenue')->map(fn ($value): float => (float) $value)->all(),
+            'percentages' => $rows->map(fn ($row): float => (float) $row->revenue > 0
+                ? ((float) $row->margin / (float) $row->revenue) * 100
+                : 0.0)->values()->all(),
+        ];
+    }
+
+    /** @return array{labels:array<int,string>, values:array<int,float>, configured_rate:float} */
+    public function tvaLiabilityByMonth(int $months = 12): array
+    {
+        return Cache::remember($this->key("tva_liability_{$months}"), self::CACHE_TTL, function () use ($months): array {
+            $start = Carbon::today()->subMonthsNoOverflow($months - 1)->startOfMonth();
+            $rows = Invoice::query()
+                ->where('invoice_date', '>=', $start)
+                ->selectRaw("DATE_FORMAT(invoice_date, '%Y-%m') as month_key, SUM(tva) as total")
+                ->groupBy('month_key')
+                ->pluck('total', 'month_key');
+            $labels = [];
+            $values = [];
+
+            for ($i = 0; $i < $months; $i++) {
+                $month = $start->copy()->addMonthsNoOverflow($i);
+                $labels[] = $month->translatedFormat('M Y');
+                $values[] = (float) ($rows[$month->format('Y-m')] ?? 0);
+            }
+
+            return [
+                'labels' => $labels,
+                'values' => $values,
+                'configured_rate' => (float) CompanySetting::current()->tva_rate,
+            ];
+        });
+    }
+
+    /** @return array{labels:array<int,string>, invoiced:array<int,float>, collected:array<int,float>, collection_ratios:array<int,?float>} */
+    public function cashCollectedVsInvoiced(int $months = 12): array
+    {
+        return Cache::remember($this->key("cash_collected_vs_invoiced_{$months}"), self::CACHE_TTL, function () use ($months): array {
+            $start = Carbon::today()->subMonthsNoOverflow($months - 1)->startOfMonth();
+            $invoiced = Invoice::query()
+                ->where('invoice_date', '>=', $start)
+                ->selectRaw("DATE_FORMAT(invoice_date, '%Y-%m') as month_key, SUM(total_ttc) as total")
+                ->groupBy('month_key')
+                ->pluck('total', 'month_key');
+            $collected = DB::table('paiements')
+                ->where('date_paiement', '>=', $start)
+                ->selectRaw("DATE_FORMAT(date_paiement, '%Y-%m') as month_key, SUM(montant) as total")
+                ->groupBy('month_key')
+                ->pluck('total', 'month_key');
+            $labels = [];
+            $invoicedValues = [];
+            $collectedValues = [];
+            $ratios = [];
+
+            for ($i = 0; $i < $months; $i++) {
+                $month = $start->copy()->addMonthsNoOverflow($i);
+                $key = $month->format('Y-m');
+                $invoiceTotal = (float) ($invoiced[$key] ?? 0);
+                $collectionTotal = (float) ($collected[$key] ?? 0);
+                $labels[] = $month->translatedFormat('M Y');
+                $invoicedValues[] = $invoiceTotal;
+                $collectedValues[] = $collectionTotal;
+                $ratios[] = $invoiceTotal > 0 ? ($collectionTotal / $invoiceTotal) * 100 : null;
+            }
+
+            return ['labels' => $labels, 'invoiced' => $invoicedValues, 'collected' => $collectedValues, 'collection_ratios' => $ratios];
+        });
+    }
+
+    /** @return array{labels:array<int,string>, datasets:array<int,array<string,mixed>>} */
+    public function paymentModeMix(int $months = 12): array
+    {
+        return Cache::remember($this->key("payment_mode_mix_{$months}"), self::CACHE_TTL, function () use ($months): array {
+            $start = Carbon::today()->subMonthsNoOverflow($months - 1)->startOfMonth();
+            $modes = ['espèces', 'chèque', 'virement', 'traite'];
+            $rows = DB::table('paiements')
+                ->where('date_paiement', '>=', $start)
+                ->selectRaw("DATE_FORMAT(date_paiement, '%Y-%m') as month_key, mode, SUM(montant) as total")
+                ->groupBy('month_key', 'mode')
+                ->get()
+                ->groupBy('mode');
+            $monthsIndex = [];
+            $labels = [];
+
+            for ($i = 0; $i < $months; $i++) {
+                $month = $start->copy()->addMonthsNoOverflow($i);
+                $monthsIndex[] = $month->format('Y-m');
+                $labels[] = $month->translatedFormat('M Y');
+            }
+
+            $colors = ['#14B8A6', '#f59e0b', '#2d5380', '#ef4444'];
+            $datasets = collect($modes)->map(function (string $mode, int $index) use ($rows, $monthsIndex, $colors): array {
+                $values = $rows->get($mode, collect())->pluck('total', 'month_key');
+
+                return [
+                    'label' => ucfirst($mode),
+                    'data' => collect($monthsIndex)->map(fn (string $key): float => (float) ($values[$key] ?? 0))->all(),
+                    'backgroundColor' => $colors[$index],
+                    'borderColor' => $colors[$index],
+                    'fill' => true,
+                ];
+            })->all();
+
+            return compact('labels', 'datasets');
+        });
+    }
+
+    private function revenueBetween(Carbon $start, Carbon $end): float
+    {
+        return (float) Invoice::query()->whereBetween('invoice_date', [$start, $end])->sum('total_ttc');
+    }
+
+    /** @return array{delta:float, percent:?float} */
+    private function comparison(float $current, float $baseline): array
+    {
+        $delta = $current - $baseline;
+
+        return [
+            'delta' => $delta,
+            'percent' => $baseline > 0 ? ($delta / $baseline) * 100 : null,
+        ];
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -301,6 +594,7 @@ class ExecutiveDashboardService
         $mom = $this->monthOverMonthDelta();
 
         return [
+            'currency' => CompanySetting::current()->currency,
             'kpis' => [
                 'today_revenue'          => $this->todayRevenue(),
                 'today_payments'         => $this->todayPayments(),
@@ -310,6 +604,16 @@ class ExecutiveDashboardService
                 'month_delta_percent'    => $mom['percent'],
                 'receivables'            => $this->receivablesSummary(),
                 'alertes_count'          => $this->alertesCount(),
+                'active_clients'         => $this->activeClients(),
+                'overdue_invoice_count'  => $this->overdueInvoiceCount(),
+            ],
+            'sales_pulse' => $this->salesPulse(),
+            'company_target' => $this->companyTarget(),
+            'revenue_comparison' => $this->revenueComparisonGrid(),
+            'financial_analysis' => $this->grossMarginAnalysis(),
+            'cash_flow' => [
+                'collected_vs_invoiced' => $this->cashCollectedVsInvoiced(),
+                'payment_mode_mix' => $this->paymentModeMix(),
             ],
             'top_clients'     => $this->topClients(5),
             'top_products'    => $this->topProducts(5),
@@ -318,6 +622,7 @@ class ExecutiveDashboardService
                 'revenue_by_month'    => $this->revenueByMonth(12),
                 'revenue_by_category' => $this->revenueByCategory(),
                 'revenue_by_user'     => $this->revenueByUser(),
+                'tva_liability'       => $this->tvaLiabilityByMonth(),
             ],
         ];
     }
@@ -328,6 +633,9 @@ class ExecutiveDashboardService
         foreach ([
             'today_revenue', 'today_payments',
             'current_month_revenue', 'previous_month_revenue',
+            'sales_pulse', 'company_target', 'active_clients', 'overdue_invoice_count', 'revenue_comparison_grid',
+            'gross_margin_analysis', 'tva_liability_12',
+            'cash_collected_vs_invoiced_12', 'payment_mode_mix_12',
             'receivables_summary', 'alertes_count',
             'top_clients_5', 'top_products_5', 'recent_invoices_8',
             'revenue_by_month_12', 'revenue_by_category', 'revenue_by_user',
