@@ -8,7 +8,6 @@
         <h1 class="text-2xl font-bold text-gray-900">🔔 Alertes</h1>
         <p class="text-gray-500 mt-1">{{ $alertes->count() }} alerte(s) active(s)</p>
     </div>
-
     @if($alertes->isNotEmpty())
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="bg-white rounded-2xl card-shadow p-5 flex items-center gap-4">
@@ -27,7 +26,6 @@
             </div>
         </div>
     @endif
-
     @if($alertes->isEmpty())
         <div class="bg-white rounded-2xl card-shadow p-12 text-center">
             <div class="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4">

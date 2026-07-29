@@ -12,7 +12,6 @@ class DashboardVendeursController extends Controller
         $mois   = $request->get('mois', now()->format('m'));
         $annee  = $request->get('annee', now()->year);
         $userId = $request->get('user_id');
-
         $url = "https://app.amevo.ma/must-negoce/public/synchronisation/{$mois}/{$annee}";
 
         if ($userId) {

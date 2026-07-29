@@ -1,5 +1,4 @@
 <?php
-
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ManualInvoiceController;
@@ -17,6 +16,7 @@ use App\Http\Controllers\DashboardVendeursController;
 use App\Http\Controllers\DashboardCategoriesController;
 use App\Http\Controllers\DashboardVendeurCategorieController;
 use App\Http\Controllers\ExecutiveDashboardController;
+use App\Http\Controllers\Admin\ActivityLogController;
 
 
 Route::middleware('guest')->group(function () {
@@ -25,7 +25,6 @@ Route::middleware('guest')->group(function () {
     Route::get('/register', [LoginController::class, 'showRegisterForm'])->name('register');
     Route::post('/register',[LoginController::class, 'register']);
 });
-
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 
 Route::middleware(['auth', 'admin_or_adv'])->group (function () {
@@ -51,7 +50,6 @@ Route::middleware(['auth', 'admin_or_adv'])->group (function () {
     Route::get('/creances/export/pdf', [CreanceController::class, 'exportPdf'])->name('creances.export.pdf');
     Route::get('/alertes', [AlerteController::class, 'index'])->name('alertes.index');
 });
-
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/users',                    [UserController::class, 'index'])->name('admin.users');
     Route::put('/admin/users/{user}/role',         [UserController::class, 'updateRole'])->name('admin.users.role');
@@ -62,12 +60,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/users/{user}/reject',  [UserController::class, 'reject'])->name('admin.users.reject');
     Route::get('/dashboard/executive', [ExecutiveDashboardController::class, 'index'])
         ->name('dashboard.executive');
-
     Route::get('/admin/company-settings',  [CompanySettingController::class, 'edit'])->name('admin.company-settings.edit');
     Route::put('/admin/company-settings',  [CompanySettingController::class, 'update'])->name('admin.company-settings.update');
 });
-
-
 Route::middleware(['auth', 'admin'])->prefix('objectifs')->name('objectifs.')->group(function () {
     Route::get('/', [ObjectifVendeurController::class, 'index'])->name('index');
     Route::get('/create', [ObjectifVendeurController::class, 'create'])->name('create');
@@ -76,7 +71,6 @@ Route::middleware(['auth', 'admin'])->prefix('objectifs')->name('objectifs.')->g
     Route::put('/{id}', [ObjectifVendeurController::class, 'update'])->name('update');
     Route::delete('/{id}', [ObjectifVendeurController::class, 'destroy'])->name('destroy');
 });
-
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('vendeurs',   VendeurController::class)->except(['show']);
     Route::resource('categories', CategorieController::class)->except(['show']);
@@ -88,4 +82,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('dashboard.categories');
     Route::get('/dashboard-vendeur-categorie', [DashboardVendeurCategorieController::class, 'index'])
         ->name('dashboard.vendeur-categorie');
+});
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+    Route::get('activity-logs/{activity}', [ActivityLogController::class, 'show'])->name('activity-logs.show');
 });

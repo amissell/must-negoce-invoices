@@ -131,7 +131,7 @@
                 </a>
             </li>
             <li class="sidebar-nav-item">
-                <a href="{{ route('products.index') }}" class="nav-link {{ request()->routeIs('products.*') ? 'active' : '' }}">
+                <a href="{{ route('products.index') }}" class=                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      "nav-link {{ request()->routeIs('products.*') ? 'active' : '' }}">
                     <span class="nav-icon">📦</span><span>Produits</span>
                 </a>
             </li>
