@@ -284,6 +284,90 @@ class ExecutiveDashboardService
         ];
     }
 
+    /**
+     * Build a query for margin details grouped by a dimension (product/client/seller).
+     * Returns a Query Builder which callers may paginate or cursor() for streaming.
+     */
+    public function marginDetailsQuery(string $dimension, ?Carbon $from = null, ?Carbon $to = null)
+    {
+        $query = DB::table('invoice_items')
+            ->join('invoices', 'invoices.id', '=', 'invoice_items.invoice_id')
+            ->join('products', 'products.id', '=', 'invoice_items.product_id')
+            ->whereNotNull('products.cost_price');
+
+        $labelSql = match ($dimension) {
+            'client' => 'COALESCE(clients.nom, invoices.client_name, \'Client inconnu\')',
+            'seller' => "COALESCE(users.name, 'Non attribué')",
+            default => 'products.name',
+        };
+
+        if ($dimension === 'client') {
+            $query->leftJoin('clients', 'clients.id', '=', 'invoices.client_id');
+        }
+
+        if ($dimension === 'seller') {
+            $query->leftJoin('users', 'users.id', '=', 'invoices.created_by');
+        }
+
+        if ($from && $to) {
+            $query->whereBetween('invoices.invoice_date', [$from->toDateString(), $to->toDateString()]);
+        } elseif ($from) {
+            $query->where('invoices.invoice_date', '>=', $from->toDateString());
+        } elseif ($to) {
+            $query->where('invoices.invoice_date', '<=', $to->toDateString());
+        }
+
+        $query->selectRaw("{$labelSql} as label")
+            ->selectRaw('SUM((invoice_items.unit_price - products.cost_price) * invoice_items.quantity) as margin')
+            ->selectRaw('SUM(invoice_items.unit_price * invoice_items.quantity) as revenue')
+            ->selectRaw('SUM(invoice_items.quantity) as qty')
+            ->groupBy('label');
+
+        return $query;
+    }
+
+    /**
+     * Paginated margin details convenience wrapper.
+     * Returns a LengthAwarePaginator-friendly Query Builder executed by caller.
+     */
+    public function marginDetails(string $dimension, ?Carbon $from = null, ?Carbon $to = null)
+    {
+        return $this->marginDetailsQuery($dimension, $from, $to);
+    }
+
+    /**
+     * Build a query for TVA (tax) details at invoice level.
+     */
+    public function tvaDetailsQuery(?Carbon $from = null, ?Carbon $to = null)
+    {
+        $query = Invoice::query()->leftJoin('clients', 'clients.id', '=', 'invoices.client_id')
+            ->select([
+                'invoices.id as invoice_id',
+                'invoices.invoice_number',
+                'invoices.invoice_date',
+                DB::raw("COALESCE(clients.nom, invoices.client_name, 'Client inconnu') as client_label"),
+                'invoices.tva as tva_amount',
+            ]);
+
+        if ($from && $to) {
+            $query->whereBetween('invoices.invoice_date', [$from->toDateString(), $to->toDateString()]);
+        } elseif ($from) {
+            $query->where('invoices.invoice_date', '>=', $from->toDateString());
+        } elseif ($to) {
+            $query->where('invoices.invoice_date', '<=', $to->toDateString());
+        }
+
+        return $query;
+    }
+
+    /**
+     * Paginated TVA details wrapper.
+     */
+    public function tvaDetails(?Carbon $from = null, ?Carbon $to = null)
+    {
+        return $this->tvaDetailsQuery($from, $to);
+    }
+
     /** @return array{labels:array<int,string>, values:array<int,float>, configured_rate:float} */
     public function tvaLiabilityByMonth(int $months = 12): array
     {

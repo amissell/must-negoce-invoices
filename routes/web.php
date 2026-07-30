@@ -68,6 +68,25 @@ Route::middleware(['auth', 'admin'])->group(function () {
         ->name('api.kpis.sales_pulse');
     Route::get('/api/kpis/ceo-scorecard', [ExecutiveDashboardController::class, 'ceoScorecard'])
         ->name('api.kpis.ceo_scorecard');
+    Route::get('/api/kpis/gross-margin', [ExecutiveDashboardController::class, 'grossMargin'])
+        ->name('api.kpis.gross_margin');
+    Route::get('/api/kpis/tva-liability', [ExecutiveDashboardController::class, 'tvaLiability'])
+        ->name('api.kpis.tva_liability');
+    // Drilldowns and exports
+    Route::get('/api/kpis/margins/details', [ExecutiveDashboardController::class, 'marginDetails'])
+        ->name('api.kpis.margins_details');
+    Route::get('/api/kpis/margins/export', [ExecutiveDashboardController::class, 'marginExport'])
+        ->name('api.kpis.margins_export');
+    Route::get('/api/kpis/tva/details', [ExecutiveDashboardController::class, 'tvaDetails'])
+        ->name('api.kpis.tva_details');
+    Route::get('/api/kpis/tva/export', [ExecutiveDashboardController::class, 'tvaExport'])
+        ->name('api.kpis.tva_export');
+    // Scheduled reports management
+    Route::get('/admin/scheduled-reports', [\App\Http\Controllers\ScheduledReportController::class, 'index'])->name('admin.scheduled_reports.index');
+    Route::post('/admin/scheduled-reports', [\App\Http\Controllers\ScheduledReportController::class, 'store'])->name('admin.scheduled_reports.store');
+    Route::delete('/admin/scheduled-reports/{scheduledReport}', [\App\Http\Controllers\ScheduledReportController::class, 'destroy'])->name('admin.scheduled_reports.destroy');
+    Route::post('/admin/scheduled-reports/{scheduledReport}/run', [\App\Http\Controllers\ScheduledReportController::class, 'runNow'])->name('admin.scheduled_reports.run');
+    Route::get('/admin/scheduled-reports/runs/{run}/download', [\App\Http\Controllers\ScheduledReportDownloadController::class, 'downloadRun'])->name('admin.scheduled_reports.download');
     Route::get('/admin/company-targets', [CompanyTargetController::class, 'index'])
         ->name('admin.company-targets.index');
     Route::put('/admin/company-targets', [CompanyTargetController::class, 'upsert'])

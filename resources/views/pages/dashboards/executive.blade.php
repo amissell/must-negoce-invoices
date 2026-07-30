@@ -45,6 +45,7 @@
                 @endif
             </a>
         </div>
+        <div id="vue-scheduled-reports" class="w-full mt-4"></div>
     </div>
 
     {{-- Vue widgets mount points (Vite-built components will mount here) --}}
@@ -152,11 +153,13 @@
             @if($financial['missing_cost_lines'] > 0)
                 <p class="mt-3 text-xs text-amber-700">{{ $financial['missing_cost_lines'] }} ligne(s) exclue(s) : coût produit manquant.</p>
             @endif
+            <div id="vue-margin-details"></div>
         </div>
         <div class="bg-white rounded-2xl card-shadow p-6">
             <h2 class="text-lg font-semibold text-gray-900 mb-4">TVA collectée — 12 mois</h2>
             <div style="height: 280px;"><canvas id="chartTvaLiability"></canvas></div>
             <p class="mt-3 text-xs text-gray-500">Taux société configuré : {{ number_format($charts['tva_liability']['configured_rate'], 2, ',', ' ') }}%</p>
+            <div id="vue-tva-details"></div>
         </div>
     </div>
 
