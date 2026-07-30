@@ -61,6 +61,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/users/{user}/reject',  [UserController::class, 'reject'])->name('admin.users.reject');
     Route::get('/dashboard/executive', [ExecutiveDashboardController::class, 'index'])
         ->name('dashboard.executive');
+    Route::get('/dashboard/executive/board.pdf', [ExecutiveDashboardController::class, 'boardPdf'])
+        ->name('dashboard.executive.board_pdf');
     Route::get('/dashboard/executive/data', [ExecutiveDashboardController::class, 'data'])
         ->name('dashboard.executive.data');
     // Lightweight JSON endpoints for front-end widgets

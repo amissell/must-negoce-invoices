@@ -44,6 +44,7 @@
                     <span class="ml-1 inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-xs">{{ $k['alertes_count'] }}</span>
                 @endif
             </a>
+            <a href="{{ route('dashboard.executive.board_pdf') }}" class="px-4 py-2 rounded-xl bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition">📄 Télécharger Board PDF</a>
         </div>
         <div id="vue-scheduled-reports" class="w-full mt-4"></div>
     </div>

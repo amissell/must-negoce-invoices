@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Services\ExecutiveDashboardService;
+use App\Services\PdfService;
 
 class ExecutiveDashboardController extends Controller
 {
-    public function __construct(private ExecutiveDashboardService $dashboard)
+    public function __construct(private ExecutiveDashboardService $dashboard, private PdfService $pdfService)
     {
     }
 
@@ -258,5 +259,18 @@ class ExecutiveDashboardController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Generate a print-friendly executive board PDF and stream it to the browser.
+     */
+    public function boardPdf()
+    {
+        $data = $this->dashboard->getDashboardData();
+
+        $filename = sprintf('board_%s.pdf', now()->format('Ymd'));
+
+        // landscape for wider layout
+        return $this->pdfService->download('pages.dashboards.board', $data, $filename, 'A4', 'landscape');
     }
 }

@@ -34,6 +34,15 @@ class ExecutiveDashboardService
         private CreanceService $creanceService,
         private AlerteService $alerteService,
     ) {
+        $this->amevoMissing = [];
+    }
+
+    /** @var array<int,string> Fields or endpoints missing from Amevo payload */
+    private array $amevoMissing;
+
+    private function recordAmevoMissing(string $key, string $reason): void
+    {
+        $this->amevoMissing[] = "{$key}: {$reason}";
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -42,38 +51,82 @@ class ExecutiveDashboardService
 
     public function todayRevenue(): float
     {
-        return Cache::remember($this->key('today_revenue'), self::CACHE_TTL,
-            fn () => (float) Invoice::whereDate('invoice_date', Carbon::today())->sum('total_ttc'),
-        );
+        return Cache::remember($this->key('today_revenue'), self::CACHE_TTL, function () {
+            $amevo = $this->creanceService->getAmevoData();
+            $data = $amevo['data'] ?? null;
+
+            if ($data && isset($data['caJourDates'], $data['caJourData'])) {
+                $todayKey = Carbon::today()->format('d/m');
+                $index = array_search($todayKey, $data['caJourDates']);
+                if ($index !== false) {
+                    $sum = 0.0;
+                    foreach ($data['caJourData'] as $entry) {
+                        $sum += (float) ($entry['data'][$index] ?? 0);
+                    }
+
+                    return $sum;
+                }
+            }
+
+            $this->recordAmevoMissing('todayRevenue', 'caJourDates/caJourData for today is missing');
+
+            return (float) Invoice::whereDate('invoice_date', Carbon::today())->sum('total_ttc');
+        });
     }
 
     public function todayPayments(): float
     {
-        return Cache::remember($this->key('today_payments'), self::CACHE_TTL,
-            fn () => (float) DB::table('paiements')
+        return Cache::remember($this->key('today_payments'), self::CACHE_TTL, function () {
+            // Amevo payload does not expose payment transactions / modes.
+            $this->recordAmevoMissing('todayPayments', 'payment transactions not present in Amevo payload');
+
+            return (float) DB::table('paiements')
                 ->whereDate('date_paiement', Carbon::today())
-                ->sum('montant'),
-        );
+                ->sum('montant');
+        });
     }
 
     public function currentMonthRevenue(): float
     {
-        $start = Carbon::now()->startOfMonth();
-        $end   = Carbon::now()->endOfMonth();
+        return Cache::remember($this->key('current_month_revenue'), self::CACHE_TTL, function () {
+            $mois = (int) Carbon::now()->format('m');
+            $annee = Carbon::now()->year;
+            $amevo = $this->creanceService->getAmevoData($mois, $annee);
+            $data = $amevo['data'] ?? null;
 
-        return Cache::remember($this->key('current_month_revenue'), self::CACHE_TTL,
-            fn () => (float) Invoice::whereBetween('invoice_date', [$start, $end])->sum('total_ttc'),
-        );
+            if ($data && isset($data['ca_total'])) {
+                return (float) $data['ca_total'];
+            }
+
+            $this->recordAmevoMissing('currentMonthRevenue', 'ca_total missing for current month');
+
+            $start = Carbon::now()->startOfMonth();
+            $end   = Carbon::now()->endOfMonth();
+
+            return (float) Invoice::whereBetween('invoice_date', [$start, $end])->sum('total_ttc');
+        });
     }
 
     public function previousMonthRevenue(): float
     {
-        $start = Carbon::now()->subMonthNoOverflow()->startOfMonth();
-        $end   = Carbon::now()->subMonthNoOverflow()->endOfMonth();
+        return Cache::remember($this->key('previous_month_revenue'), self::CACHE_TTL, function () {
+            $dt = Carbon::now()->subMonthNoOverflow();
+            $mois = (int) $dt->format('m');
+            $annee = $dt->year;
+            $amevo = $this->creanceService->getAmevoData($mois, $annee);
+            $data = $amevo['data'] ?? null;
 
-        return Cache::remember($this->key('previous_month_revenue'), self::CACHE_TTL,
-            fn () => (float) Invoice::whereBetween('invoice_date', [$start, $end])->sum('total_ttc'),
-        );
+            if ($data && isset($data['ca_total'])) {
+                return (float) $data['ca_total'];
+            }
+
+            $this->recordAmevoMissing('previousMonthRevenue', "ca_total missing for {$mois}/{$annee}");
+
+            $start = $dt->startOfMonth();
+            $end   = $dt->endOfMonth();
+
+            return (float) Invoice::whereBetween('invoice_date', [$start, $end])->sum('total_ttc');
+        });
     }
 
     /** @return array{current:float, previous:float, delta:float, percent:?float} */
@@ -91,12 +144,37 @@ class ExecutiveDashboardService
     public function receivablesSummary(): array
     {
         return Cache::remember($this->key('receivables_summary'), self::CACHE_TTL, function () {
+            $amevo = $this->creanceService->getAmevoData();
+            $data = $amevo['data'] ?? null;
+
+            if ($data && isset($data['reste_a_payer'])) {
+                // Amevo provides aggregated receivables total but not aging buckets.
+                $result = [
+                    'total' => (float) $data['reste_a_payer'],
+                    'j30' => null,
+                    'j60' => null,
+                    'j90_plus' => null,
+                ];
+
+                $this->recordAmevoMissing('receivablesSummary', 'aging buckets (j30/j60/j90) are not provided by Amevo');
+
+                // Provide DB fallback for buckets to avoid breaking callers
+                $fallback = $this->creanceService->getCreancesData();
+                $result['j30'] = (float) ($fallback['total30'] ?? 0);
+                $result['j60'] = (float) ($fallback['total60'] ?? 0);
+                $result['j90_plus'] = (float) ($fallback['total90'] ?? 0);
+
+                return $result;
+            }
+
+            $this->recordAmevoMissing('receivablesSummary', 'reste_a_payer missing in Amevo payload');
+
             $data = $this->creanceService->getCreancesData();
 
             return [
-                'total'    => (float) ($data['totalCreances'] ?? 0),
-                'j30'      => (float) ($data['total30'] ?? 0),
-                'j60'      => (float) ($data['total60'] ?? 0),
+                'total' => (float) ($data['totalCreances'] ?? 0),
+                'j30' => (float) ($data['total30'] ?? 0),
+                'j60' => (float) ($data['total60'] ?? 0),
                 'j90_plus' => (float) ($data['total90'] ?? 0),
             ];
         });
@@ -119,9 +197,85 @@ class ExecutiveDashboardService
     {
         return Cache::remember($this->key('sales_pulse'), self::CACHE_TTL, function (): array {
             $today = Carbon::today();
+            $start = $today->copy()->subDays(13);
+
+            $amevo = $this->creanceService->getAmevoData();
+            $data = $amevo['data'] ?? null;
+
+            if ($data && isset($data['caJourDates'], $data['caJourData'])) {
+                $dates = $data['caJourDates'];
+                $sparkline = [];
+
+                // build last-14-days sparkline from Amevo dates (if available)
+                for ($d = $start->copy(); $d->lte($today); $d->addDay()) {
+                    $key = $d->format('d/m');
+                    $index = array_search($key, $dates);
+                    $sum = 0.0;
+                    if ($index !== false) {
+                        foreach ($data['caJourData'] as $entry) {
+                            $sum += (float) ($entry['data'][$index] ?? 0);
+                        }
+                    }
+                    $sparkline[] = $sum;
+                }
+
+                $current = end($sparkline);
+
+                // Try to compute single-day comparisons from Amevo series as well
+                $vsLastWeek = null;
+                $vsLastMonth = null;
+
+                $todayKey = $today->format('d/m');
+                $weekKey = $today->copy()->subWeek()->format('d/m');
+                $monthKey = $today->copy()->subMonthNoOverflow()->format('d/m');
+
+                $dates = $data['caJourDates'];
+                $todayIdx = array_search($todayKey, $dates);
+                $weekIdx = array_search($weekKey, $dates);
+                $monthIdx = array_search($monthKey, $dates);
+
+                if ($todayIdx !== false && $weekIdx !== false) {
+                    $sumWeek = 0.0;
+                    foreach ($data['caJourData'] as $entry) {
+                        $sumWeek += (float) ($entry['data'][$weekIdx] ?? 0);
+                    }
+                    $vsLastWeek = $this->comparison((float) $current, $sumWeek);
+                }
+
+                if ($todayIdx !== false && $monthIdx !== false) {
+                    $sumMonth = 0.0;
+                    foreach ($data['caJourData'] as $entry) {
+                        $sumMonth += (float) ($entry['data'][$monthIdx] ?? 0);
+                    }
+                    $vsLastMonth = $this->comparison((float) $current, $sumMonth);
+                }
+
+                // If Amevo cannot provide comparators, fallback to DB for those comparators
+                if ($vsLastWeek === null) {
+                    $this->recordAmevoMissing('salesPulse.vs_last_week', 'last-week single-day comparator not available in Amevo');
+                    $weekAgo = (float) Invoice::whereDate('invoice_date', $today->copy()->subWeek())->sum('total_ttc');
+                    $vsLastWeek = $this->comparison((float) $current, $weekAgo);
+                }
+
+                if ($vsLastMonth === null) {
+                    $this->recordAmevoMissing('salesPulse.vs_last_month', 'last-month single-day comparator not available in Amevo');
+                    $monthAgo = (float) Invoice::whereDate('invoice_date', $today->copy()->subMonthNoOverflow())->sum('total_ttc');
+                    $vsLastMonth = $this->comparison((float) $current, $monthAgo);
+                }
+
+                return [
+                    'current' => (float) $current,
+                    'vs_last_week' => $vsLastWeek,
+                    'vs_last_month' => $vsLastMonth,
+                    'sparkline' => $sparkline,
+                ];
+            }
+
+            $this->recordAmevoMissing('salesPulse', 'caJourDates/caJourData missing');
+
+            // fallback to DB behaviour
             $lastWeek = $today->copy()->subWeek();
             $lastMonth = $today->copy()->subMonthNoOverflow();
-            $start = $today->copy()->subDays(13);
 
             $daily = Invoice::query()
                 ->whereBetween('invoice_date', [$start, $today])
@@ -135,13 +289,11 @@ class ExecutiveDashboardService
             }
 
             $current = (float) ($daily[$today->toDateString()] ?? 0);
-            $weekAgo = (float) Invoice::whereDate('invoice_date', $lastWeek)->sum('total_ttc');
-            $monthAgo = (float) Invoice::whereDate('invoice_date', $lastMonth)->sum('total_ttc');
 
             return [
                 'current' => $current,
-                'vs_last_week' => $this->comparison($current, $weekAgo),
-                'vs_last_month' => $this->comparison($current, $monthAgo),
+                'vs_last_week' => $this->comparison($current, (float) Invoice::whereDate('invoice_date', $lastWeek)->sum('total_ttc')),
+                'vs_last_month' => $this->comparison($current, (float) Invoice::whereDate('invoice_date', $lastMonth)->sum('total_ttc')),
                 'sparkline' => $sparkline,
             ];
         });
@@ -400,16 +552,6 @@ class ExecutiveDashboardService
     {
         return Cache::remember($this->key("cash_collected_vs_invoiced_{$months}"), self::CACHE_TTL, function () use ($months): array {
             $start = Carbon::today()->subMonthsNoOverflow($months - 1)->startOfMonth();
-            $invoiced = Invoice::query()
-                ->where('invoice_date', '>=', $start)
-                ->selectRaw("DATE_FORMAT(invoice_date, '%Y-%m') as month_key, SUM(total_ttc) as total")
-                ->groupBy('month_key')
-                ->pluck('total', 'month_key');
-            $collected = DB::table('paiements')
-                ->where('date_paiement', '>=', $start)
-                ->selectRaw("DATE_FORMAT(date_paiement, '%Y-%m') as month_key, SUM(montant) as total")
-                ->groupBy('month_key')
-                ->pluck('total', 'month_key');
             $labels = [];
             $invoicedValues = [];
             $collectedValues = [];
@@ -417,10 +559,24 @@ class ExecutiveDashboardService
 
             for ($i = 0; $i < $months; $i++) {
                 $month = $start->copy()->addMonthsNoOverflow($i);
-                $key = $month->format('Y-m');
-                $invoiceTotal = (float) ($invoiced[$key] ?? 0);
-                $collectionTotal = (float) ($collected[$key] ?? 0);
+                $mois = (int) $month->format('m');
+                $annee = $month->year;
+                $amevo = $this->creanceService->getAmevoData($mois, $annee);
+                $data = $amevo['data'] ?? null;
+
                 $labels[] = $month->translatedFormat('M Y');
+
+                if ($data && isset($data['ca_total'])) {
+                    $invoiceTotal = (float) $data['ca_total'];
+                    $collectionTotal = (float) ($data['ca_encaisse'] ?? 0);
+                } else {
+                    $this->recordAmevoMissing('cashCollectedVsInvoiced', "month {$mois}/{$annee} missing in Amevo");
+                    $monthStart = $month->copy()->startOfMonth();
+                    $monthEnd = $month->copy()->endOfMonth();
+                    $invoiceTotal = (float) Invoice::whereBetween('invoice_date', [$monthStart, $monthEnd])->sum('total_ttc');
+                    $collectionTotal = (float) DB::table('paiements')->whereBetween('date_paiement', [$monthStart, $monthEnd])->sum('montant');
+                }
+
                 $invoicedValues[] = $invoiceTotal;
                 $collectedValues[] = $collectionTotal;
                 $ratios[] = $invoiceTotal > 0 ? ($collectionTotal / $invoiceTotal) * 100 : null;
@@ -434,6 +590,9 @@ class ExecutiveDashboardService
     public function paymentModeMix(int $months = 12): array
     {
         return Cache::remember($this->key("payment_mode_mix_{$months}"), self::CACHE_TTL, function () use ($months): array {
+            // Amevo does not include payment-mode breakdowns.
+            $this->recordAmevoMissing('paymentModeMix', 'payment-mode time series not present in Amevo');
+
             $start = Carbon::today()->subMonthsNoOverflow($months - 1)->startOfMonth();
             $modes = ['espèces', 'chèque', 'virement', 'traite'];
             $rows = DB::table('paiements')
@@ -470,7 +629,34 @@ class ExecutiveDashboardService
 
     private function revenueBetween(Carbon $start, Carbon $end): float
     {
-        return (float) Invoice::query()->whereBetween('invoice_date', [$start, $end])->sum('total_ttc');
+        // Try to compute by summing Amevo monthly totals for covered months,
+        // and fallback to DB for any missing months.
+        $cursor = $start->copy()->startOfMonth();
+        $endMonth = $end->copy()->endOfMonth();
+        $total = 0.0;
+
+        while ($cursor->lte($endMonth)) {
+            $mois = (int) $cursor->format('m');
+            $annee = $cursor->year;
+            $amevo = $this->creanceService->getAmevoData($mois, $annee);
+            $data = $amevo['data'] ?? null;
+
+            if ($data && isset($data['ca_total'])) {
+                $total += (float) $data['ca_total'];
+            } else {
+                // For months not covered by Amevo, sum invoices in that month's date range intersection
+                $monthStart = $cursor->copy()->startOfMonth();
+                $monthEnd = $cursor->copy()->endOfMonth();
+                $rangeStart = $start->greaterThan($monthStart) ? $start : $monthStart;
+                $rangeEnd = $end->lessThan($monthEnd) ? $end : $monthEnd;
+                $this->recordAmevoMissing('revenueBetween', "ca_total missing for {$mois}/{$annee}");
+                $total += (float) Invoice::query()->whereBetween('invoice_date', [$rangeStart, $rangeEnd])->sum('total_ttc');
+            }
+
+            $cursor->addMonth();
+        }
+
+        return $total;
     }
 
     /** @return array{delta:float, percent:?float} */
@@ -497,6 +683,9 @@ class ExecutiveDashboardService
     public function topClients(int $limit = 5): Collection
     {
         return Cache::remember($this->key("top_clients_{$limit}"), self::CACHE_TTL, function () use ($limit) {
+            // Amevo payload does not expose per-client aggregates in this endpoint.
+            $this->recordAmevoMissing('topClients', 'per-client aggregates not present in Amevo payload');
+
             $since = Carbon::now()->subYear();
 
             return Invoice::query()
@@ -527,6 +716,9 @@ class ExecutiveDashboardService
     public function topProducts(int $limit = 5): Collection
     {
         return Cache::remember($this->key("top_products_{$limit}"), self::CACHE_TTL, function () use ($limit) {
+            // Amevo payload does not expose per-product aggregates in this endpoint.
+            $this->recordAmevoMissing('topProducts', 'per-product aggregates not present in Amevo payload');
+
             $since = Carbon::now()->subYear();
 
             return DB::table('invoice_items')
@@ -555,12 +747,14 @@ class ExecutiveDashboardService
      */
     public function recentInvoices(int $limit = 8): Collection
     {
-        return Cache::remember($this->key("recent_invoices_{$limit}"), self::CACHE_TTL,
-            fn () => Invoice::with(['client', 'creator'])
+        return Cache::remember($this->key("recent_invoices_{$limit}"), self::CACHE_TTL, function () use ($limit) {
+            $this->recordAmevoMissing('recentInvoices', 'invoice-level listing not present in Amevo payload');
+
+            return Invoice::with(['client', 'creator'])
                 ->orderByDesc('created_at')
                 ->limit($limit)
-                ->get(),
-        );
+                ->get();
+        });
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -577,22 +771,28 @@ class ExecutiveDashboardService
         return Cache::remember($this->key("revenue_by_month_{$months}"), self::CACHE_TTL, function () use ($months) {
             $start = Carbon::now()->subMonthsNoOverflow($months - 1)->startOfMonth();
 
-            $rows = Invoice::query()
-                ->where('invoice_date', '>=', $start)
-                ->select([
-                    DB::raw("DATE_FORMAT(invoice_date, '%Y-%m') as ym"),
-                    DB::raw('SUM(total_ttc) as total'),
-                ])
-                ->groupBy('ym')
-                ->pluck('total', 'ym');
-
             $labels = [];
             $values = [];
+
             for ($i = 0; $i < $months; $i++) {
                 $d  = $start->copy()->addMonthsNoOverflow($i);
-                $ym = $d->format('Y-m');
+                $mois = (int) $d->format('m');
+                $annee = $d->year;
+                $amevo = $this->creanceService->getAmevoData($mois, $annee);
+                $data = $amevo['data'] ?? null;
+
                 $labels[] = $d->translatedFormat('M Y');
-                $values[] = (float) ($rows[$ym] ?? 0);
+                if ($data && isset($data['ca_total'])) {
+                    $values[] = (float) $data['ca_total'];
+                } else {
+                    $this->recordAmevoMissing('revenueByMonth', "month {$mois}/{$annee} missing in Amevo");
+                    $ym = $d->format('Y-m');
+                    $rows = Invoice::query()
+                        ->where('invoice_date', '>=', $d->copy()->startOfMonth())
+                        ->where('invoice_date', '<=', $d->copy()->endOfMonth())
+                        ->sum('total_ttc');
+                    $values[] = (float) $rows;
+                }
             }
 
             return compact('labels', 'values');
@@ -613,6 +813,21 @@ class ExecutiveDashboardService
     public function revenueByCategory(): array
     {
         return Cache::remember($this->key('revenue_by_category'), self::CACHE_TTL, function () {
+            // Prefer Amevo payload categoriesData for current month when available.
+            $amevo = $this->creanceService->getAmevoData();
+            $data = $amevo['data'] ?? null;
+
+            if ($data && isset($data['categoriesData']) && is_array($data['categoriesData'])) {
+                $rows = collect($data['categoriesData'])->sortByDesc('ca')->slice(0, 10);
+
+                return [
+                    'labels' => $rows->pluck('libelle')->map(fn ($v) => (string) $v)->all(),
+                    'values' => $rows->pluck('ca')->map(fn ($v) => (float) $v)->all(),
+                ];
+            }
+
+            $this->recordAmevoMissing('revenueByCategory', 'categoriesData missing in Amevo; falling back to suivi_categories table');
+
             if (!Schema::hasTable('suivi_categories') || !Schema::hasTable('suivi_vendeurs')) {
                 return ['labels' => [], 'values' => []];
             }
@@ -647,6 +862,20 @@ class ExecutiveDashboardService
     public function revenueByUser(): array
     {
         return Cache::remember($this->key('revenue_by_user'), self::CACHE_TTL, function () {
+            $amevo = $this->creanceService->getAmevoData();
+            $data = $amevo['data'] ?? null;
+
+            if ($data && isset($data['vendorCards']) && is_array($data['vendorCards'])) {
+                $rows = collect($data['vendorCards'])->sortByDesc('ca_total');
+
+                return [
+                    'labels' => $rows->pluck('nom')->map(fn ($v) => (string) $v)->all(),
+                    'values' => $rows->pluck('ca_total')->map(fn ($v) => (float) $v)->all(),
+                ];
+            }
+
+            $this->recordAmevoMissing('revenueByUser', 'vendorCards missing in Amevo; falling back to invoices.created_by');
+
             $start = Carbon::now()->startOfMonth();
             $end   = Carbon::now()->endOfMonth();
 
@@ -675,6 +904,8 @@ class ExecutiveDashboardService
     /** @return array<string,mixed> */
     public function getDashboardData(): array
     {
+        // reset amevo missing list for this run
+        $this->amevoMissing = [];
         $mom = $this->monthOverMonthDelta();
 
         return [
@@ -708,6 +939,7 @@ class ExecutiveDashboardService
                 'revenue_by_user'     => $this->revenueByUser(),
                 'tva_liability'       => $this->tvaLiabilityByMonth(),
             ],
+            'amevo_missing' => array_values(array_unique($this->amevoMissing)),
         ];
     }
 
