@@ -4,8 +4,6 @@
 
 @section('content')
 <div class="max-w-2xl mx-auto space-y-6">
-
-    {{-- Header --}}
     <div class="flex items-center gap-4">
         <a href="{{ route('clients.index') }}"
            class="p-2 rounded-xl bg-white card-shadow text-gray-500 hover:text-gray-700 transition-all">
@@ -18,13 +16,9 @@
             <p class="text-sm text-gray-500 mt-0.5">Ajouter un client à la base de données</p>
         </div>
     </div>
-
-    {{-- Form Card --}}
     <div class="bg-white rounded-2xl card-shadow p-6">
         <form action="{{ route('clients.store') }}" method="POST" class="space-y-5">
             @csrf
-
-            {{-- Nom --}}
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">
                     Raison Sociale <span class="text-red-500">*</span>
@@ -36,8 +30,6 @@
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
             </div>
-
-            {{-- ICE + IF --}}
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">ICE</label>

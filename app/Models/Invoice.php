@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 class Invoice extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = [
         'invoice_number',
@@ -101,6 +102,15 @@ class Invoice extends Model
     public function client()
     {
         return $this->belongsTo(\App\Models\Client::class);
+    }
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['invoice_number', 'client_id', 'total', 'status', 'due_date', 'issue_date'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('invoice')
+            ->setDescriptionForEvent(fn(string $eventName) => "Invoice {$this->invoice_number} was {$eventName}");
     }
 
 }

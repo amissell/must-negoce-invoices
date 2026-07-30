@@ -299,4 +299,30 @@ class InvoiceService
 
     return $year . '/' . str_pad((string) $next, 3, '0', STR_PAD_LEFT);
 }
+
+    /**
+     * Generate the next invoice number, filling gaps if present.
+     */
+    public function generateInvoiceNumber(): string
+    {
+        $year = date('y');
+
+        $numbers = \App\Models\Invoice::where('invoice_number', 'like', $year . '/%')
+            ->pluck('invoice_number')
+            ->map(fn($n) => (int) substr($n, 3))
+            ->unique()
+            ->sort()
+            ->values()
+            ->toArray();
+
+        $i = 1;
+        foreach ($numbers as $num) {
+            if ($num !== $i) {
+                return $year . '/' . str_pad((string) $i, 3, '0', STR_PAD_LEFT);
+            }
+            $i++;
+        }
+
+        return $year . '/' . str_pad((string) $i, 3, '0', STR_PAD_LEFT);
+    }
 }

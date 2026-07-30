@@ -1,11 +1,7 @@
 @extends('layouts.app')
-
 @section('title', 'Clients')
-
 @section('content')
 <div class="space-y-6">
-
-    {{-- Header --}}
     <div class="flex items-center justify-between">
         <div>
             <h1 class="text-2xl font-bold text-gray-900">👥 Gestion des Clients</h1>
@@ -19,8 +15,6 @@
             Nouveau Client
         </a>
     </div>
-
-    {{-- Search Bar --}}
     <form method="GET" class="flex gap-3">
         <div class="relative flex-1 max-w-md">
             <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -41,8 +35,6 @@
             </a>
         @endif
     </form>
-
-    {{-- Table Card --}}
     <div class="bg-white rounded-2xl card-shadow overflow-hidden">
         <table class="w-full text-sm">
             <thead>
@@ -127,13 +119,10 @@
             </tbody>
         </table>
     </div>
-
-    {{-- Pagination --}}
     @if($clients->hasPages())
     <div class="flex justify-center">
         {{ $clients->links() }}
     </div>
     @endif
-
 </div>
 @endsection

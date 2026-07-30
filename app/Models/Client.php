@@ -4,12 +4,24 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
+/**
+ * @property string|null $credit_limit
+ * @property int|null $payment_terms_days
+ */
 class Client extends Model
 {
+    use LogsActivity;
     protected $fillable = [
         'nom', 'ice', 'if_number', 'rc', 'cnss',
-        'telephone', 'email', 'adresse', 'ville',
+        'telephone', 'email', 'adresse', 'ville', 'credit_limit', 'payment_terms_days',
+    ];
+
+    protected $casts = [
+        'credit_limit' => 'decimal:2',
+        'payment_terms_days' => 'integer',
     ];
 
     public function invoices(): HasMany
@@ -27,5 +39,14 @@ class Client extends Model
     public function nombreFactures(): int
     {
         return $this->invoices()->count();
+    }
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'email', 'phone', 'address', 'city', 'country', 'tax_number'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('client')
+            ->setDescriptionForEvent(fn(string $eventName) => "Client {$this->name} was {$eventName}");
     }
 }
