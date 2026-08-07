@@ -23,6 +23,7 @@ class ManualInvoiceControllerTest extends TestCase
             'email' => 'admin@example.com',
             'password' => Hash::make('password'),
             'role' => 'admin',
+            'status' => 'approved',
         ]);
     }
 

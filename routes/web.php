@@ -28,20 +28,20 @@ Route::middleware('guest')->group(function () {
 });
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 
-Route::middleware(['auth', 'admin_or_adv'])->group (function () {
+Route::middleware(['auth', 'approved', 'admin_or_adv'])->group (function () {
     Route::get('/', [InvoiceController::class, 'index'])->name('invoices.index');
+    Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.list');
+    Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
     Route::post('/invoices/generate',         [InvoiceController::class, 'generate'])->name('invoices.generate');
     Route::get('/invoices/{id}/download',     [InvoiceController::class, 'downloadPdf'])->name('invoices.download');
     Route::delete('/invoices/{id}',           [InvoiceController::class, 'destroy'])->name('invoices.destroy');
     Route::get('/invoices/{id}/edit',         [ManualInvoiceController::class, 'edit'])->name('invoices.edit');
     Route::put('/invoices/{id}',              [ManualInvoiceController::class, 'update'])->name('invoices.update');
+    Route::patch('/invoices/{id}',            [ManualInvoiceController::class, 'update'])->name('invoices.update.patch');
 
     Route::get('/products',          [ProductController::class, 'index'])->name('products.index');
     Route::post('/products',         [ProductController::class, 'store'])->name('products.store');
     Route::delete('/products/{id}',  [ProductController::class, 'destroy'])->name('products.destroy');
-    Route::get('/clients/search', [ClientController::class, 'search'])->name('clients.search');
-    Route::resource('clients', ClientController::class);
-
     Route::prefix('invoices/manual')->name('invoices.manual.')->group(function () {
         Route::get('/create',  [ManualInvoiceController::class, 'create'])->name('create');
         Route::post('/store',  [ManualInvoiceController::class, 'store'])->name('store');
@@ -51,21 +51,19 @@ Route::middleware(['auth', 'admin_or_adv'])->group (function () {
     Route::get('/creances/export/pdf', [CreanceController::class, 'exportPdf'])->name('creances.export.pdf');
     Route::get('/alertes', [AlerteController::class, 'index'])->name('alertes.index');
 });
-Route::middleware(['auth', 'admin'])->group(function () {
-    Route::get('/admin/users',                    [UserController::class, 'index'])->name('admin.users');
-    Route::put('/admin/users/{user}/role',         [UserController::class, 'updateRole'])->name('admin.users.role');
-    Route::delete('/admin/users/{user}',           [UserController::class, 'destroy'])->name('admin.users.destroy');
-    Route::get('/admin/users/create',  [UserController::class, 'create'])->name('admin.users.create');
-    Route::post('/admin/users',        [UserController::class, 'store'])->name('admin.users.store');
-    Route::post('/admin/users/{user}/approve', [UserController::class, 'approve'])->name('admin.users.approve');
-    Route::post('/admin/users/{user}/reject',  [UserController::class, 'reject'])->name('admin.users.reject');
+Route::middleware(['auth', 'approved'])->group(function () {
+    Route::get('/clients/search', [ClientController::class, 'search'])->name('clients.search');
+    Route::resource('clients', ClientController::class);
+});
+Route::middleware(['auth', 'executive'])->group(function () {
     Route::get('/dashboard/executive', [ExecutiveDashboardController::class, 'index'])
         ->name('dashboard.executive');
     Route::get('/dashboard/executive/board.pdf', [ExecutiveDashboardController::class, 'boardPdf'])
         ->name('dashboard.executive.board_pdf');
     Route::get('/dashboard/executive/data', [ExecutiveDashboardController::class, 'data'])
         ->name('dashboard.executive.data');
-    // Lightweight JSON endpoints for front-end widgets
+    Route::get('/api/dashboard', [ExecutiveDashboardController::class, 'data'])
+        ->name('api.dashboard');
     Route::get('/api/kpis/sales-pulse', [ExecutiveDashboardController::class, 'salesPulse'])
         ->name('api.kpis.sales_pulse');
     Route::get('/api/kpis/ceo-scorecard', [ExecutiveDashboardController::class, 'ceoScorecard'])
@@ -74,15 +72,26 @@ Route::middleware(['auth', 'admin'])->group(function () {
         ->name('api.kpis.gross_margin');
     Route::get('/api/kpis/tva-liability', [ExecutiveDashboardController::class, 'tvaLiability'])
         ->name('api.kpis.tva_liability');
-    // Drilldowns and exports
     Route::get('/api/kpis/margins/details', [ExecutiveDashboardController::class, 'marginDetails'])
         ->name('api.kpis.margins_details');
     Route::get('/api/kpis/margins/export', [ExecutiveDashboardController::class, 'marginExport'])
         ->name('api.kpis.margins_export');
+    Route::get('/api/dashboard/margin-export', [ExecutiveDashboardController::class, 'marginExport'])
+        ->name('api.dashboard.margin_export');
     Route::get('/api/kpis/tva/details', [ExecutiveDashboardController::class, 'tvaDetails'])
         ->name('api.kpis.tva_details');
     Route::get('/api/kpis/tva/export', [ExecutiveDashboardController::class, 'tvaExport'])
         ->name('api.kpis.tva_export');
+});
+
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/admin/users',                    [UserController::class, 'index'])->name('admin.users');
+    Route::put('/admin/users/{user}/role',         [UserController::class, 'updateRole'])->name('admin.users.role');
+    Route::delete('/admin/users/{user}',           [UserController::class, 'destroy'])->name('admin.users.destroy');
+    Route::get('/admin/users/create',  [UserController::class, 'create'])->name('admin.users.create');
+    Route::post('/admin/users',        [UserController::class, 'store'])->name('admin.users.store');
+    Route::post('/admin/users/{user}/approve', [UserController::class, 'approve'])->name('admin.users.approve');
+    Route::post('/admin/users/{user}/reject',  [UserController::class, 'reject'])->name('admin.users.reject');
     // Scheduled reports management
     Route::get('/admin/scheduled-reports', [\App\Http\Controllers\ScheduledReportController::class, 'index'])->name('admin.scheduled_reports.index');
     Route::post('/admin/scheduled-reports', [\App\Http\Controllers\ScheduledReportController::class, 'store'])->name('admin.scheduled_reports.store');

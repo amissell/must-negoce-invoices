@@ -48,11 +48,34 @@ class InvoiceService
     }
     public function updateManualInvoice(Invoice $invoice, array $validated, int $userId): Invoice
     {
+        // PATCH requests may change only a subset of invoice fields. Merge the
+        // submitted data with the current invoice before recalculating totals.
+        $existingItems = $invoice->items()->with('product')->get()->map(static function ($item): array {
+            return [
+                'product_id' => $item->product_id,
+                'quantity'   => $item->quantity,
+                'unit_price' => $item->unit_price,
+            ];
+        })->all();
+
+        $validated = array_merge([
+            'invoice_date'      => $invoice->invoice_date?->format('Y-m-d'),
+            'payment_mode'      => $invoice->payment_mode,
+            'client_id'         => $invoice->client_id,
+            'client_name'      => $invoice->client_name,
+            'client_address'   => $invoice->client_address,
+            'client_phone'     => $invoice->client_phone,
+            'client_ice'       => $invoice->client_ice,
+            'remise_percentage' => $invoice->remise_percentage ?? 0,
+            'items'             => $existingItems,
+        ], $validated);
+
         $validated = $this->prepareClientData($validated);
         $calculation = $this->invoiceCalculationService->calculateInvoiceTotals(
             $validated['items'],
             (float) ($validated['remise_percentage'] ?? 0)
         );
+
         return $this->invoicePersistence->updateManualInvoice(
             $invoice,
             [

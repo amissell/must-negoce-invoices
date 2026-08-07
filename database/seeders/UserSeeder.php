@@ -19,7 +19,7 @@ class UserSeeder extends Seeder
             [
                 'name' => 'AMAL',
                 'password' => Hash::make('Aissell@+2001'), // Change this in production!
-            ]
+            ] 
         );
 
         echo "✅ Admin user created successfully!\n";
