@@ -21,8 +21,11 @@ class CheckApproved
     $user = Auth::user();
 
     if ($user && !$user->isApproved() && !$user->isAdmin()) {
-        Auth::logout();
-        return redirect('/login')->with('error', '⏳ Votre compte est en attente d\'approbation.');
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json(['message' => 'User account is pending approval.'], Response::HTTP_FORBIDDEN);
+        }
+
+        abort(Response::HTTP_FORBIDDEN, 'User account is pending approval.');
     }
 
     return $next($request);

@@ -30,6 +30,13 @@
     table.items tbody tr:nth-child(even) { background: #f8fafc; }
     table.items tbody td { padding: 9px 8px; }
     table.items td.num { text-align: right; font-family: 'DejaVu Sans Mono', monospace; }
+    /* Auto-shrink item rows when the invoice has many products, so everything still fits nicely */
+    table.items.items-compact { font-size: 8.5px; }
+    table.items.items-compact thead th { padding: 6px 8px; font-size: 8.5px; }
+    table.items.items-compact tbody td { padding: 4px 8px; }
+    table.items.items-tight { font-size: 7.5px; }
+    table.items.items-tight thead th { padding: 4px 6px; font-size: 7.5px; }
+    table.items.items-tight tbody td { padding: 2px 6px; }
     .totals { margin-top: 18px; display: table; width: 100%; }
     .totals-spacer { display: table-cell; width: 55%; }
     .totals-box { display: table-cell; width: 45%; background: #f1f5f9; border-radius: 8px; padding: 14px 18px; }
@@ -80,7 +87,11 @@
         </div>
     </div>
 
-    <table class="items">
+    @php
+        $itemCount = $invoice->items->count();
+        $itemsDensityClass = $itemCount > 30 ? 'items-tight' : ($itemCount > 15 ? 'items-compact' : '');
+    @endphp
+    <table class="items {{ $itemsDensityClass }}">
         <thead>
             <tr>
                 <th>Description</th>
@@ -148,3 +159,4 @@
 </div>
 </body>
 </html>
+

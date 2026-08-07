@@ -8,6 +8,8 @@ return [
     ],
     'amevo' => [
         'synchronisation_url' => env('AMEVO_SYNCHRONISATION_URL', 'https://app.amevo.ma/must-negoce/public/synchronisation'),
+        'base_url' => env('AMEVO_API_BASE_URL'),
+        'api_key' => env('AMEVO_API_KEY'),
     ],
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),

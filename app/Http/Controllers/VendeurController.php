@@ -9,6 +9,8 @@ class VendeurController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Vendeur::class);
+
         $query = Vendeur::query();
 
         if ($request->filled('q')) {
@@ -27,6 +29,8 @@ class VendeurController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create', Vendeur::class);
+
         $validated = $request->validate([
             'nom_complet' => 'required|string|max:150|unique:vendeurs,nom_complet',
             'amevo_id'    => 'nullable|string|max:100|unique:vendeurs,amevo_id',
@@ -49,9 +53,13 @@ class VendeurController extends Controller
 
     public function update(Request $request, Vendeur $vendeur)
     {
+        $this->authorize('update', $vendeur);
+
         $validated = $request->validate([
             'nom_complet' => 'required|string|max:150|unique:vendeurs,nom_complet,' . $vendeur->id,
             'amevo_id'    => 'nullable|string|max:100|unique:vendeurs,amevo_id,' . $vendeur->id,
+            'phone'       => 'sometimes|string|max:20|regex:/^[0-9\s\-\+\.]+$/',
+            'status'      => 'sometimes|string|in:active,inactive',
         ], [
             'nom_complet.required' => 'Le nom complet est obligatoire.',
             'nom_complet.unique'   => 'Ce nom est déjà utilisé par un autre vendeur.',
@@ -66,6 +74,8 @@ class VendeurController extends Controller
 
     public function destroy(Vendeur $vendeur)
     {
+        $this->authorize('delete', $vendeur);
+
         $vendeur->delete();
 
         return redirect()->route('vendeurs.index')

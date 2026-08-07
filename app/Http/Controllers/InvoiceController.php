@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 use App\Http\Requests\GenerateInvoiceRequest;
 use App\Http\Requests\StoreInvoiceProductsRequest;
+use App\Http\Requests\UpdateInvoiceRequest;
 use App\Models\CompanySetting;
 use App\Models\Invoice;
 use App\Services\InvoiceService;
@@ -11,6 +12,7 @@ use App\Helpers\NumberToFrenchWords;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Gate;
 
 class InvoiceController extends Controller
 {
@@ -22,36 +24,55 @@ class InvoiceController extends Controller
         $this->invoiceService = $invoiceService;
         $this->pdfService = $pdfService;
     }
-    public function index(Request $request)
-    {
-        $query = Invoice::with('creator')->latest();
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
-        }
-        if ($request->filled('client_id')) {
-            $query->where('client_id', $request->client_id);
-        }
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('invoice_number', 'like', "%{$search}%")
-                  ->orWhere('client_name',  'like', "%{$search}%")
-                  ->orWhere('client_ice',   'like', "%{$search}%");
-            });
-        }
-        $invoices       = $query->paginate(15)->withQueryString();
-        $totalInvoices  = Invoice::count();
-        $automaticCount = Invoice::where('type', 'automatic')->count();
-        $manualCount    = Invoice::where('type', 'manual')->count();
-        $clients        = \App\Models\Client::orderBy('nom')->get(['id', 'nom']);
-        return view('pages.invoices.index', compact(
-            'invoices',
-            'totalInvoices',
-            'automaticCount',
-            'manualCount',
-            'clients'
-        ));
+public function index(Request $request)
+{
+    // Check authorization
+    $this->authorize('viewAny', Invoice::class);
+
+    /** @var \App\Models\User $user */
+    $user = Auth::user();
+
+    $query = Invoice::with('creator')->latest();
+
+    // Apply row-level security: regular users see only their own invoices
+    if (! $user->isAdmin() && ! $user->isSuperviseur()) {
+        $query->where('created_by', $user->id);
     }
+
+    if ($request->filled('type')) {
+        $query->where('type', $request->type);
+    }
+
+    if ($request->filled('client_id')) {
+        $query->where('client_id', $request->client_id);
+    }
+
+    if ($request->filled('search')) {
+        $search = $request->search;
+
+        $query->where(function ($q) use ($search) {
+            $q->where('invoice_number', 'like', "%{$search}%")
+              ->orWhere('client_name', 'like', "%{$search}%")
+              ->orWhere('client_ice', 'like', "%{$search}%");
+        });
+    }
+
+    $invoices = $query->paginate(15)->withQueryString();
+
+    $totalInvoices = Invoice::count();
+    $automaticCount = Invoice::where('type', 'automatic')->count();
+    $manualCount = Invoice::where('type', 'manual')->count();
+
+    $clients = \App\Models\Client::orderBy('nom')->get(['id', 'nom']);
+
+    return view('pages.invoices.index', compact(
+        'invoices',
+        'totalInvoices',
+        'automaticCount',
+        'manualCount',
+        'clients'
+    ));
+}
 
     public function store(StoreInvoiceProductsRequest $request)
     {
@@ -81,6 +102,9 @@ class InvoiceController extends Controller
     public function downloadPdf($id)
     {
         $invoice = Invoice::with('items.product')->findOrFail($id);
+
+        // Check authorization
+        $this->authorize('view', $invoice);
         $safeNumber = str_replace('/', '-', $invoice->invoice_number);
         $amountInWords = NumberToFrenchWords::convert($invoice->total_ttc);
 
@@ -157,11 +181,20 @@ class InvoiceController extends Controller
     {
         return redirect()->route('invoices.index');
     }
-    public function destroy($id)
-    {
-        $invoice = Invoice::findOrFail($id);
-        $invoice->items()->delete();
-        $invoice->delete();
-        return redirect()->route('invoices.index')->with('success', 'Facture supprimée avec succès!');
+    public function destroy(Request $request, $id)
+{
+    $invoice = Invoice::findOrFail($id);
+
+    $this->authorize('delete', $invoice);
+
+    $invoice->items()->delete();
+    $invoice->delete();
+
+    if ($request->expectsJson()) {
+        return response()->json(['message' => 'Facture supprimée avec succès!']);
     }
+
+    return redirect()->route('invoices.index')
+        ->with('success', 'Facture supprimée avec succès!');
+}
 }

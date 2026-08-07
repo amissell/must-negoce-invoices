@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Services\ExecutiveDashboardService;
 use App\Services\PdfService;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 
 class ExecutiveDashboardController extends Controller
 {
@@ -13,6 +15,9 @@ class ExecutiveDashboardController extends Controller
 
     public function index()
     {
+        // Authorize: only admin and superviseur can view dashboard
+        Gate::authorize('view-dashboard');
+
         $data = $this->dashboard->getDashboardData();
 
         return view('pages.dashboards.executive', $data);
@@ -20,6 +25,9 @@ class ExecutiveDashboardController extends Controller
 
     public function data()
     {
+        // Authorize: only admin and superviseur can view dashboard data
+        Gate::authorize('view-dashboard');
+
         return response()->json($this->dashboard->getDashboardData());
     }
 
@@ -28,6 +36,8 @@ class ExecutiveDashboardController extends Controller
      */
     public function salesPulse()
     {
+        Gate::authorize('view-dashboard');
+
         return response()->json($this->dashboard->salesPulse());
     }
 
@@ -36,11 +46,15 @@ class ExecutiveDashboardController extends Controller
      */
     public function grossMargin()
     {
+        Gate::authorize('view-dashboard');
+
         return response()->json($this->dashboard->grossMarginAnalysis());
     }
 
     public function marginDetails()
     {
+        Gate::authorize('view-dashboard');
+
         $data = request()->validate([
             'dimension' => ['required', 'string'],
             'from' => ['nullable', 'date'],
@@ -107,6 +121,9 @@ class ExecutiveDashboardController extends Controller
 
     public function marginExport()
     {
+        // Authorize: only admin and superviseur can export
+        Gate::authorize('view-dashboard');
+
         $data = request()->validate([
             'dimension' => ['required', 'string'],
             'from' => ['nullable', 'date'],
@@ -159,6 +176,9 @@ class ExecutiveDashboardController extends Controller
      */
     public function ceoScorecard()
     {
+        // Authorize: only admin and superviseur can view scorecard
+        Gate::authorize('view-dashboard');
+
         $scorecard = [
             'mtd_revenue' => $this->dashboard->currentMonthRevenue(),
             'mtd_vs_target' => $this->dashboard->companyTarget(),
@@ -175,6 +195,8 @@ class ExecutiveDashboardController extends Controller
      */
     public function tvaLiability()
     {
+        Gate::authorize('view-dashboard');
+
         $months = (int) request('months', 12);
 
         return response()->json($this->dashboard->tvaLiabilityByMonth($months));
@@ -182,6 +204,8 @@ class ExecutiveDashboardController extends Controller
 
     public function tvaDetails()
     {
+        Gate::authorize('view-dashboard');
+
         $data = request()->validate([
             'from' => ['nullable', 'date'],
             'to' => ['nullable', 'date'],
@@ -226,6 +250,9 @@ class ExecutiveDashboardController extends Controller
 
     public function tvaExport()
     {
+        // Authorize: only admin and superviseur can export
+        Gate::authorize('view-dashboard');
+
         $data = request()->validate([
             'from' => ['nullable', 'date'],
             'to' => ['nullable', 'date'],
@@ -266,6 +293,9 @@ class ExecutiveDashboardController extends Controller
      */
     public function boardPdf()
     {
+        // Authorize: only admin and superviseur can export PDF
+        Gate::authorize('view-dashboard');
+
         $data = $this->dashboard->getDashboardData();
 
         $filename = sprintf('board_%s.pdf', now()->format('Ymd'));

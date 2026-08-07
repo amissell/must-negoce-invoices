@@ -51,8 +51,8 @@ class ExecutiveDashboardDrilldownsTest extends TestCase
     {
         Carbon::setTestNow('2026-07-15 10:00:00');
         $admin = User::factory()->create(['role' => 'admin', 'status' => 'approved']);
-        // use a valid non-admin role value defined in the schema
-        $user = User::factory()->create(['role' => 'superviseur', 'status' => 'approved']);
+        // ADV users are not allowed to access executive drilldowns.
+        $user = User::factory()->create(['role' => 'adv', 'status' => 'approved']);
 
         $client = Client::create(['nom' => 'Pagination Client']);
 

@@ -7,8 +7,8 @@
 <style>
     @page { margin: 15mm 20mm 15mm 20mm; size: A4; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'DejaVu Sans', 'Arial', sans-serif; font-size: 10px; color: #000; line-height: 1.4; padding: 20px 30px; }
-    .header { display: table; width: 100%; margin-bottom: 18px; border-bottom: 2px solid #000; padding-bottom: 14px; }
+    body { font-family: 'DejaVu Sans', 'Arial', sans-serif; font-size: 10px; color: #000; line-height: 1.4; }
+    .header { display: table; width: 100%; margin-bottom: 12px; border-bottom: 2px solid #000; padding-bottom: 10px; }
     .header-left { display: table-cell; vertical-align: middle; width: 70px; }
     .header-right { display: table-cell; vertical-align: middle; padding-left: 12px; }
     .logo { width: 60px; height: auto; }
@@ -38,6 +38,16 @@
     table.items td.qty { text-align: center; width: 12%; font-family: 'DejaVu Sans Mono', monospace; }
     table.items td.price { text-align: right; width: 18%; font-family: 'DejaVu Sans Mono', monospace; }
     table.items td.total { text-align: right; width: 20%; font-weight: 600; font-family: 'DejaVu Sans Mono', monospace; }
+    /* Auto-shrink item rows when the invoice has many products, so everything still fits nicely */
+    table.items.items-compact { font-size: 8px; }
+    table.items.items-compact thead th { padding: 4px 5px; font-size: 8.5px; }
+    table.items.items-compact tbody td { padding: 2.5px 5px; }
+    table.items.items-tight { font-size: 7px; }
+    table.items.items-tight thead th { padding: 3px 4px; font-size: 7.5px; }
+    table.items.items-tight tbody td { padding: 1.5px 4px; }
+    table.items.items-ultra { font-size: 6.5px; }
+    table.items.items-ultra thead th { padding: 2px 3px; font-size: 7px; }
+    table.items.items-ultra tbody td { padding: 1px 3px; line-height: 1.1; }
     .totals { margin-top: 15px; margin-bottom: 15px; page-break-inside: avoid; }
     .totals-table { float: right; width: 280px; font-size: 10px; }
     .totals-table table { width: 100%; border-collapse: collapse; }
@@ -98,7 +108,11 @@
         @if($invoice->client_address)<div class="client-info-row"><span class="label">Adresse :</span> <span>{{ $invoice->client_address }}</span></div>@endif
     </div>
 
-    <table class="items">
+    @php
+        $itemCount = $invoice->items->count();
+        $itemsDensityClass = $itemCount > 45 ? 'items-ultra' : ($itemCount > 25 ? 'items-tight' : ($itemCount > 15 ? 'items-compact' : ''));
+    @endphp
+    <table class="items {{ $itemsDensityClass }}">
         <thead>
             <tr>
                 <th>Description</th>

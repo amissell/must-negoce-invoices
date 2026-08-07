@@ -80,9 +80,6 @@ class DashboardVendeursController extends Controller
             return view('pages.dashboards.dashboard-vendeurs', [
                 'erreur' => "Erreur réseau : " . $e->getMessage(),
                 'data' => null,
-                'mois' => $mois,
-                'annee' => $annee,
-                'userId' => $userId,
             ]);
         }
 

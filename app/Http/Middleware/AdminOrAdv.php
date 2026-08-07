@@ -8,15 +8,15 @@ class AdminOrAdv
 {
     public function handle(Request $request, Closure $next)
     {
-        if (!Auth()->check()) {
+        if (!Auth::check()) {
             return redirect()->route('login');
         }
 
-        $role = Auth()->user()->role;
+        $role = Auth::user()->role;
 
-        if (!in_array($role, ['admin', 'adv'])) {
+        if (!in_array($role, ['admin', 'superviseur', 'adv'])) {
             abort(403);
-        }
+}
 
         return $next($request);
     }

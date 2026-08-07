@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 
 /**
  * @property string|null $credit_limit
@@ -13,7 +15,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  */
 class Client extends Model
 {
-    use LogsActivity;
+     use HasFactory, LogsActivity;
     protected $fillable = [
         'nom', 'ice', 'if_number', 'rc', 'cnss',
         'telephone', 'email', 'adresse', 'ville', 'credit_limit', 'payment_terms_days',

@@ -49,13 +49,22 @@ class ManualInvoiceController extends Controller
     public function update(UpdateManualInvoiceRequest $request, int $id)
     {
         $invoice = Invoice::findOrFail($id);
+        $this->authorize('update', $invoice);
 
         try {
             $this->invoiceService->updateManualInvoice($invoice, $request->validated(), Auth::id());
 
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Facture modifiée']);
+            }
+
             return redirect()->route('invoices.index')
                 ->with('success', 'Facture modifiée');
         } catch (\Throwable $exception) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $exception->getMessage()], 422);
+            }
+
             return back()->withInput()->with('error', $exception->getMessage());
         }
     }
@@ -77,6 +86,7 @@ class ManualInvoiceController extends Controller
     public function downloadPDF($id)
     {
         $invoice = Invoice::with('items.product')->findOrFail($id);
+        $this->authorize('view', $invoice);
         $amountInWords = NumberToFrenchWords::convert($invoice->total_ttc);
 
         return $this->pdfService->download('pages.invoices.pdf-manual', compact('invoice', 'amountInWords'), "facture_{$invoice->invoice_number}.pdf");
@@ -85,6 +95,7 @@ class ManualInvoiceController extends Controller
     public function edit(int $id)
     {
         $invoice = Invoice::with('items.product')->findOrFail($id);
+        $this->authorize('update', $invoice);
         $products = Product::orderBy('name')->get();
         $clients = Client::orderBy('nom')->get(['id', 'nom', 'ice', 'telephone', 'adresse']);
 
