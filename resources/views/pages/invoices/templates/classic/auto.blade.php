@@ -7,7 +7,7 @@
 <style>
     @page { margin: 15mm 20mm 15mm 20mm; size: A4; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'DejaVu Sans', 'Arial', sans-serif; font-size: 10px; color: #000; line-height: 1.4; }
+    body { font-family: 'DejaVu Sans', 'Arial', sans-serif; font-size: 10px; color: #000; line-height: 1.4; padding: 20px 30px; }
     .header { display: table; width: 100%; margin-bottom: 18px; border-bottom: 2px solid #000; padding-bottom: 14px; }
     .header-left { display: table-cell; vertical-align: middle; width: 70px; }
     .header-right { display: table-cell; vertical-align: middle; padding-left: 12px; }
