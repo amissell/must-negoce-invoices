@@ -17,7 +17,6 @@
 <body>
     <h1>📊 Suivi des Créances - {{ now()->format('d/m/Y') }}</h1>
     <p>Total impayé: <strong>{{ number_format($totalCreances, 2) }} MAD</strong> | 0-30j: {{ number_format($total30, 2) }} | 31-60j: {{ number_format($total60, 2) }} | 60j+: {{ number_format($total90, 2) }}</p>
-
     <table>
         <thead>
             <tr>

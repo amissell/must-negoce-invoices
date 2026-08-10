@@ -55,21 +55,18 @@
                        value="{{ old('objectif_ca', $objectif->objectif_ca ?? 0) }}"
                        class="w-full border rounded p-2">
             </div>
-
             <div class="mb-4">
                 <label class="block font-semibold mb-1">Objectif BL</label>
                 <input type="number" name="objectif_bl"
                        value="{{ old('objectif_bl', $objectif->objectif_bl ?? 0) }}"
                        class="w-full border rounded p-2">
             </div>
-
             <div class="mb-4">
                 <label class="block font-semibold mb-1">Prime</label>
                 <input type="number" step="0.01" name="prime"
                        value="{{ old('prime', $objectif->prime ?? 300) }}"
                        class="w-full border rounded p-2">
             </div>
-
             <button class="bg-indigo-600 text-white px-4 py-2 rounded font-bold">
                 💾 Enregistrer
             </button>

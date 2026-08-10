@@ -82,7 +82,6 @@
             @endif
         </div>
     </div>
-
     <div class="invoice-title">Facture pour</div>
     <div class="invoice-info">
         <table>
@@ -100,7 +99,6 @@
             </tr>
         </table>
     </div>
-
     @php
         $itemsDensityClass = $itemCount > 45 ? 'items-ultra' : ($itemCount > 25 ? 'items-tight' : ($itemCount > 15 ? 'items-compact' : ''));
     @endphp
@@ -124,7 +122,6 @@
             @endforeach
         </tbody>
     </table>
-
     <div class="totals clearfix">
         <div class="totals-table">
             <table>
@@ -143,11 +140,9 @@
             </table>
         </div>
     </div>
-
     <div class="amount-words">
         <strong>Arrêtée la présente facture à la somme de :</strong> {{ strtoupper($amountInWords) }}
     </div>
-
     <div class="footer">
         @if($company->address)
             <div class="footer-row"><strong>Adresse :</strong> {{ $company->address }}</div>

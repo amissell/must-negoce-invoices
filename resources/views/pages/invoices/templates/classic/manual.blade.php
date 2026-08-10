@@ -5,26 +5,27 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Facture {{ $invoice->invoice_number }}</title>
 <style>
-    @page { margin: 15mm 20mm 15mm 20mm; size: A4; }
+    @page { margin: 20mm 35mm 20mm 35mm; size: A4; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'DejaVu Sans', 'Arial', sans-serif; font-size: 10px; color: #000; line-height: 1.4; }
-    .header { display: table; width: 100%; margin-bottom: 12px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+    body { font-family: 'DejaVu Sans', 'Arial', sans-serif; font-size: 10px; color: #000; line-height: 1.4;padding: 20px 30px; }
+    .header { display: table; width: 100%; margin-bottom: 18px; border-bottom: 2px solid #000; padding-bottom: 14px; }
     .header-left { display: table-cell; vertical-align: middle; width: 70px; }
     .header-right { display: table-cell; vertical-align: middle; padding-left: 12px; }
     .logo { width: 60px; height: auto; }
     .company-name { font-size: 20px; font-weight: bold; margin-bottom: 2px; letter-spacing: 0.5px; }
     .company-subtitle { font-size: 9px; color: #555; letter-spacing: 1.5px; text-transform: uppercase; }
-    .invoice-title { font-size: 13px; font-weight: bold; margin-bottom: 8px; }
-    .invoice-info { margin-bottom: 10px; font-size: 10px; }
+    .invoice-title { font-size: 13px; font-weight: bold; margin-bottom: 12px; }
+    .combined-info-box { display: table; width: 100%; table-layout: fixed; margin-bottom: 24px; border: 1px solid #999; background-color: #f9f9f9; page-break-inside: avoid; }
+    .combined-info-col { display: table-cell; vertical-align: top; width: 50%; padding: 14px 16px; }
+    .combined-info-col.left-col { border-right: 1px solid #ccc; }
+    .combined-info-col .col-title { font-weight: bold; font-size: 10px; text-decoration: underline; text-align: center; margin-bottom: 8px; text-transform: uppercase; }
     .invoice-info table { width: 100%; border-collapse: collapse; }
-    .invoice-info td { padding: 3px 0; vertical-align: top; }
-    .invoice-info .label { font-weight: bold; width: 25%; }
-    .invoice-info .value { width: 25%; }
-    .client-box { margin-bottom: 15px; padding: 12px 14px; border: 1px solid #ccc; background-color: #f9f9f9; page-break-inside: avoid; }
-    .client-box .title { font-weight: bold; font-size: 10px; margin-bottom: 6px; color: #333; text-transform: uppercase; }
-    .client-info-row { margin-bottom: 3px; font-size: 9px; }
-    .client-info-row .label { font-weight: bold; display: inline-block; width: 70px; }
-    table.items { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 9px; }
+    .invoice-info td { padding: 3px 0; vertical-align: top; font-size: 9.5px; }
+    .invoice-info .label { font-weight: bold; width: 45%; }
+    .invoice-info .value { width: 55%; }
+    .client-info-row { margin-bottom: 3px; font-size: 9.5px; }
+    .client-info-row .label { font-weight: bold; display: inline-block; width: 65px; }
+    table.items { width: 100%; border-collapse: collapse; margin: 8px 0 12px; font-size: 9px; }
     table.items thead { background-color: #e0e0e0; }
     table.items thead tr { border: 2px solid #000; }
     table.items thead th { padding: 6px 5px; font-weight: bold; text-align: center; border-right: 1px solid #999; font-size: 10px; }
@@ -38,16 +39,6 @@
     table.items td.qty { text-align: center; width: 12%; font-family: 'DejaVu Sans Mono', monospace; }
     table.items td.price { text-align: right; width: 18%; font-family: 'DejaVu Sans Mono', monospace; }
     table.items td.total { text-align: right; width: 20%; font-weight: 600; font-family: 'DejaVu Sans Mono', monospace; }
-    /* Auto-shrink item rows when the invoice has many products, so everything still fits nicely */
-    table.items.items-compact { font-size: 8px; }
-    table.items.items-compact thead th { padding: 4px 5px; font-size: 8.5px; }
-    table.items.items-compact tbody td { padding: 2.5px 5px; }
-    table.items.items-tight { font-size: 7px; }
-    table.items.items-tight thead th { padding: 3px 4px; font-size: 7.5px; }
-    table.items.items-tight tbody td { padding: 1.5px 4px; }
-    table.items.items-ultra { font-size: 6.5px; }
-    table.items.items-ultra thead th { padding: 2px 3px; font-size: 7px; }
-    table.items.items-ultra tbody td { padding: 1px 3px; line-height: 1.1; }
     .totals { margin-top: 15px; margin-bottom: 15px; page-break-inside: avoid; }
     .totals-table { float: right; width: 280px; font-size: 10px; }
     .totals-table table { width: 100%; border-collapse: collapse; }
@@ -85,27 +76,33 @@
     </div>
 
     <div class="invoice-title">Facture pour</div>
-    <div class="invoice-info">
-        <table>
-            <tr>
-                <td class="label">N° FACTURE :</td>
-                <td class="value">{{ $invoice->invoice_number }}</td>
-                <td class="label">DATE :</td>
-                <td class="value">{{ \Carbon\Carbon::parse($invoice->invoice_date)->locale('fr')->isoFormat('D MMMM YYYY') }}</td>
-            </tr>
-            <tr>
-                <td class="label">MODE DE PAY :</td>
-                <td class="value" colspan="3">{{ $invoice->payment_mode ?? 'ESP' }}</td>
-            </tr>
-        </table>
-    </div>
-
-    <div class="client-box">
-        <div class="title">Informations Client</div>
-        <div class="client-info-row"><span class="label">Nom :</span> <span>{{ $invoice->client_name }}</span></div>
-        @if($invoice->client_phone)<div class="client-info-row"><span class="label">Téléphone :</span> <span>{{ $invoice->client_phone }}</span></div>@endif
-        @if($invoice->client_ice)<div class="client-info-row"><span class="label">ICE :</span> <span>{{ $invoice->client_ice }}</span></div>@endif
-        @if($invoice->client_address)<div class="client-info-row"><span class="label">Adresse :</span> <span>{{ $invoice->client_address }}</span></div>@endif
+    <div class="combined-info-box">
+        <div class="combined-info-col left-col">
+            <div class="col-title">Information</div>
+            <div class="invoice-info">
+                <table>
+                    <tr>
+                        <td class="label">N° FACTURE :</td>
+                        <td class="value">{{ $invoice->invoice_number }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">DATE :</td>
+                        <td class="value">{{ \Carbon\Carbon::parse($invoice->invoice_date)->locale('fr')->isoFormat('D MMMM YYYY') }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">MODE DE PAY :</td>
+                        <td class="value">{{ $invoice->payment_mode ?? 'ESP' }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="combined-info-col">
+            <div class="col-title">Destinataire</div>
+            <div class="client-info-row"><span class="label">Nom :</span> <span>{{ $invoice->client_name }}</span></div>
+            @if($invoice->client_phone)<div class="client-info-row"><span class="label">Téléphone :</span> <span>{{ $invoice->client_phone }}</span></div>@endif
+            @if($invoice->client_ice)<div class="client-info-row"><span class="label">ICE :</span> <span>{{ $invoice->client_ice }}</span></div>@endif
+            @if($invoice->client_address)<div class="client-info-row"><span class="label">Adresse :</span> <span>{{ $invoice->client_address }}</span></div>@endif
+        </div>
     </div>
 
     @php

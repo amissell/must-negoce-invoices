@@ -9,7 +9,6 @@
             ➕ Nouvel Objectif
         </a>
     </div>
-
     <form method="GET" action="{{ route('objectifs.index') }}"
           class="bg-white rounded-xl shadow p-4 mb-6 flex flex-wrap gap-4 items-end">
         <div>
@@ -22,7 +21,6 @@
                 @endfor
             </select>
         </div>
-
         <div>
             <label class="block text-sm font-semibold text-gray-600 mb-1">Année</label>
             <select name="annee" class="border rounded-lg px-3 py-2 text-sm">
@@ -33,18 +31,15 @@
                 @endfor
             </select>
         </div>
-
         <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">
             🔍 Filtrer
         </button>
     </form>
-
     @if(session('success'))
         <div class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg font-semibold">
             {{ session('success') }}
         </div>
     @endif
-
     <div class="bg-white rounded-xl shadow overflow-hidden">
         <table class="w-full text-sm">
             <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
@@ -74,7 +69,6 @@
                                class="text-indigo-600 hover:underline text-xs font-semibold mr-2">
                                 ✏️ Modifier
                             </a>
-
                             <form action="{{ route('objectifs.destroy', $obj->id) }}"
                                   method="POST"
                                   class="inline"
@@ -100,12 +94,10 @@
             </tbody>
         </table>
     </div>
-
     @php
         $vendeursAvecObjectif = $objectifs->pluck('vendeur_nom')->toArray();
         $vendeursSans = array_diff($vendeurs, $vendeursAvecObjectif);
     @endphp
-
     @if(count($vendeursSans) > 0)
         <div class="mt-4 bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg text-sm">
             ⚠️ <strong>Vendeurs sans objectif ce mois :</strong> {{ implode(', ', $vendeursSans) }}
