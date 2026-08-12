@@ -190,6 +190,13 @@
                 </a>
             </li>
             @endif
+            @if(auth()->user() && auth()->user()->isSuperviseur())
+            <li class="sidebar-nav-item">
+                <a href="{{ route('business-analytics.index') }}" class="nav-link {{ request()->routeIs('business-analytics.*') ? 'active' : '' }}">
+                    <span class="nav-icon">🔎</span><span>Business Analytics</span>
+                </a>
+            </li>
+            @endif
         </nav>
 
         <div class="sidebar-footer">

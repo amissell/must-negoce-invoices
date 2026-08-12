@@ -17,6 +17,7 @@ use App\Http\Controllers\DashboardVendeursController;
 use App\Http\Controllers\DashboardCategoriesController;
 use App\Http\Controllers\DashboardVendeurCategorieController;
 use App\Http\Controllers\ExecutiveDashboardController;
+use App\Http\Controllers\BusinessAnalyticsController;
 use App\Http\Controllers\Admin\ActivityLogController;
 
 
@@ -56,6 +57,10 @@ Route::middleware(['auth', 'approved'])->group(function () {
     Route::resource('clients', ClientController::class);
 });
 Route::middleware(['auth', 'executive'])->group(function () {
+    Route::get('/business-analytics', [BusinessAnalyticsController::class, 'index'])
+        ->name('business-analytics.index');
+    Route::get('/api/business-analytics', [BusinessAnalyticsController::class, 'data'])
+        ->name('api.business-analytics');
     Route::get('/dashboard/executive', [ExecutiveDashboardController::class, 'index'])
         ->name('dashboard.executive');
     Route::get('/dashboard/executive/board.pdf', [ExecutiveDashboardController::class, 'boardPdf'])
