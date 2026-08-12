@@ -19,7 +19,6 @@ class Activity extends SpatieActivity
         'ip_address',
         'user_agent',
     ];
-
     protected $casts = [
         'properties' => 'collection',
     ];

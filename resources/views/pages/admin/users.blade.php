@@ -27,8 +27,6 @@
             </div>
         </div>
     </div>
-
-    {{-- Alerts --}}
     @if(session('success'))
     <div style="background:#DCFCE7;border:1.5px solid #86EFAC;border-radius:14px;padding:16px 20px;color:#15803D;font-weight:600;display:flex;align-items:center;gap:10px">
         ✅ {{ session('success') }}
@@ -39,8 +37,6 @@
         ⚠️ {{ session('error') }}
     </div>
     @endif
-
-    {{-- Legend --}}
     <div style="background:white;border-radius:16px;padding:16px 20px;border:1px solid #E2E8F0;display:flex;gap:20px;flex-wrap:wrap">
         <span style="font-size:12px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.5px;align-self:center">Rôles :</span>
         <span style="background:#EEF2FF;color:#4338CA;padding:5px 14px;border-radius:999px;font-size:12px;font-weight:800;border:1px solid #C7D2FE">👑 Admin — Accès total</span>
@@ -48,8 +44,6 @@
         <span style="background:#FEE2E2;color:#B91C1C;padding:5px 14px;border-radius:999px;font-size:12px;font-weight:800;border:1px solid #FCA5A5">📊 ADV — Facturation uniquement</span>
         <span style="background:#FEF9C3;color:#854D0E;padding:5px 14px;border-radius:999px;font-size:12px;font-weight:800;border:1px solid #FDE047">⏳ En attente d'approbation</span>
     </div>
-
-    {{-- Users Table --}}
     <div style="background:white;border-radius:20px;box-shadow:0 4px 20px rgba(0,0,0,0.08);overflow:hidden;border:1px solid rgba(0,0,0,0.05)">
         <div style="overflow-x:auto">
         <table style="width:100%;border-collapse:collapse;min-width:900px">
@@ -67,11 +61,7 @@
             <tbody>
                 @foreach($users as $user)
                 <tr style="border-top:1px solid #F1F5F9" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='white'">
-
-                    {{-- # --}}
                     <td style="padding:20px;color:#94A3B8;font-weight:700;font-size:13px">{{ $loop->iteration }}</td>
-
-                    {{-- Utilisateur --}}
                     <td style="padding:20px">
                         <div style="display:flex;align-items:center;gap:12px">
                             <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#4F46E5,#7C3AED);display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:16px;flex-shrink:0">
@@ -90,11 +80,7 @@
                             </div>
                         </div>
                     </td>
-
-                    {{-- Email --}}
                     <td style="padding:20px;color:#64748B;font-size:14px">{{ $user->email }}</td>
-
-                    {{-- Rôle badge --}}
                     <td style="padding:20px;text-align:center">
                         @if($user->role === 'admin')
                             <span style="background:#EEF2FF;color:#4338CA;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:800;border:1px solid #C7D2FE">👑 Admin</span>
@@ -104,8 +90,6 @@
                             <span style="background:#F0FDF4;color:#15803D;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:800;border:1px solid #86EFAC">👁 Superviseur</span>
                             @endif
                     </td>
-
-                    {{-- Statut --}}
                     <td style="padding:20px;text-align:center">
                         @if($user->id === auth()->id())
                             <span style="color:#CBD5E1;font-size:13px">—</span>
@@ -133,8 +117,6 @@
                             <span style="color:#B91C1C;font-weight:700;font-size:13px">❌ Rejeté</span>
                         @endif
                     </td>
-
-                    {{-- Changer rôle --}}
                     <td style="padding:20px;text-align:center">
                         @if($user->id !== auth()->id())
                         <form method="POST" action="{{ route('admin.users.role', $user) }}"
@@ -155,8 +137,6 @@
                             <span style="color:#CBD5E1;font-size:13px;font-style:italic">Non modifiable</span>
                         @endif
                     </td>
-
-                    {{-- Supprimer --}}
                     <td style="padding:20px;text-align:center">
                         @if($user->id !== auth()->id())
                         <form method="POST" action="{{ route('admin.users.destroy', $user) }}"
@@ -171,14 +151,12 @@
                             <span style="color:#CBD5E1;font-size:13px">—</span>
                         @endif
                     </td>
-
                 </tr>
                 @endforeach
             </tbody>
         </table>
         </div>
     </div>
-
 </div>
 </div>
 @endsection

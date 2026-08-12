@@ -1,7 +1,5 @@
 @extends('layouts.app')
-
 @section('title', 'Nouveau Client')
-
 @section('content')
 <div class="max-w-2xl mx-auto space-y-6">
     <div class="flex items-center gap-4">
@@ -47,8 +45,6 @@
                            class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
             </div>
-
-            {{-- RC + CNSS --}}
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">RC</label>
@@ -63,8 +59,6 @@
                            class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
             </div>
-
-            {{-- Téléphone + Email --}}
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">Téléphone</label>
@@ -79,8 +73,6 @@
                            class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
             </div>
-
-            {{-- Adresse + Ville --}}
             <div class="grid grid-cols-3 gap-4">
                 <div class="col-span-2">
                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">Adresse</label>
@@ -94,8 +86,6 @@
                            class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
             </div>
-
-            {{-- Buttons --}}
             <div class="flex gap-3 pt-2">
                 <button type="submit"
                         class="btn-primary text-white px-6 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all">
@@ -111,6 +101,5 @@
             </div>
         </form>
     </div>
-
 </div>
 @endsection

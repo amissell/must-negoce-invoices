@@ -14,9 +14,7 @@ class CategorieController extends Controller
         if ($request->filled('q')) {
             $query->where('nom', 'like', '%' . $request->q . '%');
         }
-
         $categories = $query->orderBy('nom')->paginate(20)->withQueryString();
-
         return view('pages.categories.index', compact('categories'));
     }
 
@@ -57,9 +55,7 @@ class CategorieController extends Controller
             'nom.unique'   => 'Ce nom est déjà utilisé par une autre catégorie.',
             'amevo_id.unique' => 'Cet ID AMEVO est déjà utilisé par une autre catégorie.',
         ]);
-
         $categorie->update($validated);
-
         return redirect()->route('categories.index')
             ->with('success', '✅ Catégorie mise à jour !');
     }
@@ -67,7 +63,6 @@ class CategorieController extends Controller
     public function destroy(Categorie $categorie)
     {
         $categorie->delete();
-
         return redirect()->route('categories.index')
             ->with('success', '✅ Catégorie supprimée !');
     }

@@ -10,7 +10,6 @@
         overflow: hidden;
         box-shadow: 0 12px 32px rgba(30, 58, 95, 0.15);
     }
-
     .page-hero::before {
         content: '';
         position: absolute;
@@ -21,7 +20,6 @@
         background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
         animation: float 20s ease-in-out infinite;
     }
-
     @keyframes float {
         0%,100% {
             transform: translate(0, 0) rotate(0deg);
@@ -31,7 +29,6 @@
         }
     }
 
-    /* ═══════════════ FILTER BAR ═══════════════ */
     .filter-bar {
         background: white;
         border-radius: 16px;
@@ -210,7 +207,6 @@
         transition: all 0.2s ease;
     }
 
-    /* ═══════════════ BADGE ═══════════════ */
     .badge-drops {
         background: #eff6ff;
         color: #1e3a5f;
@@ -223,7 +219,6 @@
         display: inline-block;
     }
 
-    /* ═══════════════ ERROR ALERT ═══════════════ */
     .error-alert {
         display: flex;
         align-items: flex-start;
@@ -247,7 +242,6 @@
         margin: 6px 0 0 0;
     }
 
-    /* ═══════════════ ANIMATIONS ═══════════════ */
     @keyframes fadeInUp {
         from {
             opacity: 0;
@@ -263,12 +257,10 @@
         animation: fadeInUp 0.5s ease-out backwards;
     }
 
-    /* ═══════════════ CHART STYLING ═══════════════ */
     canvas {
         max-height: 300px;
     }
 
-    /* ═══════════════ RESPONSIVE ═══════════════ */
     @media (max-width: 768px) {
         .page-hero {
             padding: 24px !important;
@@ -303,12 +295,10 @@
     }
 </style>
 @endpush
-
 @section('content')
 <div class="min-h-screen" style="background:linear-gradient(to bottom,#F8FAFC 0%,#EFF6FF 100%);">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-    {{-- ══════════════ HERO ══════════════ --}}
     <div class="page-hero p-8 fade-in-up">
         <div class="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
@@ -332,8 +322,6 @@
             </a>
         </div>
     </div>
-
-    {{-- ══════════════ FILTRES ══════════════ --}}
     <div class="filter-bar fade-in-up" style="animation-delay:0.05s">
         <form method="GET" id="filterForm" action="{{ route('dashboard.categories') }}" class="flex flex-wrap items-end gap-3 w-full">
             <div>
@@ -359,8 +347,6 @@
             </div>
         </form>
     </div>
-
-    {{-- ══════════════ ERREUR ══════════════ --}}
     @if($erreur)
         <div class="error-alert">
             <span style="font-size: 20px; flex-shrink: 0;">⚠️</span>
@@ -370,10 +356,8 @@
             </div>
         </div>
     @endif
-
     @if($data)
     @php
-        // Modern Professional Color Palette - Blue & Teal Theme
         $catColors = [
             ['hex'=>'#1e3a5f', 'text'=>'text-[#1e3a5f]'],
             ['hex'=>'#2d5380', 'text'=>'text-[#2d5380]'],
@@ -386,8 +370,6 @@
         ];
         $categoriesData = $data['categoriesData'] ?? [];
     @endphp
-
-    {{-- ══════════════ KPI CARDS ══════════════ --}}
     <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-4">
         <div class="kpi-card blue fade-in-up" style="animation-delay:0s">
             <div class="kpi-icon bg-indigo-50">💰</div>
@@ -400,14 +382,12 @@
             <div class="kpi-label">Quantité Totale Vendue</div>
         </div>
     </div>
-{{-- ══════════════ RÉPARTITION PAR CATÉGORIE ══════════════ --}}
     <div class="table-card fade-in-up" style="animation-delay:0.15s">
         <div class="table-header">
             <h2 class="text-lg font-extrabold flex items-center gap-2">🏷️ RÉPARTITION PAR CATÉGORIE</h2>
         </div>
-
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
-            {{-- Tableau --}} <div class="overflow-x-auto">
+             <div class="overflow-x-auto">
                 <table class="min-w-full dashboard-table">
                     <thead>
                         <tr>
@@ -437,23 +417,18 @@
                     </tbody>
                 </table>
             </div>
-
-            {{-- Camembert --}}
             <div>
                 <canvas id="categoryPieChart" height="240"></canvas>
             </div>
         </div>
     </div>
-    {{-- ══════════════ ÉVOLUTION PAR CATÉGORIE ══════════════ --}}
     <div class="table-card fade-in-up" style="animation-delay:0.25s">
         <div class="p-6">
             <h3 class="font-bold text-gray-900 mb-4">📈 Évolution du CA par Catégorie</h3>
             <canvas id="categoryEvoChart" height="280"></canvas>
         </div>
     </div>
-
     @endif
-
 </div>
 </div>
 @endsection
@@ -462,14 +437,11 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 @if($data)
-// Professional Modern Color Palette - Corporate Blue & Teal
 const COLORS = ['#1e3a5f','#2d5380','#14B8A6','#2dd4bf','#0d9488','#3b7cb8','#152d48','#006b5b'];
 
 const categoriesData = @json($data['categoriesData'] ?? []);
 const catEvoLabels   = @json($data['catEvoLabels'] ?? []);
 const catEvoSeries   = @json($data['catEvoSeries'] ?? []);
-
-// Camembert : répartition du CA par catégorie
 if (categoriesData.length > 0) {
     new Chart(document.getElementById('categoryPieChart'), {
         type: 'doughnut',
@@ -501,7 +473,6 @@ if (catEvoLabels.length > 0 && catEvoSeries.length > 0) {
         pointBackgroundColor: COLORS[index % COLORS.length],
         pointBorderColor: '#fff', pointBorderWidth: 2, fill: false,
     }));
-
     new Chart(document.getElementById('categoryEvoChart'), {
         type: 'line',
         data: { labels: catEvoLabels, datasets: catLineDatasets },

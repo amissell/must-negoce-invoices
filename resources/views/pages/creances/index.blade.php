@@ -1,7 +1,5 @@
 @extends('layouts.app')
-
 @section('title', 'Créances')
-
 @section('content')
 <div class="space-y-6">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -20,8 +18,6 @@
             </a>
         </div>
     </div>
-
-    {{-- KPI Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="bg-white rounded-2xl card-shadow p-5">
             <p class="text-sm text-gray-500">Total Impayé</p>
@@ -40,14 +36,11 @@
             <p class="text-2xl font-bold text-red-700 mt-1">{{ number_format($total90, 2, ',', ' ') }} MAD</p>
         </div>
     </div>
-
-    {{-- Panneau AMEVO --}}
     <div class="bg-white rounded-2xl card-shadow p-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
             <h2 class="text-lg font-bold text-gray-900">🔄 Reste à Encaisser (AMEVO) — {{ \Carbon\Carbon::now()->translatedFormat('F Y') }}</h2>
             <span class="text-xs text-gray-400">Données vendeur AMEVO, à titre de recoupement — sans lien direct avec les créances clients ci-dessous</span>
         </div>
-
         @if($amevoErreur)
             <div class="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
                 <span class="text-red-500 text-lg mt-0.5">🔴</span>
@@ -106,8 +99,6 @@
             <p class="text-sm text-gray-400">Aucune donnée AMEVO disponible.</p>
         @endif
     </div>
-
-    {{-- Aging Table --}}
     <div class="bg-white rounded-2xl card-shadow overflow-hidden">
         <div class="p-6 pb-0">
             <h2 class="text-lg font-bold text-gray-900">Détail par Client</h2>

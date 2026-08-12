@@ -19,7 +19,6 @@
             </a>
         </div>
     </div>
-
     @if(session('success'))
         <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">{{ session('success') }}</div>
     @endif
@@ -36,13 +35,10 @@
 
     <form id="manualInvoiceForm" method="POST" action="{{ route('invoices.manual.store') }}" class="bg-white shadow-lg rounded-lg overflow-hidden">
         @csrf
-
         <input type="hidden" name="montant_ht"    id="hiddenMontantHT">
         <input type="hidden" name="tva_amount"    id="hiddenTva">
         <input type="hidden" name="total_ttc"     id="hiddenTotalTTC">
         <input type="hidden" name="remise_amount" id="hiddenRemiseAmount">
-
-        <!-- Invoice Information Section -->
         <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
             <h2 class="text-xl font-semibold text-gray-800">Informations de la Facture</h2>
         </div>
@@ -71,16 +67,10 @@
                 </div>
             </div>
         </div>
-
-        <!-- ════════════════════════════════════════════════════════
-             CLIENT SECTION
-        ════════════════════════════════════════════════════════ -->
         <div class="bg-gray-50 px-6 py-4 border-t border-b border-gray-200">
             <h2 class="text-xl font-semibold text-gray-800">Informations Client</h2>
         </div>
         <div class="p-6">
-
-            {{-- Toggle Buttons --}}
             <div class="flex gap-3 mb-6">
                 <button type="button" id="btnClientExistant" onclick="switchClientMode('existant')"
                         class="flex-1 py-2.5 rounded-xl text-sm font-semibold border-2 border-blue-600 bg-blue-600 text-white transition-all">
@@ -91,8 +81,6 @@
                     ➕ Nouveau Client
                 </button>
             </div>
-
-            {{-- MODE 1: Client Existant --}}
             <div id="modeExistant">
                 <div class="mb-4">
                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">Sélectionner un client</label>
@@ -111,8 +99,6 @@
                         @endforeach
                     </select>
                 </div>
-
-                {{-- Preview Card --}}
                 <div id="clientPreview" class="hidden bg-blue-50 border border-blue-100 rounded-xl p-4">
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                         <div><p class="text-xs text-gray-400 mb-0.5">Nom</p><p id="previewNom" class="font-semibold text-gray-700"></p></div>
@@ -131,8 +117,6 @@
                     <a href="{{ route('clients.create') }}" target="_blank" class="text-blue-500 hover:underline font-medium">Créer un nouveau client ↗</a>
                 </p>
             </div>
-
-            {{-- MODE 2: Nouveau Client --}}
             <div id="modeNouveau" class="hidden">
                 <input type="hidden" id="hiddenClientIdReset" name="client_id" value="">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -168,9 +152,6 @@
                 </div>
             </div>
         </div>
-        <!-- ════════════════════════════════════════════════════════ -->
-
-        <!-- Products Section -->
         <div class="bg-gray-50 px-6 py-4 border-t border-b border-gray-200">
             <div class="flex items-center justify-between">
                 <div>
@@ -265,7 +246,6 @@
         </div>
     </form>
 </div>
-
 <template id="itemRowTemplate">
     <tr class="item-row">
         <td class="px-6 py-4">
@@ -296,11 +276,9 @@
         </td>
     </tr>
 </template>
-
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-
     const TVA_RATE = 0.20;
     let itemIndex  = 0;
     const itemsBody   = document.getElementById('itemsBody');
@@ -311,15 +289,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     addItemBtn.addEventListener('click', addItem);
     remiseInput.addEventListener('input', calculateGrandTotal);
-
-    // ── CLIENT MODE SWITCH ───────────────────────────────────────────────────
     window.switchClientMode = function(mode) {
         const modeExistant = document.getElementById('modeExistant');
         const modeNouveau  = document.getElementById('modeNouveau');
         const btnExistant  = document.getElementById('btnClientExistant');
         const btnNouveau   = document.getElementById('btnClientNouveau');
         const hiddenReset  = document.getElementById('hiddenClientIdReset');
-
         if (mode === 'existant') {
             modeExistant.classList.remove('hidden');
             modeNouveau.classList.add('hidden');
@@ -341,8 +316,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
     document.getElementById('hiddenClientIdReset').disabled = true;
-
-    // ── CLIENT SELECT AUTO-FILL ──────────────────────────────────────────────
     const clientSelect = document.getElementById('clientSelect');
     if (clientSelect) {
         clientSelect.addEventListener('change', function () {
@@ -366,7 +339,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // ── ITEMS ────────────────────────────────────────────────────────────────
     function addItem() {
         const template = document.getElementById('itemRowTemplate');
         const clone    = template.content.cloneNode(true);
@@ -398,44 +370,37 @@ document.addEventListener('DOMContentLoaded', function () {
             updateSubmitButton();
         });
     }
-
     function calculateRowTotal(row) {
         const qty   = parseFloat(row.querySelector('.quantity-input').value) || 0;
         const price = parseFloat(row.querySelector('.price-input').value)    || 0;
         row.querySelector('.item-total').textContent = (qty * price).toFixed(2);
         calculateGrandTotal();
     }
-
     function calculateGrandTotal() {
         let totalTtcBrut = 0;
 
         document.querySelectorAll('.item-total').forEach(s => {
             totalTtcBrut += parseFloat(s.textContent) || 0;
         });
-
         const htBrut = totalTtcBrut / 1.20;
         const remisePct = parseFloat(remiseInput.value) || 0;
         const remiseAmount = htBrut * (remisePct / 100);
         const htNet = htBrut - remiseAmount;
         const tva = htNet * TVA_RATE;
         const totalTTC = htNet + tva;
-
         document.getElementById('totalBrut').textContent = htBrut.toFixed(2) + ' MAD';
         document.getElementById('montantRemise').textContent = '- ' + remiseAmount.toFixed(2) + ' MAD';
         document.getElementById('totalTTC').textContent = htNet.toFixed(2) + ' MAD';
         document.getElementById('tvaAmount').textContent = tva.toFixed(2) + ' MAD';
         document.getElementById('montantHT').textContent = totalTTC.toFixed(2) + ' MAD';
-
         document.getElementById('hiddenMontantHT').value = htNet.toFixed(2);
         document.getElementById('hiddenTva').value = tva.toFixed(2);
         document.getElementById('hiddenTotalTTC').value = totalTTC.toFixed(2);
         document.getElementById('hiddenRemiseAmount').value = remiseAmount.toFixed(2);
     }
-
     function updateSubmitButton() {
         submitBtn.disabled = itemsBody.children.length === 0;
     }
-
     addItem();
 });
 </script>

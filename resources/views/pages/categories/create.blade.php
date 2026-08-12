@@ -1,7 +1,5 @@
 @extends('layouts.app')
-
 @section('title', 'Nouvelle Catégorie')
-
 @section('content')
 <div class="max-w-xl mx-auto space-y-6">
 
@@ -35,7 +33,6 @@
                 @enderror
             </div>
 
-            {{-- AMEVO ID --}}
             <div>
                 <label for="amevo_id" class="block text-sm font-semibold text-gray-700 mb-1.5">
                     ID AMEVO

@@ -11,9 +11,7 @@ class ClientController extends Controller
     public function index(Request $request)
     {
         $this->authorize('viewAny', Client::class);
-
         $query = Client::withCount(['invoices']);
-
         if ($request->filled('search')) {
             $s = $request->search;
             $query->where(function ($q) use ($s) {
@@ -23,9 +21,7 @@ class ClientController extends Controller
                   ->orWhere('telephone', 'like', "%$s%");
             });
         }
-
         $clients = $query->orderBy('nom')->paginate(15)->withQueryString();
-
         return view('pages.clients.index', compact('clients'));
     }
 

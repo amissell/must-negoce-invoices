@@ -435,11 +435,6 @@ class ExecutiveDashboardService
                 : 0.0)->values()->all(),
         ];
     }
-
-    /**
-     * Build a query for margin details grouped by a dimension (product/client/seller).
-     * Returns a Query Builder which callers may paginate or cursor() for streaming.
-     */
     public function marginDetailsQuery(string $dimension, ?Carbon $from = null, ?Carbon $to = null)
     {
         $query = DB::table('invoice_items')
@@ -477,19 +472,12 @@ class ExecutiveDashboardService
 
         return $query;
     }
-
-    /**
-     * Paginated margin details convenience wrapper.
-     * Returns a LengthAwarePaginator-friendly Query Builder executed by caller.
-     */
     public function marginDetails(string $dimension, ?Carbon $from = null, ?Carbon $to = null)
     {
         return $this->marginDetailsQuery($dimension, $from, $to);
     }
 
-    /**
-     * Build a query for TVA (tax) details at invoice level.
-     */
+
     public function tvaDetailsQuery(?Carbon $from = null, ?Carbon $to = null)
     {
         $query = Invoice::query()->leftJoin('clients', 'clients.id', '=', 'invoices.client_id')
@@ -527,7 +515,7 @@ class ExecutiveDashboardService
             $start = Carbon::today()->subMonthsNoOverflow($months - 1)->startOfMonth();
             $rows = Invoice::query()
                 ->where('invoice_date', '>=', $start)
-                ->selectRaw("DATE_FORMAT(invoice_date, '%Y-%m') as month_key, SUM(tva) as total")
+                ->selectRaw($this->monthKeyExpression('invoice_date').' as month_key, SUM(tva) as total')
                 ->groupBy('month_key')
                 ->pluck('total', 'month_key');
             $labels = [];
@@ -597,7 +585,7 @@ class ExecutiveDashboardService
             $modes = ['espèces', 'chèque', 'virement', 'traite'];
             $rows = DB::table('paiements')
                 ->where('date_paiement', '>=', $start)
-                ->selectRaw("DATE_FORMAT(date_paiement, '%Y-%m') as month_key, mode, SUM(montant) as total")
+                ->selectRaw($this->monthKeyExpression('date_paiement').' as month_key, mode, SUM(montant) as total')
                 ->groupBy('month_key', 'mode')
                 ->get()
                 ->groupBy('mode');
@@ -657,6 +645,13 @@ class ExecutiveDashboardService
         }
 
         return $total;
+    }
+
+    private function monthKeyExpression(string $column): string
+    {
+        return DB::connection()->getDriverName() === 'sqlite'
+            ? "strftime('%Y-%m', {$column})"
+            : "DATE_FORMAT({$column}, '%Y-%m')";
     }
 
     /** @return array{delta:float, percent:?float} */
@@ -813,7 +808,6 @@ class ExecutiveDashboardService
     public function revenueByCategory(): array
     {
         return Cache::remember($this->key('revenue_by_category'), self::CACHE_TTL, function () {
-            // Prefer Amevo payload categoriesData for current month when available.
             $amevo = $this->creanceService->getAmevoData();
             $data = $amevo['data'] ?? null;
 
@@ -897,10 +891,6 @@ class ExecutiveDashboardService
         });
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // Agrégat unique consommé par le contrôleur / la vue
-    // ─────────────────────────────────────────────────────────────
-
     /** @return array<string,mixed> */
     public function getDashboardData(): array
     {
@@ -942,8 +932,6 @@ class ExecutiveDashboardService
             'amevo_missing' => array_values(array_unique($this->amevoMissing)),
         ];
     }
-
-    /** Vide tous les caches du dashboard exécutif. */
     public function flushCache(): void
     {
         foreach ([

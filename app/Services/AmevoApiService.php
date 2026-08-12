@@ -98,19 +98,15 @@ class AmevoApiService
                     'url' => $this->maskUrl($url),
                 ]);
 
-                // Add timeout to options
                 $options['timeout'] = self::TIMEOUT;
 
-                // Make the request
                 $response = Http::withHeaders($options['headers'] ?? [])
                     ->timeout(self::TIMEOUT)
                     ->{$method}($url, $options['query'] ?? []);
 
-                // Check for HTTP errors
                 if ($response->failed()) {
                     $statusCode = $response->status();
 
-                    // Don't retry on client errors (4xx) except specific cases
                     if ($statusCode >= 400 && $statusCode < 500) {
                         throw new Exception("Amevo API client error: {$statusCode}");
                     }
@@ -118,14 +114,12 @@ class AmevoApiService
                     throw new Exception("Amevo API HTTP error: {$statusCode}");
                 }
 
-                // Parse and validate response
                 $data = $response->json();
 
                 if (!$data || !is_array($data)) {
                     throw new Exception("Invalid Amevo API response format");
                 }
 
-                // Check for API-level errors
                 if (isset($data['error'])) {
                     throw new Exception("Amevo API error: {$data['error']}");
                 }
@@ -147,19 +141,15 @@ class AmevoApiService
                     'exception' => get_class($e),
                 ]);
 
-                // Retry if we haven't exceeded max retries
                 if ($attempt < self::MAX_RETRIES) {
-                    // Exponential backoff: wait longer on each retry
                     $delayMs = self::RETRY_DELAY_MS * (2 ** ($attempt - 1));
                     usleep($delayMs * 1000);
                 } else {
-                    // Max retries exceeded
                     break;
                 }
             }
         }
 
-        // All retries failed
         Log::error("Amevo API request failed after {$attempt} attempts", [
             'error' => $lastException?->getMessage(),
             'url' => $this->maskUrl($url),
@@ -183,12 +173,10 @@ class AmevoApiService
             throw new Exception("Vendor ID cannot be empty");
         }
 
-        // Only allow alphanumeric characters, dashes, underscores
         if (!preg_match('/^[a-zA-Z0-9_-]+$/', $vendorId)) {
             throw new Exception("Invalid vendor ID format");
         }
 
-        // Prevent excessively long IDs (possible attack)
         if (strlen($vendorId) > 255) {
             throw new Exception("Vendor ID too long");
         }

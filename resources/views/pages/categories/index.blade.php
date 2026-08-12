@@ -4,8 +4,6 @@
 
 @section('content')
 <div class="space-y-6">
-
-    {{-- Header --}}
     <div class="flex items-center justify-between">
         <div>
             <h1 class="text-2xl font-bold text-gray-900">📦 Gestion des Catégories</h1>
@@ -19,8 +17,6 @@
             Nouvelle Catégorie
         </a>
     </div>
-
-    {{-- Search --}}
     <form method="GET" action="{{ route('categories.index') }}" class="flex gap-3">
         <div class="relative flex-1 max-w-sm">
             <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
@@ -43,8 +39,6 @@
         </a>
         @endif
     </form>
-
-    {{-- Table --}}
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         @if($categories->isEmpty())
             <div class="text-center py-16">
@@ -124,7 +118,6 @@
                 @endforeach
             </tbody>
         </table>
-
         @if($categories->hasPages())
         <div class="px-6 py-4 border-t border-gray-100">
             {{ $categories->links() }}

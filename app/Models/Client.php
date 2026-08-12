@@ -20,24 +20,18 @@ class Client extends Model
         'nom', 'ice', 'if_number', 'rc', 'cnss',
         'telephone', 'email', 'adresse', 'ville', 'credit_limit', 'payment_terms_days',
     ];
-
     protected $casts = [
         'credit_limit' => 'decimal:2',
         'payment_terms_days' => 'integer',
     ];
-
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
     }
-
-    // Total de toutes les factures
     public function totalFacture(): float
     {
         return (float) $this->invoices()->sum('total_ttc');
     }
-
-    // Nombre total de factures
     public function nombreFactures(): int
     {
         return $this->invoices()->count();

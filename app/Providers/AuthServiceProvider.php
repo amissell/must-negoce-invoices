@@ -34,44 +34,26 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        /**
-         * Gate for admin-only operations
-         */
         Gate::define('admin-only', function ($user) {
             return $user->isAdmin() && $user->isApproved();
         });
 
-        /**
-         * Gate for supervisor and above
-         */
         Gate::define('superviseur-only', function ($user) {
             return $user->isSuperviseur() && $user->isApproved();
         });
 
-        /**
-         * Gate for approved users only
-         */
         Gate::define('approved-only', function ($user) {
             return $user->isApproved();
         });
 
-        /**
-         * Gate for accessing executive dashboard
-         */
         Gate::define('view-dashboard', function ($user) {
             return in_array($user->role, ['admin', 'superviseur']) && $user->isApproved();
         });
 
-        /**
-         * Gate for managing reports
-         */
         Gate::define('manage-reports', function ($user) {
             return in_array($user->role, ['admin', 'superviseur']) && $user->isApproved();
         });
 
-        /**
-         * Gate for viewing analytics
-         */
         Gate::define('view-analytics', function ($user) {
             return $user->isApproved();
         });

@@ -77,12 +77,9 @@
     .fade-in-up { animation: fadeInUp 0.5s ease-out backwards; }
 </style>
 @endpush
-
 @section('content')
 <div class="min-h-screen" style="background:linear-gradient(to bottom,#F8FAFC 0%,#EFF6FF 100%);">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-
-    {{-- ══════════════ HERO ══════════════ --}}
     <div class="page-hero p-8 fade-in-up">
         <div class="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
@@ -109,8 +106,6 @@
             </div>
         </div>
     </div>
-
-    {{-- ══════════════ FILTRES ══════════════ --}}
     <div class="filter-bar fade-in-up" style="animation-delay:0.05s">
         <form method="GET" id="filterForm" action="{{ route('dashboard.vendeur-categorie') }}" class="flex flex-wrap items-end gap-3 w-full">
             <div>
@@ -136,9 +131,6 @@
             </div>
         </form>
     </div>
-
-
-    {{-- ══════════════ KPI ══════════════ --}}
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
     <div class="kpi-card fade-in-up">
@@ -150,7 +142,6 @@
             Chiffre d'affaires Total
         </div>
     </div>
-
     <div class="kpi-card fade-in-up">
         <div class="kpi-icon bg-teal-50">🧑‍💼</div>
         <div class="kpi-value text-teal-600">
@@ -160,7 +151,6 @@
             Nombre de vendeurs
         </div>
     </div>
-
     <div class="kpi-card fade-in-up">
         <div class="kpi-icon bg-orange-50">🏷️</div>
         <div class="kpi-value text-orange-600">
@@ -170,7 +160,6 @@
             Nombre de catégories
         </div>
     </div>
-
 </div>
 <div class="table-card fade-in-up mt-6">
 
@@ -185,77 +174,48 @@
         <table class="pivot-table min-w-full">
 
             <thead>
-
                 <tr>
-
                     <th>Vendeur</th>
-
                     <th class="text-right">
                         CA Total
                     </th>
-
                     @foreach($categoriesData as $cat)
-
                         <th class="text-right">
                             {{ $cat['libelle'] }}
                         </th>
-
                     @endforeach
-
                 </tr>
-
             </thead>
-
             <tbody>
-
             @foreach($vendorCards as $vendeur)
-
                 <tr>
-
                     <td>
                         {{ $vendeur['nom'] }}
                     </td>
-
                     <td class="total-cell">
                         {{ number_format($vendeur['ca_total'],0,',',' ') }} DH
                     </td>
-
                     @foreach($categoriesData as $cat)
-
                         @php
                             $estimation = ($vendeur['ca_total'] * $cat['pct']) / 100;
                         @endphp
-
                         <td>
-
                             <strong>
                                 {{ number_format($estimation,0,',',' ') }}
                             </strong>
-
                             <br>
-
                             <small class="text-gray-500">
                                 {{ number_format($cat['pct'],1) }} %
                             </small>
-
                         </td>
-
                     @endforeach
-
                 </tr>
-
             @endforeach
-
             </tbody>
-
         </table>
-
     </div>
-
 </div>
-
 <div class="mt-6 bg-yellow-50 border border-yellow-300 rounded-xl p-4">
-
     <strong>ℹ️ Information</strong>
     <p class="mt-2 text-sm text-gray-700">
 

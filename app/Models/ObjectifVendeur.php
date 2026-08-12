@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ObjectifVendeur extends Model
 {
     protected $table = 'objectifs_vendeurs';
-
     protected $fillable = [
         'vendeur_id',
         'vendeur_nom',

@@ -7,11 +7,6 @@ use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use Illuminate\Support\Facades\DB;
 
-/**
- * Handles invoice persistence and invoice item persistence inside a transaction.
- * Invoice numbers are reserved atomically INSIDE the transaction via
- * InvoiceNumberGenerator (SELECT ... FOR UPDATE on invoice_sequences).
- */
 class InvoicePersistence
 {
     private InvoiceNumberGenerator $invoiceNumberGenerator;

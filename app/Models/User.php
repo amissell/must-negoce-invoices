@@ -10,7 +10,6 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class User extends Authenticatable
 {
     use HasFactory, Notifiable, LogsActivity;
-
     protected $fillable = [
         'name',
         'email',
@@ -18,12 +17,10 @@ class User extends Authenticatable
         'role',
         'status',
     ];
-
     protected $hidden = [
         'password',
         'remember_token',
     ];
-
     protected function casts(): array
     {
         return [
@@ -31,32 +28,26 @@ class User extends Authenticatable
             'password'          => 'hashed',
         ];
     }
-
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
     }
-
     public function isSuperviseur(): bool
     {
         return in_array($this->role, ['admin', 'superviseur']);
     }
-
     public function isApproved(): bool
     {
         return $this->status === 'approved';
     }
-
     public function isPending(): bool
     {
         return $this->status === 'pending';
     }
-
     public function isRejected(): bool
     {
         return $this->status === 'rejected';
     }
-
     public function isAdv(): bool
     {
         return $this->role === 'adv';

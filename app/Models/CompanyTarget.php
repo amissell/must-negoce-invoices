@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Model;
 class CompanyTarget extends Model
 {
     protected $fillable = ['month', 'year', 'target_amount'];
-
     protected $casts = [
         'month' => 'integer',
         'year' => 'integer',

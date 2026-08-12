@@ -1,10 +1,7 @@
 @extends('layouts.app')
-
 @section('title', 'Modifier Catégorie')
-
 @section('content')
 <div class="max-w-xl mx-auto space-y-6">
-
     <div class="flex items-center gap-3">
         <a href="{{ route('categories.index') }}"
            class="p-2 hover:bg-gray-100 rounded-xl transition-all text-gray-500">
@@ -22,8 +19,6 @@
         <form method="POST" action="{{ route('categories.update', $categorie) }}" class="space-y-5">
             @csrf
             @method('PUT')
-
-            {{-- Nom --}}
             <div>
                 <label for="nom" class="block text-sm font-semibold text-gray-700 mb-1.5">
                     Nom de la catégorie <span class="text-red-500">*</span>
@@ -36,8 +31,6 @@
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
             </div>
-
-            {{-- AMEVO ID --}}
             <div>
                 <label for="amevo_id" class="block text-sm font-semibold text-gray-700 mb-1.5">
                     ID AMEVO
@@ -52,13 +45,10 @@
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
             </div>
-
-            {{-- Info --}}
             <div class="bg-gray-50 rounded-xl p-3 text-xs text-gray-500 space-y-1">
                 <p>🕐 Créée le {{ $categorie->created_at->format('d/m/Y à H:i') }}</p>
                 <p>🔄 Modifiée le {{ $categorie->updated_at->format('d/m/Y à H:i') }}</p>
             </div>
-
             <div class="flex gap-3 pt-2">
                 <button type="submit"
                         class="btn-primary text-white px-6 py-2.5 rounded-xl text-sm font-semibold flex-1 transition-all">

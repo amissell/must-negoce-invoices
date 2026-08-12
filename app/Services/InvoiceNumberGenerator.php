@@ -13,10 +13,7 @@ use RuntimeException;
  */
 class InvoiceNumberGenerator
 {
-    /**
-     * Reserve and return the next invoice number for the current year.
-     * MUST be called inside a DB::transaction() to guarantee the row lock.
-     */
+
     public function generateNextInvoiceNumber(): string
     {
         if (DB::transactionLevel() < 1) {
@@ -42,9 +39,6 @@ class InvoiceNumberGenerator
             ->first();
 
         $next = ((int) $row->last_number) + 1;
-
-        // If the stored sequence is zero, initialize it from existing invoices
-        // to avoid colliding with invoice numbers created outside the sequence.
         if (((int) $row->last_number) === 0) {
             $maxNumber = (int) DB::table('invoices')
                 ->where('invoice_number', 'like', $year . '/%')
@@ -65,10 +59,6 @@ class InvoiceNumberGenerator
 
         return $year . '/' . str_pad((string) $next, 3, '0', STR_PAD_LEFT);
     }
-
-    /**
-     * Generate the next invoice number filling gaps in the sequence.
-     */
     public function generateInvoiceNumber(): string
     {
         $year = date('y');

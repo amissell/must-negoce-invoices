@@ -13,7 +13,6 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class Product extends Model
 {
     use HasFactory, LogsActivity;
-
     protected $fillable = [
         'name',
         'reference',
@@ -22,12 +21,10 @@ class Product extends Model
         'cost_price',
         'unite',
     ];
-
     protected $casts = [
         'prix_ttc' => 'decimal:2',
         'cost_price' => 'decimal:2',
     ];
-
     protected static function boot()
     {
         parent::boot();

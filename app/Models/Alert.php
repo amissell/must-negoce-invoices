@@ -68,11 +68,6 @@ class Alert extends Model
     {
         return [self::SEVERITY_INFO, self::SEVERITY_WARNING, self::SEVERITY_CRITICAL];
     }
-
-    /**
-     * A standard Eloquent morph-to relation. Callers store the related model's
-     * fully qualified class name in related_type until a morph map is introduced.
-     */
     public function related(): MorphTo
     {
         return $this->morphTo(__FUNCTION__, 'related_type', 'related_id');

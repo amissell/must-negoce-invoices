@@ -7,20 +7,6 @@ use App\Models\SuiviVendeur;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
-/**
- * Centralise la logique d'alertes (factures impayées + vendeurs inactifs).
- *
- * Extrait tel quel depuis AlerteController@index (extract-method refactor,
- * comportement public identique). Réutilisé par :
- *   - AlerteController@index                → page /alertes
- *   - ExecutiveDashboardService             → panneau alertes du dashboard exécutif
- *
- * Aucune règle métier n'a été modifiée :
- *   - seuil factures impayées : > 30 jours
- *   - seuil vendeurs inactifs : >= 3 jours (défaut, paramétrable)
- *   - niveau "critique" facture : > 60 jours
- *   - niveau "critique" vendeur : >= 7 jours
- */
 class AlerteService
 {
     /**
@@ -84,11 +70,6 @@ class AlerteService
             ];
         })->filter()->values();
     }
-
-    /**
-     * Alertes agrégées (factures + vendeurs), triées par niveau (critique d'abord).
-     * Reproduit exactement la sortie précédemment construite inline dans AlerteController@index.
-     */
     public function getAllAlertes(): Collection
     {
         $ordreNiveau = ['critique' => 0, 'attention' => 1];

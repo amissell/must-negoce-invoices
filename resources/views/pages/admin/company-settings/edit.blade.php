@@ -31,7 +31,6 @@
     .template-option.selected { border-color: var(--accent-color); background: #ecfeff; box-shadow: 0 0 0 3px rgba(20,184,166,0.12); }
 </style>
 @endpush
-
 @section('content')
 <div class="page-header">
     <div>
@@ -39,15 +38,12 @@
         <p class="page-subtitle">Ces informations sont utilisées sur toutes les factures PDF générées.</p>
     </div>
 </div>
-
 <form action="{{ route('admin.company-settings.update') }}" method="POST" enctype="multipart/form-data">
     @csrf
     @method('PUT')
-
     <div class="settings-card">
         <h3>Identité</h3>
         <p class="hint">Nom et logo affichés en en-tête des factures.</p>
-
         @if($company->logo_url)
             <div class="logo-preview">
                 <img src="{{ $company->logo_url }}" alt="Logo actuel">
@@ -59,7 +55,6 @@
                 </div>
             </div>
         @endif
-
         <div class="grid-2">
             <div class="form-field">
                 <label for="name">Nom de la société *</label>
@@ -71,7 +66,6 @@
             </div>
         </div>
     </div>
-
     <div class="settings-card">
         <h3>Coordonnées</h3>
         <div class="grid-2">
@@ -93,7 +87,6 @@
             </div>
         </div>
     </div>
-
     <div class="settings-card">
         <h3>Informations légales</h3>
         <p class="hint">Ces identifiants apparaissent dans le pied de page des factures.</p>
@@ -105,7 +98,6 @@
             <div class="form-field"><label for="cnss">CNSS</label><input type="text" name="cnss" id="cnss" value="{{ old('cnss', $company->cnss) }}"></div>
         </div>
     </div>
-
     <div class="settings-card">
         <h3>Facturation</h3>
         <div class="grid-3">
@@ -123,7 +115,6 @@
             </div>
         </div>
     </div>
-
     <div class="settings-card">
         <h3>Textes des factures</h3>
         <div class="grid-2">
@@ -137,11 +128,9 @@
             </div>
         </div>
     </div>
-
     <div class="settings-card">
         <h3>Modèle de facture PDF par défaut</h3>
         <p class="hint">Choisissez le style utilisé lors du téléchargement des factures.</p>
-
         <div class="template-picker">
             @php $currentTpl = old('default_pdf_template', $company->default_pdf_template); @endphp
             <label class="template-option {{ $currentTpl === 'classic' ? 'selected' : '' }}" data-tpl="classic">
@@ -157,13 +146,11 @@
             </label>
         </div>
     </div>
-
     <div class="form-actions">
         <button type="submit" class="btn-primary">💾 Enregistrer</button>
     </div>
 </form>
 @endsection
-
 @push('scripts')
 <script>
     document.querySelectorAll('.template-option').forEach(opt => {

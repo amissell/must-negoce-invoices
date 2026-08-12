@@ -11,7 +11,6 @@ class CreanceService
 {
     public function getAmevoData(?int $mois = null, ?int $annee = null, ?int $userId = null): array
     {
-        // Avoid external HTTP calls during automated tests to keep suite deterministic.
         if (app()->environment('testing')) {
             return ['erreur' => null, 'data' => null];
         }
@@ -30,13 +29,11 @@ class CreanceService
                 if ($response->failed()) {
                     return ['erreur' => "Impossible de contacter l'API AMEVO.", 'data' => null];
                 }
-
                 $data = $response->json();
 
                 if (isset($data['error']) && $data['error'] === true) {
                     return ['erreur' => $data['message'] ?? "Erreur inconnue de l'API AMEVO.", 'data' => null];
                 }
-
                 return ['erreur' => null, 'data' => $data];
 
             } catch (\Exception $e) {
@@ -48,7 +45,6 @@ class CreanceService
     public function getCreancesData(): array
     {
         $now = Carbon::now();
-
         $clients = Client::with(['invoices' => function ($q) {
             $q->where('statut_paiement', '!=', 'payée');
         }])->get()->map(function ($client) use ($now) {
@@ -75,12 +71,10 @@ class CreanceService
                 'risque' => $j90 > 0 ? 'critique' : ($j60 > 0 ? 'attention' : 'normal'),
             ];
         })->filter(fn($c) => $c['total_impaye'] > 0)->sortByDesc('total_impaye');
-
         $totalCreances = $clients->sum('total_impaye');
         $total30 = $clients->sum('j30');
         $total60 = $clients->sum('j60');
         $total90 = $clients->sum('j90_plus');
-
         return compact('clients', 'totalCreances', 'total30', 'total60', 'total90');
     }
 }

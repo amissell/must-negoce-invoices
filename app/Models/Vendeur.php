@@ -11,7 +11,6 @@ class Vendeur extends Model
         'nom_complet',
         'amevo_id',
     ];
-
     public function objectifs(): HasMany
     {
         return $this->hasMany(ObjectifVendeur::class, 'vendeur_id');

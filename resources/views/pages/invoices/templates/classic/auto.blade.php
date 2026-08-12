@@ -34,7 +34,6 @@
     table.items td.qty { text-align: center; width: 12%; font-family: 'DejaVu Sans Mono', monospace; }
     table.items td.price { text-align: right; width: 18%; font-family: 'DejaVu Sans Mono', monospace; }
     table.items td.total { text-align: right; width: 20%; font-weight: 600; font-family: 'DejaVu Sans Mono', monospace; }
-    /* Auto-shrink item rows when the invoice has many products, so everything still fits nicely */
     table.items.items-compact { font-size: 8px; }
     table.items.items-compact thead th { padding: 4px 5px; font-size: 8.5px; }
     table.items.items-compact tbody td { padding: 2.5px 5px; }
@@ -44,7 +43,6 @@
     table.items.items-ultra { font-size: 6.5px; }
     table.items.items-ultra thead th { padding: 2px 3px; font-size: 7px; }
     table.items.items-ultra tbody td { padding: 1px 3px; line-height: 1.1; }
-    /* When density is high, shrink the surrounding blocks too, to free more room for rows */
     body.dense .header { margin-bottom: 8px; padding-bottom: 8px; }
     body.dense .invoice-info { margin-bottom: 4px; }
     body.dense .totals { margin-top: 6px; margin-bottom: 6px; }

@@ -14,7 +14,6 @@ class SuiviCategorie extends Model
         'quantite',
         'ca',
     ];
-
     public function suiviVendeur()
     {
         return $this->belongsTo(SuiviVendeur::class);

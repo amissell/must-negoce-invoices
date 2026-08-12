@@ -4,8 +4,6 @@
 
 @section('content')
 <div class="space-y-6">
-
-    {{-- Header --}}
     <div class="flex items-center justify-between">
         <div class="flex items-center gap-4">
             <a href="{{ route('clients.index') }}"
@@ -36,9 +34,6 @@
             Modifier
         </a>
     </div>
-    
-
-    {{-- KPI Cards --}}
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-white rounded-2xl card-shadow p-5">
             <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Facturé</p>
@@ -57,8 +52,6 @@
             <p class="text-sm font-semibold text-gray-700 mt-1 truncate">{{ $client->email ?? '—' }}</p>
         </div>
     </div>
-
-    {{-- Infos Légales --}}
     <div class="bg-white rounded-2xl card-shadow p-6">
         <h2 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">📋 Informations Légales</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -86,8 +79,6 @@
         </div>
         @endif
     </div>
-
-    {{-- Historique Factures --}}
     <div class="bg-white rounded-2xl card-shadow overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-50">
             <h2 class="text-sm font-bold text-gray-500 uppercase tracking-wider">🧾 Historique des Factures</h2>
@@ -136,6 +127,5 @@
             </tbody>
         </table>
     </div>
-
 </div>
 @endsection
