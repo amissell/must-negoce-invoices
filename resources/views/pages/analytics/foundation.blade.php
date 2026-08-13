@@ -7,6 +7,7 @@
 @php
     $summary = $dataQuality['summary'];
     $period = $dataQuality['period'];
+    $hasData = ($summary['checks'] ?? 0) > 0 || ($summary['issues'] ?? 0) > 0 || ($summary['critical'] ?? 0) > 0 || ($summary['warnings'] ?? 0) > 0;
 @endphp
 
 <div class="space-y-6">
@@ -14,6 +15,7 @@
         <div>
             <h1 class="text-2xl font-bold text-gray-900">Business Analytics Foundation</h1>
             <p class="mt-1 text-sm text-gray-500">Qualité des données et limites de calcul — aucune donnée n’est estimée ou inventée.</p>
+            <a href="{{ route('business-analytics.commercial.index') }}" class="mt-2 inline-block text-sm font-medium text-teal-700 hover:text-teal-900">Voir l’analyse clients, ventes et paiements →</a>
         </div>
         <form method="GET" class="flex flex-wrap items-end gap-3 rounded-xl bg-white p-3 shadow-sm">
             <label class="text-sm text-gray-600">Du <input type="date" name="from" value="{{ $period['from'] }}" class="ml-1 rounded border-gray-300"></label>
@@ -22,6 +24,11 @@
         </form>
     </div>
 
+    @if (! $hasData)
+        <section class="rounded-xl border border-slate-300 bg-slate-100 p-4 text-sm text-slate-700">
+            <strong>Données indisponibles :</strong> aucune vérification analytique n’a été déclenchée pour cette période. Le module signale explicitement l’absence de données au lieu de conclure à un résultat parfait.
+        </section>
+    @endif
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
         <div class="rounded-xl bg-white p-5 shadow-sm"><p class="text-xs uppercase text-gray-500">Contrôles</p><p class="mt-2 text-2xl font-bold">{{ $summary['checks'] }}</p></div>
         <div class="rounded-xl bg-white p-5 shadow-sm"><p class="text-xs uppercase text-gray-500">Anomalies</p><p class="mt-2 text-2xl font-bold">{{ $summary['issues'] }}</p></div>

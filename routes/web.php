@@ -18,6 +18,8 @@ use App\Http\Controllers\DashboardCategoriesController;
 use App\Http\Controllers\DashboardVendeurCategorieController;
 use App\Http\Controllers\ExecutiveDashboardController;
 use App\Http\Controllers\BusinessAnalyticsController;
+use App\Http\Controllers\CommercialAnalyticsController;
+use App\Http\Controllers\ProfitabilityAnalyticsController;
 use App\Http\Controllers\Admin\ActivityLogController;
 
 
@@ -61,6 +63,20 @@ Route::middleware(['auth', 'executive'])->group(function () {
         ->name('business-analytics.index');
     Route::get('/api/business-analytics', [BusinessAnalyticsController::class, 'data'])
         ->name('api.business-analytics');
+    Route::get('/business-analytics/commercial', [CommercialAnalyticsController::class, 'index'])
+        ->name('business-analytics.commercial.index');
+    Route::get('/api/business-analytics/commercial', [CommercialAnalyticsController::class, 'data'])
+        ->name('api.business-analytics.commercial');
+    Route::get('/business-analytics/profitability', [ProfitabilityAnalyticsController::class, 'index'])
+        ->name('business-analytics.profitability.index');
+    Route::get('/api/business-analytics/profitability', [ProfitabilityAnalyticsController::class, 'data'])
+        ->name('api.business-analytics.profitability');
+    Route::get('/api/business-analytics/profitability/details', [ProfitabilityAnalyticsController::class, 'details'])
+        ->name('api.business-analytics.profitability.details');
+    Route::get('/api/business-analytics/profitability/details/export', [ProfitabilityAnalyticsController::class, 'detailsExport'])
+        ->name('api.business-analytics.profitability.details.export');
+    Route::get('/api/business-analytics/profitability/export', [ProfitabilityAnalyticsController::class, 'export'])
+        ->name('api.business-analytics.profitability.export');
     Route::get('/dashboard/executive', [ExecutiveDashboardController::class, 'index'])
         ->name('dashboard.executive');
     Route::get('/dashboard/executive/board.pdf', [ExecutiveDashboardController::class, 'boardPdf'])
