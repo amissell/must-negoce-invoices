@@ -291,7 +291,7 @@ class InvoiceService
      */
     private function buildManualInvoiceItems(array $items, float $remisePercentage = 0): array
     {
-        return array_map(function (array $item) {
+        return array_map(function (array $item) use ($remisePercentage) {
             return [
                 'product' => Product::findOrFail($item['product_id']),
                 'product_id' => $item['product_id'],

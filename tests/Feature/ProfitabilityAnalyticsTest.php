@@ -86,16 +86,13 @@ class ProfitabilityAnalyticsTest extends TestCase
             'tva' => 0,
             'total_ttc' => 200,
         ]);
-
         DB::table('invoice_items')->insert([
             ['invoice_id' => $invoice->id, 'product_id' => $known->id, 'quantity' => 1, 'unit_price' => 100, 'unit_cost_at_sale' => 50, 'total' => 100, 'discount_amount' => 0, 'created_at' => now(), 'updated_at' => now()],
             ['invoice_id' => $invoice->id, 'product_id' => $unknown->id, 'quantity' => 1, 'unit_price' => 100, 'unit_cost_at_sale' => null, 'total' => 100, 'discount_amount' => null, 'created_at' => now(), 'updated_at' => now()],
         ]);
-
         $response = $this->actingAs($admin)
             ->getJson(route('api.business-analytics.profitability.details', ['dimension' => 'product']))
             ->assertOk();
-
         $this->assertSame('Produit rentable', $response->json('data.0.label'));
         $this->assertSame(1, $response->json('total'));
         $this->assertStringNotContainsString('Produit sans coût', json_encode($response->json('data')));

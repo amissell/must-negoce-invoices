@@ -22,6 +22,11 @@ class ScheduledReportDownloadController extends Controller
             abort(404);
         }
 
-        return Storage::disk($disk)->download($run->file_path);
+        $headers = [];
+        if (str_ends_with(strtolower($run->file_path), '.xlsx')) {
+            $headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        }
+
+        return Storage::disk($disk)->download($run->file_path, basename($run->file_path), $headers);
     }
 }

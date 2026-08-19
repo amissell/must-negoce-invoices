@@ -113,12 +113,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/users',        [UserController::class, 'store'])->name('admin.users.store');
     Route::post('/admin/users/{user}/approve', [UserController::class, 'approve'])->name('admin.users.approve');
     Route::post('/admin/users/{user}/reject',  [UserController::class, 'reject'])->name('admin.users.reject');
-    // Scheduled reports management
-    Route::get('/admin/scheduled-reports', [\App\Http\Controllers\ScheduledReportController::class, 'index'])->name('admin.scheduled_reports.index');
-    Route::post('/admin/scheduled-reports', [\App\Http\Controllers\ScheduledReportController::class, 'store'])->name('admin.scheduled_reports.store');
-    Route::delete('/admin/scheduled-reports/{scheduledReport}', [\App\Http\Controllers\ScheduledReportController::class, 'destroy'])->name('admin.scheduled_reports.destroy');
-    Route::post('/admin/scheduled-reports/{scheduledReport}/run', [\App\Http\Controllers\ScheduledReportController::class, 'runNow'])->name('admin.scheduled_reports.run');
-    Route::get('/admin/scheduled-reports/runs/{run}/download', [\App\Http\Controllers\ScheduledReportDownloadController::class, 'downloadRun'])->name('admin.scheduled_reports.download');
     Route::get('/admin/company-targets', [CompanyTargetController::class, 'index'])
         ->name('admin.company-targets.index');
     Route::put('/admin/company-targets', [CompanyTargetController::class, 'upsert'])
@@ -127,6 +121,17 @@ Route::middleware(['auth', 'admin'])->group(function () {
         ->name('admin.company-targets.destroy');
     Route::get('/admin/company-settings',  [CompanySettingController::class, 'edit'])->name('admin.company-settings.edit');
     Route::put('/admin/company-settings',  [CompanySettingController::class, 'update'])->name('admin.company-settings.update');
+});
+
+Route::middleware(['auth', 'approved'])->group(function () {
+    Route::get('/admin/scheduled-reports', [\App\Http\Controllers\ScheduledReportController::class, 'index'])->name('admin.scheduled_reports.index');
+    Route::post('/admin/scheduled-reports', [\App\Http\Controllers\ScheduledReportController::class, 'store'])->name('admin.scheduled_reports.store');
+    Route::put('/admin/scheduled-reports/{scheduledReport}', [\App\Http\Controllers\ScheduledReportController::class, 'update'])->name('admin.scheduled_reports.update');
+    Route::patch('/admin/scheduled-reports/{scheduledReport}', [\App\Http\Controllers\ScheduledReportController::class, 'update'])->name('admin.scheduled_reports.update.patch');
+    Route::delete('/admin/scheduled-reports/{scheduledReport}', [\App\Http\Controllers\ScheduledReportController::class, 'destroy'])->name('admin.scheduled_reports.destroy');
+    Route::post('/admin/scheduled-reports/{scheduledReport}/run', [\App\Http\Controllers\ScheduledReportController::class, 'runNow'])->name('admin.scheduled_reports.run');
+    Route::get('/admin/scheduled-reports/{scheduledReport}/download-latest', [\App\Http\Controllers\ScheduledReportController::class, 'downloadLatest'])->name('admin.scheduled_reports.download_latest');
+    Route::get('/admin/scheduled-reports/runs/{run}/download', [\App\Http\Controllers\ScheduledReportDownloadController::class, 'downloadRun'])->name('admin.scheduled_reports.download');
 });
 Route::middleware(['auth', 'admin'])->prefix('objectifs')->name('objectifs.')->group(function () {
     Route::get('/', [ObjectifVendeurController::class, 'index'])->name('index');

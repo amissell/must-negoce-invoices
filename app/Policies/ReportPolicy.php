@@ -51,8 +51,7 @@ class ReportPolicy
             return false;
         }
 
-        // Only admin can update reports
-        return $user->isAdmin();
+        return $user->isAdmin() || $user->isSuperviseur();
     }
 
     /**

@@ -137,7 +137,7 @@ class AmevoApiService
                 Log::warning("Amevo API request failed", [
                     'attempt' => $attempt,
                     'max_retries' => self::MAX_RETRIES,
-                    'error' => $e->getMessage(),
+                    'error' => $e->getMessage(), 
                     'exception' => get_class($e),
                 ]);
 
