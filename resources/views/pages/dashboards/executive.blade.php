@@ -24,7 +24,8 @@
     <div class="flex items-start justify-between flex-wrap gap-4">
         <div>
             <h1 class="text-2xl font-bold text-gray-900">📊 Dashboard Exécutif</h1>
-            <p class="text-gray-500 mt-1">Vue synthétique de l'activité — {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
+            <p class="text-gray-500 mt-1">Vue synthétique fondée sur les factures, paiements, objectifs et suivi locaux — {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
+            <p class="mt-2 text-xs text-slate-600">Les marges sont calculées uniquement sur les lignes avec coût connu. Les lignes sans coût sont exclues pour éviter toute surestimation.</p>
         </div>
 
         {{-- Quick actions --}}
@@ -53,6 +54,10 @@
     <div class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div id="vue-sales-pulse" class="bg-white rounded-2xl card-shadow p-4" data-initial='@json($sales_pulse)'></div>
         <div id="vue-ceo-scorecard" class="bg-white rounded-2xl card-shadow p-4" data-initial='@json(["mtd_revenue" => $k["current_month_revenue"], "outstanding_receivables" => $recv["total"], "overdue_invoices" => $k["overdue_invoice_count"]])'></div>
+    </div>
+
+    <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <strong>Attention :</strong> ce tableau reflète les données enregistrées localement et ne comprend pas les coûts historiques, stocks, fournisseurs ou attributs vendeur Amevo non disponibles dans le schéma actuel.
     </div>
 
     {{-- Daily sales pulse and target attainment --}}
@@ -149,10 +154,10 @@
     {{-- Financial analysis --}}
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <div class="bg-white rounded-2xl card-shadow p-6">
-            <div class="flex justify-between gap-3 mb-4"><h2 class="text-lg font-semibold text-gray-900">Marge brute par produit</h2><span class="text-xs text-gray-500">Prix TTC − coût TTC</span></div>
+            <div class="flex justify-between gap-3 mb-4"><h2 class="text-lg font-semibold text-gray-900">Marge brute par produit</h2><span class="text-xs text-gray-500">Coût connu uniquement — prix TTC − coût TTC</span></div>
             <div style="height: 280px;"><canvas id="chartProductMargin"></canvas></div>
             @if($financial['missing_cost_lines'] > 0)
-                <p class="mt-3 text-xs text-amber-700">{{ $financial['missing_cost_lines'] }} ligne(s) exclue(s) : coût produit manquant.</p>
+                <p class="mt-3 text-xs text-amber-700">{{ $financial['missing_cost_lines'] }} ligne(s) exclue(s) : coût produit manquant dans le système local.</p>
             @endif
             <div id="vue-margin-details"></div>
         </div>
@@ -168,6 +173,7 @@
         @foreach(['clients' => 'Marge par client', 'sellers' => 'Marge par vendeur (créateur de facture)'] as $dimension => $title)
             <div class="bg-white rounded-2xl card-shadow p-6 overflow-x-auto">
                 <h2 class="text-lg font-semibold text-gray-900 mb-4">{{ $title }}</h2>
+                <p class="mb-3 text-xs text-slate-500">Source locale : factures et coût produit connu uniquement.</p>
                 <table class="w-full text-sm"><thead><tr class="text-left text-gray-500 border-b"><th class="py-2">Libellé</th><th class="py-2 text-right">Marge</th><th class="py-2 text-right">Marge %</th></tr></thead><tbody>
                     @forelse($financial[$dimension]['labels'] as $index => $label)
                         <tr class="border-b last:border-0"><td class="py-2 font-medium">{{ $label }}</td><td class="py-2 text-right">{{ $fmt($financial[$dimension]['margins'][$index]) }}</td><td class="py-2 text-right {{ $financial[$dimension]['percentages'][$index] >= 0 ? 'text-green-600' : 'text-red-600' }}">{{ number_format($financial[$dimension]['percentages'][$index], 1, ',', ' ') }}%</td></tr>

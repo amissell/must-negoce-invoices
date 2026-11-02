@@ -151,7 +151,12 @@ class ExecutiveDashboardController extends Controller
         $qb = $this->dashboard->marginDetails($data['dimension'], $from, $to)->orderBy('margin', 'desc');
 
         // streaming CSV
-        $filename = sprintf('margins_%s_%s_%s.csv', $data['dimension'], $from->format('Ymd'), $to->format('Ymd'));
+        $filename = sprintf(
+            'margins_%s_%s_%s.csv',
+            $data['dimension'],
+            $from?->format('Ymd') ?? 'all',
+            $to?->format('Ymd') ?? 'all',
+        );
 
         $headers = ['Content-Type' => 'text/csv', 'Content-Disposition' => "attachment; filename=\"{$filename}\""];
 
@@ -163,7 +168,7 @@ class ExecutiveDashboardController extends Controller
                 $revenue = (float) $row->revenue;
                 $qty = (int) $row->qty;
                 $pct = $revenue > 0 ? ($margin / $revenue) * 100 : '';
-                fputcsv($out, [(string) $row->label, $margin, $revenue, $qty, $pct]);
+                fputcsv($out, [$this->csvSafeText($row->label), $margin, $revenue, $qty, $pct]);
             }
             fclose($out);
         };
@@ -197,7 +202,10 @@ class ExecutiveDashboardController extends Controller
     {
         Gate::authorize('view-dashboard');
 
-        $months = (int) request('months', 12);
+        $data = request()->validate([
+            'months' => ['sometimes', 'integer', 'min:1', 'max:24'],
+        ]);
+        $months = (int) ($data['months'] ?? 12);
 
         return response()->json($this->dashboard->tvaLiabilityByMonth($months));
     }
@@ -273,14 +281,18 @@ class ExecutiveDashboardController extends Controller
 
         $qb = $this->dashboard->tvaDetails($from, $to)->orderBy('invoice_date', 'desc');
 
-        $filename = sprintf('tva_%s_%s.csv', $from->format('Ymd'), $to->format('Ymd'));
+        $filename = sprintf(
+            'tva_%s_%s.csv',
+            $from?->format('Ymd') ?? 'all',
+            $to?->format('Ymd') ?? 'all',
+        );
         $headers = ['Content-Type' => 'text/csv', 'Content-Disposition' => "attachment; filename=\"{$filename}\""];
 
         $callback = function () use ($qb) {
             $out = fopen('php://output', 'w');
             fputcsv($out, ['invoice_id', 'invoice_number', 'invoice_date', 'client_label', 'tva_amount']);
             foreach ($qb->cursor() as $row) {
-                fputcsv($out, [$row->invoice_id, $row->invoice_number, $row->invoice_date, $row->client_label, (float) $row->tva_amount]);
+                fputcsv($out, [$row->invoice_id, $this->csvSafeText($row->invoice_number), $row->invoice_date, $this->csvSafeText($row->client_label), (float) $row->tva_amount]);
             }
             fclose($out);
         };
@@ -302,5 +314,15 @@ class ExecutiveDashboardController extends Controller
 
         // landscape for wider layout
         return $this->pdfService->download('pages.dashboards.board', $data, $filename, 'A4', 'landscape');
+    }
+
+    /** Prefix spreadsheet formula-like text so CSV exports open as plain text. */
+    private function csvSafeText(mixed $value): string
+    {
+        $text = (string) ($value ?? '');
+
+        return preg_match('/^[\x00-\x20]*[=+\-@]/', $text) === 1
+            ? "'{$text}"
+            : $text;
     }
 }

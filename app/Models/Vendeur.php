@@ -15,4 +15,8 @@ class Vendeur extends Model
     {
         return $this->hasMany(ObjectifVendeur::class, 'vendeur_id');
     }
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
 }

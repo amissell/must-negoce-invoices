@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Product;
+use App\Models\Vendeur;
 
 class InvoiceService
 {
@@ -48,6 +49,7 @@ class InvoiceService
             'total_ttc' => $calculation['total_ttc'],
             'amount_in_words' => $this->numberToWords($calculation['total_ttc']),
             'created_by' => $userId,
+            'vendeur_id' => $this->vendeurForUser($userId),
         ], $this->buildManualInvoiceItems($calculation['items'], (float) $calculation['remise_percentage']));
     }
 
@@ -210,6 +212,7 @@ class InvoiceService
                 'type' => 'automatic',
                 'client_name' => 'divers',
                 'created_by' => $userId,
+                'vendeur_id' => $this->vendeurForUser($userId),
             ], $items);
             $remainingAmount -= $actualInvoiceTotal;
             $totalGenerated += $actualInvoiceTotal;
@@ -282,6 +285,7 @@ class InvoiceService
             'type' => 'automatic',
             'client_name' => $customerName,
             'created_by' => $userId,
+            'vendeur_id' => $this->vendeurForUser($userId),
         ], $items);
     }
 
@@ -301,6 +305,17 @@ class InvoiceService
                 'discount_amount' => round((float) $item['total_ttc'] * $remisePercentage / 100, 2),
             ];
         }, $items);
+    }
+
+    private function vendeurForUser(int $userId): ?int
+    {
+        $user = \App\Models\User::find($userId);
+        if (! $user) {
+            return null;
+        }
+        return Vendeur::where('amevo_id', (string) $userId)
+            ->orWhere('nom_complet', $user->name)
+            ->value('id');
     }
 
     private function splitIntoMultipleInvoices(string $customerName, array $items, int $userId): void

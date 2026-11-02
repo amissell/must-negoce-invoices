@@ -163,7 +163,7 @@
                 </div>
 
                 <!-- Search & Filters -->
-                <form method="GET" action="{{ route('invoices.index') }}" class="flex flex-col sm:flex-row gap-3">
+                <form method="GET" action="{{ route('invoices.index') }}" class="flex flex-col gap-3">
                     <!-- Search Input -->
                     <div class="relative flex-1">
                         <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
@@ -192,6 +192,10 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                         </svg>
                     </div>
+                    <select name="vendeur_id" class="px-3 py-2.5 border border-gray-200 rounded-lg text-sm" onchange="this.form.submit()"><option value="">Tous les vendeurs</option>@foreach($vendeurs as $vendeur)<option value="{{ $vendeur->id }}" @selected(request('vendeur_id') == $vendeur->id)>{{ $vendeur->nom_complet }}</option>@endforeach</select>
+                    <select name="delivery_status" class="px-3 py-2.5 border border-gray-200 rounded-lg text-sm" onchange="this.form.submit()"><option value="">Tous les envois</option><option value="non_envoyee" @selected(request('delivery_status') === 'non_envoyee')>Non envoyée</option><option value="envoyee" @selected(request('delivery_status') === 'envoyee')>Dahat lclient</option></select>
+                    <select name="compta" class="px-3 py-2.5 border border-gray-200 rounded-lg text-sm" onchange="this.form.submit()"><option value="">Toutes remises</option><option value="non_remis" @selected(request('compta') === 'non_remis')>À remettre à la compta</option><option value="remis" @selected(request('compta') === 'remis')>Déjà remis</option></select>
+                    <select name="month" class="px-3 py-2.5 border border-gray-200 rounded-lg text-sm" onchange="this.form.submit()"><option value="">Tous les mois</option>@for($m=1;$m<=12;$m++)<option value="{{ $m }}" @selected((int)request('month')===$m)>{{ \Carbon\Carbon::create()->month($m)->locale('fr')->monthName }}</option>@endfor</select><select name="year" class="px-3 py-2.5 border border-gray-200 rounded-lg text-sm" onchange="this.form.submit()"><option value="">Toutes années</option>@for($y=now()->year;$y>=2024;$y--)<option value="{{ $y }}" @selected(request('year')==$y)>{{ $y }}</option>@endfor</select>
 
                     <!-- Type Filters -->
                     <div class="flex gap-2">
@@ -230,23 +234,36 @@
             </div>
         </div>
 
+        <form id="invoice-bulk-form" method="POST" class="px-6 py-3 bg-teal-50 border-b flex flex-wrap items-center gap-3">
+            @csrf
+            <strong id="selection-count" class="text-teal-800">0 facture sélectionnée</strong>
+            <select name="vendeur_id" class="border rounded-lg p-2 text-sm"><option value="">Assigner un vendeur…</option>@foreach($vendeurs as $vendeur)<option value="{{ $vendeur->id }}">{{ $vendeur->nom_complet }}</option>@endforeach</select>
+            <select name="delivery_status" class="border rounded-lg p-2 text-sm"><option value="">Envoi client…</option><option value="non_envoyee">Non envoyée</option><option value="main_propre">Dahat lclient</option></select>
+            <select name="remis_compta" class="border rounded-lg p-2 text-sm"><option value="">Remise compta…</option><option value="1">Marquer remis aujourd'hui</option><option value="0">Retirer la remise</option></select>
+            <button formaction="{{ route('invoices.bulk-update') }}" class="px-3 py-2 bg-teal-600 text-white rounded-lg text-sm font-semibold">Appliquer</button><button formaction="{{ route('invoices.export-selection') }}" class="px-3 py-2 bg-slate-700 text-white rounded-lg text-sm font-semibold">Exporter Excel</button>
+        </form>
+
         <!-- Table -->
         <div class="overflow-x-auto">
             <table class="w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
+                        <th class="px-4 py-4">Choisir</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">N° Facture</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Type</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Client</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Vendeur</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Date</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Montant TTC</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Créé par</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Envoi client</th>
                         <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-100">
                     @forelse($invoices as $invoice)
                     <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-4 py-4"><input form="invoice-bulk-form" class="invoice-checkbox" name="invoice_ids[]" value="{{ $invoice->id }}" type="checkbox"></td>
                         <td class="px-6 py-4 text-sm font-mono font-semibold text-blue-600">
                             #{{ $invoice->invoice_number }}
                         </td>
@@ -264,6 +281,7 @@
                         <td class="px-6 py-4 text-sm font-medium text-gray-900">
                             {{ $invoice->client->nom ?? 'N/A' }}
                         </td>
+                        <td class="px-6 py-4 text-sm text-gray-600"><select form="tracking-{{ $invoice->id }}" name="vendeur_id" class="border rounded-md p-1.5 text-xs"><option value="">Non assigné</option>@foreach($vendeurs as $vendeur)<option value="{{ $vendeur->id }}" @selected($invoice->vendeur_id === $vendeur->id)>{{ $vendeur->nom_complet }}</option>@endforeach</select></td>
                         <td class="px-6 py-4 text-sm text-gray-500">
                             {{ \Carbon\Carbon::parse($invoice->invoice_date)->format('d/m/Y') }}
                         </td>
@@ -271,8 +289,9 @@
                             {{ number_format($invoice->total_ttc, 2, ',', ' ') }} MAD
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-600">
-                            {{ $invoice->user->name ?? 'Système' }}
+                            {{ $invoice->creator_name }}
                         </td>
+                        <td class="px-6 py-4 text-xs"><form id="tracking-{{ $invoice->id }}" action="{{ route('invoices.tracking', $invoice) }}" method="POST" class="flex gap-1 items-center">@csrf<select name="delivery_status" class="border rounded-md p-1.5 text-xs"><option value="non_envoyee" @selected($invoice->delivery_status === 'non_envoyee')>Non envoyée</option><option value="main_propre" @selected($invoice->delivery_status !== 'non_envoyee')>Dahat lclient</option></select><button class="bg-teal-600 text-white rounded px-2 py-1.5">OK</button></form></td>
                         <td class="px-6 py-4 text-sm text-right">
                             <div class="flex justify-end gap-2">
                                 @if(!$invoice->is_automatic)
@@ -309,7 +328,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                        <td colspan="10" class="px-6 py-8 text-center text-gray-500">
                             <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
                             </svg>
@@ -332,3 +351,7 @@
 
 </div>
 @endsection
+
+@push('scripts')
+<script>document.addEventListener('DOMContentLoaded',()=>{const boxes=[...document.querySelectorAll('.invoice-checkbox')],count=document.getElementById('selection-count');const update=()=>count.textContent=`${boxes.filter(b=>b.checked).length} facture(s) sélectionnée(s)`;boxes.forEach(b=>b.addEventListener('change',update));});</script>
+@endpush

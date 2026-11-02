@@ -141,6 +141,11 @@
                 </a>
             </li>
             <li class="sidebar-nav-item">
+                <a href="{{ route('paiements.index') }}" class="nav-link {{ request()->routeIs('paiements.*') ? 'active' : '' }}">
+                    <span class="nav-icon">💳</span><span>Paiements</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
                 <a href="{{ route('alertes.index') }}" class="nav-link {{ request()->routeIs('alertes.*') ? 'active' : '' }}">
                     <span class="nav-icon">🔔</span><span>Alertes</span>
                 </a>

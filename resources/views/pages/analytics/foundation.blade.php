@@ -15,6 +15,7 @@
         <div>
             <h1 class="text-2xl font-bold text-gray-900">Business Analytics Foundation</h1>
             <p class="mt-1 text-sm text-gray-500">Qualité des données et limites de calcul — aucune donnée n’est estimée ou inventée.</p>
+            <p class="mt-2 text-xs text-slate-600">Source locale : factures, lignes de vente, clients, paiements, produits et objectifs enregistrés dans le système actuel.</p>
             <a href="{{ route('business-analytics.commercial.index') }}" class="mt-2 inline-block text-sm font-medium text-teal-700 hover:text-teal-900">Voir l’analyse clients, ventes et paiements →</a>
         </div>
         <form method="GET" class="flex flex-wrap items-end gap-3 rounded-xl bg-white p-3 shadow-sm">

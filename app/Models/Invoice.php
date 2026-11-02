@@ -30,6 +30,10 @@ class Invoice extends Model
         'is_locked',
         'created_by',
         'updated_by',
+        'vendeur_id',
+        'delivery_status',
+        'delivered_at',
+        'remis_compta_at',
     ];
 
     protected $casts = [
@@ -40,6 +44,8 @@ class Invoice extends Model
         'total_ttc' => 'decimal:2',
         'remise_amount' => 'decimal:2',
         'remise_percentage' => 'decimal:2',
+        'delivered_at' => 'datetime',
+        'remis_compta_at' => 'date',
     ];
     public function creator()
     {
@@ -72,6 +78,30 @@ class Invoice extends Model
     public function client()
     {
         return $this->belongsTo(\App\Models\Client::class);
+    }
+    public function vendeur()
+    {
+        return $this->belongsTo(Vendeur::class);
+    }
+    public function paiements()
+    {
+        return $this->belongsToMany(Paiement::class, 'paiement_invoice')->withPivot('montant_affecte')->withTimestamps();
+    }
+    public function getMontantRegleAttribute(): float
+    {
+        if (array_key_exists('montant_regle_sum', $this->attributes)) {
+            return (float) $this->attributes['montant_regle_sum'];
+        }
+        return (float) $this->paiements()->sum('paiement_invoice.montant_affecte');
+    }
+    public function getResteAPayerAttribute(): float
+    {
+        return max(0, round((float) $this->total_ttc - $this->montant_regle, 2));
+    }
+    public function getPaymentStatusAttribute(): string
+    {
+        if ($this->montant_regle <= 0) return 'non_payee';
+        return $this->reste_a_payer <= 0 ? 'payee' : 'partiellement_payee';
     }
     public function getActivitylogOptions(): LogOptions
     {

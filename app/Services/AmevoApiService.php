@@ -9,7 +9,7 @@ use Exception;
 class AmevoApiService
 {
     private const MAX_RETRIES = 3;
-    private const RETRY_DELAY_MS = 1000; // 1 second
+    private const RETRY_DELAY_MS = 1000;
     private const TIMEOUT = 30; // 30 seconds
 
     /**
@@ -137,7 +137,7 @@ class AmevoApiService
                 Log::warning("Amevo API request failed", [
                     'attempt' => $attempt,
                     'max_retries' => self::MAX_RETRIES,
-                    'error' => $e->getMessage(), 
+                    'error' => $e->getMessage(),
                     'exception' => get_class($e),
                 ]);
 

@@ -13,6 +13,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Gate;
+use App\Models\Vendeur;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\InvoicesComptaExport;
 
 class InvoiceController extends Controller
 {
@@ -32,7 +35,7 @@ public function index(Request $request)
     /** @var \App\Models\User $user */
     $user = Auth::user();
 
-    $query = Invoice::with('creator')->latest();
+    $query = Invoice::with(['creator', 'client', 'vendeur'])->withSum('paiements as montant_regle_sum', 'paiement_invoice.montant_affecte')->latest();
 
     // Apply row-level security: regular users see only their own invoices
     if (! $user->isAdmin() && ! $user->isSuperviseur()) {
@@ -45,6 +48,21 @@ public function index(Request $request)
 
     if ($request->filled('client_id')) {
         $query->where('client_id', $request->client_id);
+    }
+    if ($request->filled('vendeur_id')) $query->where('vendeur_id', $request->vendeur_id);
+    if ($request->filled('delivery_status')) {
+        $request->delivery_status === 'envoyee'
+            ? $query->where('delivery_status', '!=', 'non_envoyee')
+            : $query->where('delivery_status', $request->delivery_status);
+    }
+    if ($request->filled('compta')) $request->compta === 'remis' ? $query->whereNotNull('remis_compta_at') : $query->whereNull('remis_compta_at');
+    if ($request->filled('month')) $query->whereMonth('invoice_date', $request->month);
+    if ($request->filled('year')) $query->whereYear('invoice_date', $request->year);
+    if ($request->filled('payment_status')) {
+        $paid = '(select coalesce(sum(montant_affecte), 0) from paiement_invoice where paiement_invoice.invoice_id = invoices.id)';
+        if ($request->payment_status === 'non_payee') $query->whereRaw("{$paid} = 0");
+        if ($request->payment_status === 'payee') $query->whereRaw("{$paid} >= invoices.total_ttc");
+        if ($request->payment_status === 'partiellement_payee') $query->whereRaw("{$paid} > 0 and {$paid} < invoices.total_ttc");
     }
 
     if ($request->filled('search')) {
@@ -64,15 +82,50 @@ public function index(Request $request)
     $manualCount = Invoice::where('type', 'manual')->count();
 
     $clients = \App\Models\Client::orderBy('nom')->get(['id', 'nom']);
+    $vendeurs = Vendeur::orderBy('nom_complet')->get(['id', 'nom_complet']);
 
     return view('pages.invoices.index', compact(
         'invoices',
         'totalInvoices',
         'automaticCount',
         'manualCount',
-        'clients'
+        'clients', 'vendeurs'
     ));
 }
+
+    public function bulkUpdate(Request $request)
+    {
+        $this->authorize('viewAny', Invoice::class);
+        $data = $request->validate(['invoice_ids' => 'required|array|min:1', 'invoice_ids.*' => 'integer|exists:invoices,id', 'vendeur_id' => 'nullable|exists:vendeurs,id', 'delivery_status' => 'nullable|in:non_envoyee,email,main_propre', 'remis_compta' => 'nullable|boolean']);
+        $attributes = [];
+        if ($request->filled('vendeur_id')) $attributes['vendeur_id'] = $data['vendeur_id'];
+        if ($request->filled('delivery_status')) { $attributes['delivery_status'] = $data['delivery_status']; $attributes['delivered_at'] = $data['delivery_status'] === 'non_envoyee' ? null : now(); }
+        if (array_key_exists('remis_compta', $data)) $attributes['remis_compta_at'] = $data['remis_compta'] ? now()->toDateString() : null;
+        if ($attributes) Invoice::whereIn('id', $data['invoice_ids'])->update($attributes);
+        return back()->with('success', count($data['invoice_ids']).' facture(s) mise(s) à jour.');
+    }
+
+    public function updateTracking(Request $request, Invoice $invoice)
+    {
+        $this->authorize('view', $invoice);
+        $data = $request->validate([
+            'vendeur_id' => 'nullable|exists:vendeurs,id',
+            'delivery_status' => 'required|in:non_envoyee,email,main_propre',
+        ]);
+        $invoice->update([
+            'vendeur_id' => $data['vendeur_id'],
+            'delivery_status' => $data['delivery_status'],
+            'delivered_at' => $data['delivery_status'] === 'non_envoyee' ? null : now(),
+        ]);
+        return back()->with('success', 'Suivi de la facture mis à jour.');
+    }
+
+    public function exportSelection(Request $request)
+    {
+        $data = $request->validate(['invoice_ids' => 'required|array|min:1', 'invoice_ids.*' => 'integer|exists:invoices,id']);
+        $invoices = Invoice::with(['client', 'vendeur'])->whereIn('id', $data['invoice_ids'])->get();
+        return Excel::download(new InvoicesComptaExport($invoices), 'remise-compta-'.now()->format('Y-m-d').'.xlsx');
+    }
 
     public function store(StoreInvoiceProductsRequest $request)
     {

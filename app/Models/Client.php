@@ -28,6 +28,10 @@ class Client extends Model
     {
         return $this->hasMany(Invoice::class);
     }
+    public function paiements(): HasMany
+    {
+        return $this->hasMany(Paiement::class);
+    }
     public function totalFacture(): float
     {
         return (float) $this->invoices()->sum('total_ttc');

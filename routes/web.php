@@ -1,6 +1,7 @@
 <?php
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\PaiementController;
 use App\Http\Controllers\ManualInvoiceController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UserController;
@@ -41,6 +42,10 @@ Route::middleware(['auth', 'approved', 'admin_or_adv'])->group (function () {
     Route::get('/invoices/{id}/edit',         [ManualInvoiceController::class, 'edit'])->name('invoices.edit');
     Route::put('/invoices/{id}',              [ManualInvoiceController::class, 'update'])->name('invoices.update');
     Route::patch('/invoices/{id}',            [ManualInvoiceController::class, 'update'])->name('invoices.update.patch');
+    Route::post('/invoices/bulk-update', [InvoiceController::class, 'bulkUpdate'])->name('invoices.bulk-update');
+    Route::post('/invoices/{invoice}/tracking', [InvoiceController::class, 'updateTracking'])->name('invoices.tracking');
+    Route::post('/invoices/export-selection', [InvoiceController::class, 'exportSelection'])->name('invoices.export-selection');
+    Route::resource('paiements', PaiementController::class)->except(['show', 'destroy']);
 
     Route::get('/products',          [ProductController::class, 'index'])->name('products.index');
     Route::post('/products',         [ProductController::class, 'store'])->name('products.store');
