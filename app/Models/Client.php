@@ -43,10 +43,10 @@ class Client extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'email', 'phone', 'address', 'city', 'country', 'tax_number'])
+            ->logOnly(['nom', 'ice', 'if_number', 'rc', 'cnss', 'telephone', 'email', 'adresse', 'ville'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
             ->useLogName('client')
-            ->setDescriptionForEvent(fn(string $eventName) => "Client {$this->name} was {$eventName}");
+            ->setDescriptionForEvent(fn (string $eventName) => "Client {$this->nom} was {$eventName}");
     }
 }

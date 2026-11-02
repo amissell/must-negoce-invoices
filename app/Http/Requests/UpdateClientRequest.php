@@ -22,21 +22,22 @@ class UpdateClientRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nom' => 'sometimes|string|max:255',
+            'nom' => 'sometimes|required|string|max:255',
             'ice' => [
                 'sometimes',
+                'nullable',
                 'string',
                 Rule::unique('clients', 'ice')->ignore($this->route('client')),
             ],
-            'if_number' => 'sometimes|string|max:50',
-            'rc' => 'sometimes|string|max:50',
-            'cnss' => 'sometimes|string|max:50',
-            'telephone' => 'sometimes|string|max:20|regex:/^[0-9\s\-\+\.]+$/',
-            'email' => 'sometimes|email',
-            'adresse' => 'sometimes|string|max:255',
-            'ville' => 'sometimes|string|max:100',
-            'credit_limit' => 'sometimes|numeric|min:0',
-            'payment_terms_days' => 'sometimes|integer|min:0|max:365',
+            'if_number' => 'sometimes|nullable|string|max:50',
+            'rc' => 'sometimes|nullable|string|max:50',
+            'cnss' => 'sometimes|nullable|string|max:50',
+            'telephone' => 'sometimes|nullable|string|max:20|regex:/^[0-9\s\-\+\.]+$/',
+            'email' => 'sometimes|nullable|email|max:255',
+            'adresse' => 'sometimes|nullable|string|max:255',
+            'ville' => 'sometimes|nullable|string|max:100',
+            'credit_limit' => 'sometimes|nullable|numeric|min:0',
+            'payment_terms_days' => 'sometimes|nullable|integer|min:0|max:365',
         ];
     }
 
@@ -63,11 +64,11 @@ class UpdateClientRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        if ($this->has('credit_limit')) {
+        if ($this->filled('credit_limit')) {
             $this->merge(['credit_limit' => (float) $this->credit_limit]);
         }
 
-        if ($this->has('payment_terms_days')) {
+        if ($this->filled('payment_terms_days')) {
             $this->merge(['payment_terms_days' => (int) $this->payment_terms_days]);
         }
     }
